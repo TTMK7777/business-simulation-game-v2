@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ビジネスエンパイア - 経営シミュレーション</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .company-name { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+        .date { font-size: 14px; opacity: 0.9; }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+        .stat-value { font-size: 18px; font-weight: bold; }
+        
+        /* ニュースティッカー */
+        .news-ticker {
+            background: #333;
+            color: #ffd700;
+            padding: 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .news-ticker span {
+            display: inline-block;
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* ランキング表示 */
+        .ranking-bar {
+            background: #f0f0f0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+        }
+        .rank-item {
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .rank-item.player { background: #ffd700; font-weight: bold; }
+        
+        .tabs {
+            display: flex;
+            padding: 15px 15px 0;
+            gap: 10px;
+            overflow-x: auto;
+            background: white;
+        }
+        .tab {
+            padding: 10px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .content {
+            padding: 20px;
+            min-height: 400px;
+            background: white;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:active { transform: scale(0.98); }
+        .employee {
+            background: #f8f8f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .employee-name { font-weight: bold; font-size: 16px; }
+        .personality {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .abilities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .ability { font-size: 13px; }
+        .ability-name { color: #666; }
+        .ability-value { font-weight: bold; color: #333; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 350px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+        .modal-close {
+            width: 100%;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        .empty { text-align: center; color: #999; padding: 40px 20px; }
+        .product {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .info-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .competitor {
+            background: #fff3cd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #ff9800;
+        }
+        
+        /* 実績表示用スタイル */
+        .achievement {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #ffa500;
+        }
+        
+        .achievement-unlocked {
+            animation: achievementPulse 2s ease-in-out;
+        }
+        
+        @keyframes achievementPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">株式会社スタートアップ</div>
+            <div class="date" id="gameDate">2025年1月 第1週</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">💰 資金</div>
+                    <div class="stat-value" id="money">1000万</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">👥 従業員</div>
+                    <div class="stat-value" id="employeeCount">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📊 売上</div>
+                    <div class="stat-value" id="revenue">0万</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ニュースティッカー -->
+        <div class="news-ticker">
+            <span id="newsText">📰 ゲーム開始！IT業界で成功を目指そう！</span>
+        </div>
+
+        <!-- ランキング表示 -->
+        <div class="ranking-bar" id="rankingBar">
+            <div class="rank-item">1位: テックコープ(35%)</div>
+            <div class="rank-item">2位: デジタルワークス(29%)</div>
+            <div class="rank-item">3位: サイバーソフト(22%)</div>
+            <div class="rank-item player">4位: あなた(0.1%)</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showPanel('overview')">📊 概要</button>
+            <button class="tab" onclick="showPanel('employees')">👥 人事</button>
+            <button class="tab" onclick="showPanel('products')">📦 製品</button>
+            <button class="tab" onclick="showPanel('market')">🏢 市場</button>
+            <button class="tab" onclick="showPanel('finance')">💰 財務</button>
+        </div>
+
+        <div class="content">
+            <div id="overview" class="panel active">
+                <h3>🏢 会社概要</h3>
+                <div class="info-box">
+                    <div>業界: IT・ソフトウェア</div>
+                    <div>市場シェア: <span id="marketShare">0.1%</span></div>
+                    <div>ブランド力: <span id="brand">⭐</span></div>
+                    <div>評判: <span id="reputation">50</span>/100</div>
+                    <div>市場環境: <span id="marketTrend">安定</span></div>
+                    <div>研究P: <span id="researchPoints">0</span></div>
+                </div>
+                
+                <div id="strategyBox" class="info-box">
+                    <h4>🎯 経営戦略</h4>
+                    <div id="currentStrategy">戦略未設定</div>
+                    <button class="btn" onclick="showStrategySelection()" style="margin: 5px 0; padding: 10px; font-size: 14px;">戦略変更</button>
+                </div>
+                
+                <div id="achievementsList" class="info-box" style="display: none;">
+                    <h4>🏆 獲得実績</h4>
+                    <div id="achievements"></div>
+                </div>
+                
+                <button class="btn" onclick="nextTurn()">⏭️ 次のターンへ</button>
+                <button class="btn" onclick="saveGame()">💾 ゲーム保存</button>
+                <button class="btn" onclick="showAchievements()">🏆 実績確認</button>
+            </div>
+
+            <div id="employees" class="panel">
+                <h3>👥 従業員管理</h3>
+                <div id="employeeList"></div>
+                <button class="btn" onclick="showHiring()">➕ 採用活動</button>
+                <button class="btn" onclick="trainEmployees()">📚 研修実施</button>
+            </div>
+
+            <div id="products" class="panel">
+                <h3>📦 製品開発</h3>
+                <div id="productList"></div>
+                <button class="btn" onclick="developProduct()">🔧 新製品開発</button>
+            </div>
+
+            <div id="market" class="panel">
+                <h3>🏢 市場状況</h3>
+                <div id="marketInfo"></div>
+                <button class="btn" onclick="doMarketing()">📢 マーケティング</button>
+            </div>
+
+            <div id="finance" class="panel">
+                <h3>💰 財務状況</h3>
+                <div id="financeInfo"></div>
+                <button class="btn" onclick="getLoan()">🏦 銀行融資</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div id="modalBody"></div>
+            <button class="modal-close" onclick="closeModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        // ゲームデータ（フェーズ2強化版）
+        const game = {
+            money: 10000000,
+            employees: [],
+            products: [],
+            turn: 1,
+            year: 2025,
+            month: 1,
+            week: 1,
+            marketShare: 0.1,
+            brandPower: 1,
+            monthlyRevenue: 0,
+            debt: 0,
+            achievements: [],
+            lastPlayerAction: null,
+            reputation: 50, // 0-100
+            marketTrend: 'stable', // boom, stable, recession
+            eventHistory: [],
+            companyStrategy: null, // 現在の経営戦略
+            researchPoints: 0 // 研究開発ポイント
+        };
+
+        // 競合AI企業（強化版）
+        const competitors = [
+            { 
+                name: 'テックコープ', 
+                share: 35, 
+                strategy: 'aggressive', 
+                power: 100,
+                ceo: '田中 剛',
+                aggressiveness: 0.8,
+                lastAction: null,
+                alertLevel: 'normal' // normal, cautious, aggressive
+            },
+            { 
+                name: 'デジタルワークス', 
+                share: 29, 
+                strategy: 'balanced', 
+                power: 85,
+                ceo: '鈴木 智子',
+                aggressiveness: 0.5,
+                lastAction: null,
+                alertLevel: 'normal'
+            },
+            { 
+                name: 'サイバーソフト', 
+                share: 22, 
+                strategy: 'defensive', 
+                power: 70,
+                ceo: '山田 孝志',
+                aggressiveness: 0.3,
+                lastAction: null,
+                alertLevel: 'normal'
+            }
+        ];
+
+        // ニュース生成（強化版）
+        const newsTemplates = [
+            '${company}が新製品を発表！業界に衝撃',
+            '${company}の売上が${percent}%増加',
+            'IT業界の成長率が${percent}%に',
+            '${company}が大型買収を検討中',
+            '新技術の登場で市場が活性化',
+            '${company}のCEOが今後の戦略を語る',
+            'スタートアップ企業の参入が相次ぐ',
+            '${company}が優秀人材の引き抜きを開始',
+            '${company}が価格競争を仕掛ける',
+            '${company}が大規模マーケティングを展開'
+        ];
+
+        // ランダムイベントシステム
+        const randomEvents = [
+            {
+                id: 'tech_boom',
+                name: '🤖 AI技術ブーム到来',
+                description: '生成AI市場が急拡大！技術系従業員の価値が上昇',
+                probability: 0.15,
+                effects: { marketTrend: 'boom', techSalaryMultiplier: 1.3 },
+                duration: 3
+            },
+            {
+                id: 'economic_recession',
+                name: '📉 景気減速の兆し',
+                description: 'IT投資に慎重ムード。売上に影響の可能性',
+                probability: 0.1,
+                effects: { marketTrend: 'recession', revenueMultiplier: 0.8 },
+                duration: 4
+            },
+            {
+                id: 'talent_war',
+                name: '💼 人材争奪戦激化',
+                description: '大手企業が高給で人材を狙っている',
+                probability: 0.2,
+                effects: { poachingRisk: 0.3, hiringSalaryMultiplier: 1.2 },
+                duration: 2
+            },
+            {
+                id: 'big_contract',
+                name: '🎯 大口契約のチャンス',
+                description: '政府系の大型プロジェクトの入札が開始',
+                probability: 0.12,
+                effects: { contractOpportunity: true },
+                duration: 1
+            },
+            {
+                id: 'tech_revolution',
+                name: '⚡ 技術革新の波',
+                description: '新技術の登場で市場が活性化',
+                probability: 0.08,
+                effects: { innovationBonus: 1.5 },
+                duration: 2
+            }
+        ];
+
+        // 従業員トレイトシステム
+        const employeeTraits = {
+            // ポジティブトレイト
+            innovative: {
+                name: '💡 革新的',
+                description: '創造力+20、新製品開発時ボーナス',
+                effects: { creativeBonus: 20, developmentBonus: 1.3 },
+                probability: 0.15
+            },
+            leadership: {
+                name: '👑 リーダーシップ',
+                description: 'チーム全体の生産性+15%、給与+30%',
+                effects: { teamBoost: 0.15, salaryMultiplier: 1.3 },
+                probability: 0.1
+            },
+            efficient: {
+                name: '⚡ 効率的',
+                description: '作業効率+25%、残業少ない',
+                effects: { efficiencyBonus: 0.25, overtimeReduction: 0.2 },
+                probability: 0.2
+            },
+            loyal: {
+                name: '🤝 忠実',
+                description: '離職リスク-50%、モチベーション安定',
+                effects: { loyaltyBonus: 0.5, motivationStability: 0.3 },
+                probability: 0.25
+            },
+            
+            // ネガティブトレイト
+            burnout_prone: {
+                name: '😰 燃え尽き症候群',
+                description: 'モチベーション-20、生産性-30%',
+                effects: { motivationPenalty: -20, productivityPenalty: -0.3 },
+                probability: 0.1
+            },
+            perfectionist: {
+                name: '🎯 完璧主義者',
+                description: '品質+15%だが作業速度-20%',
+                effects: { qualityBonus: 0.15, speedPenalty: -0.2 },
+                probability: 0.15
+            },
+            social: {
+                name: '🗣️ 社交的',
+                description: 'チーム雰囲気+10%、集中力-10%',
+                effects: { teamMoraleBonus: 0.1, focusPenalty: -0.1 },
+                probability: 0.2
+            }
+        };
+
+        // 製品ライフサイクルシステム
+        const productLifecycle = {
+            introduction: {
+                name: '導入期',
+                duration: 3,
+                revenueMultiplier: 0.5,
+                description: '市場認知度が低く売上は控えめ'
+            },
+            growth: {
+                name: '成長期', 
+                duration: 4,
+                revenueMultiplier: 1.5,
+                description: '急速に売上が伸びる黄金期'
+            },
+            maturity: {
+                name: '成熟期',
+                duration: 6,
+                revenueMultiplier: 1.0,
+                description: '安定した収益だが競合が増加'
+            },
+            decline: {
+                name: '衰退期',
+                duration: -1, // 無制限
+                revenueMultiplier: 0.3,
+                description: '売上低迷、改良やマーケティングが必要'
+            }
+        };
+
+        // 戦略選択システム
+        const companyStrategies = {
+            current: null, // 現在の戦略
+            options: {
+                niche: {
+                    name: '🎯 ニッチ戦略',
+                    description: '特定分野に特化。利益率+50%、市場拡大-30%',
+                    effects: { profitMargin: 1.5, marketExpansion: 0.7, employeeCost: 1.2 }
+                },
+                scale: {
+                    name: '📈 規模戦略', 
+                    description: '大量採用で市場シェア拡大。採用コスト-20%、利益率-10%',
+                    effects: { hiringCostReduction: 0.8, profitMargin: 0.9, marketExpansion: 1.4 }
+                },
+                tech_focus: {
+                    name: '🔬 技術特化',
+                    description: 'R&D重視。開発成功率+30%、人件費+20%',
+                    effects: { developmentSuccess: 1.3, salaryMultiplier: 1.2, innovationBonus: 0.3 }
+                },
+                balanced: {
+                    name: '⚖️ バランス型',
+                    description: 'バランス重視の安定戦略',
+                    effects: { stability: 0.2 }
+                }
+            }
+        };
+
+        // 実績システム（拡張版）
+        const achievements = [
+            {
+                id: 'first_profit',
+                name: '💰 初回黒字達成',
+                description: '初めて月次で黒字を達成した',
+                condition: (game) => game.monthlyRevenue > 0 && !game.achievements.includes('first_profit'),
+                reward: { money: 500000, brandPower: 1 }
+            },
+            {
+                id: 'big_company',
+                name: '👥 大企業への道',
+                description: '従業員数が10人に到達した',
+                condition: (game) => game.employees.length >= 10 && !game.achievements.includes('big_company'),
+                reward: { reputation: 20, brandPower: 1 }
+            },
+            {
+                id: 'market_leader',
+                name: '🏆 市場リーダー',
+                description: '市場シェア15%以上を獲得した',
+                condition: (game) => game.marketShare >= 15 && !game.achievements.includes('market_leader'),
+                reward: { money: 2000000, reputation: 30 }
+            },
+            {
+                id: 'debt_free',
+                name: '💎 無借金経営',
+                description: '借金を完済して健全経営を達成',
+                condition: (game) => game.debt === 0 && game.money > 5000000 && !game.achievements.includes('debt_free'),
+                reward: { reputation: 25, brandPower: 2 }
+            },
+            {
+                id: 'innovation_master',
+                name: '🚀 イノベーター',
+                description: '5つ以上の製品を開発した',
+                condition: (game) => game.products.length >= 5 && !game.achievements.includes('innovation_master'),
+                reward: { money: 1000000, reputation: 15 }
+            },
+            {
+                id: 'trait_collector',
+                name: '🏷️ トレイトコレクター',
+                description: '特別なトレイトを持つ従業員を5人採用',
+                condition: (game) => game.employees.filter(e => e.traits && e.traits.length > 0).length >= 5 && !game.achievements.includes('trait_collector'),
+                reward: { money: 800000, reputation: 10 }
+            },
+            {
+                id: 'product_lifecycle_master',
+                name: '📊 ライフサイクルマスター',
+                description: '製品を成長期から成熟期まで育て上げた',
+                condition: (game) => game.products.some(p => p.lifecycle === 'maturity') && !game.achievements.includes('product_lifecycle_master'),
+                reward: { brandPower: 2, reputation: 15 }
+            }
+        ];
+
+        // 初期化
+        function init() {
+            const initialEmployee = {
+                id: 1,
+                name: '山田 太郎',
+                personality: 'まじめ',
+                abilities: { technical: 65, sales: 45, planning: 55, management: 50 },
+                motivation: 75,
+                salary: 400000,
+                department: '開発部'
+            };
+            game.employees.push(initialEmployee);
+            updateDisplay();
+            generateNews();
+        }
+
+        // ニュース生成
+        function generateNews() {
+            const template = newsTemplates[Math.floor(Math.random() * newsTemplates.length)];
+            const company = competitors[Math.floor(Math.random() * competitors.length)].name;
+            const percent = Math.floor(Math.random() * 30) + 10;
+            const news = template.replace('${company}', company).replace('${percent}', percent);
+            document.getElementById('newsText').textContent = '📰 ' + news;
+        }
+
+        // 動的競合AI行動システム
+        function updateCompetitors() {
+            competitors.forEach(comp => {
+                // プレイヤーの行動に対する反応
+                if (game.lastPlayerAction) {
+                    reactToPlayerAction(comp, game.lastPlayerAction);
+                }
+                
+                // 警戒レベルの調整
+                if (game.marketShare > comp.share * 0.3) {
+                    comp.alertLevel = 'aggressive';
+                    comp.aggressiveness = Math.min(1.0, comp.aggressiveness + 0.1);
+                } else if (game.marketShare < comp.share * 0.1) {
+                    comp.alertLevel = 'normal';
+                    comp.aggressiveness = Math.max(0.2, comp.aggressiveness - 0.05);
+                }
+                
+                // AI企業の独自行動
+                performAIAction(comp);
+                
+                // シェア変動（戦略とパワーに応じて）
+                let change = (Math.random() - 0.5) * comp.aggressiveness * 3;
+                if (comp.alertLevel === 'aggressive') change *= 1.5;
+                
+                comp.share = Math.max(5, Math.min(60, comp.share + change));
+                
+                // 市場シェアの正規化
+                normalizeMarketShares();
+            });
+            
+            game.lastPlayerAction = null;
+            updateRanking();
+        }
+
+        // プレイヤー行動への反応
+        function reactToPlayerAction(competitor, action) {
+            switch(action) {
+                case 'hiring':
+                    if (competitor.strategy === 'aggressive' && Math.random() < 0.4) {
+                        competitor.lastAction = 'counter_hiring';
+                        showModal('業界ニュース', `${competitor.name}の${competitor.ceo}CEOが「優秀な人材確保を強化する」と発表`);
+                    }
+                    break;
+                case 'marketing':
+                    if (Math.random() < competitor.aggressiveness * 0.6) {
+                        competitor.lastAction = 'counter_marketing';
+                        showModal('市場動向', `${competitor.name}が大規模マーケティング攻勢を開始！`);
+                        competitor.share += 0.5;
+                    }
+                    break;
+                case 'product_development':
+                    if (competitor.strategy !== 'defensive' && Math.random() < 0.3) {
+                        competitor.lastAction = 'product_rush';
+                        showModal('技術競争', `${competitor.name}が対抗製品の開発を急いでいる模様`);
+                    }
+                    break;
+            }
+        }
+
+        // AI企業の独自行動
+        function performAIAction(competitor) {
+            const actionChance = competitor.aggressiveness * 0.3;
+            
+            if (Math.random() < actionChance) {
+                const actions = ['innovation', 'expansion', 'acquisition'];
+                const action = actions[Math.floor(Math.random() * actions.length)];
+                
+                switch(action) {
+                    case 'innovation':
+                        competitor.power += 5;
+                        showModal('競合動向', `${competitor.name}が革新的な技術を発表！`);
+                        break;
+                    case 'expansion':
+                        competitor.share += 1;
+                        showModal('市場拡大', `${competitor.name}が事業を拡大中`);
+                        break;
+                    case 'acquisition':
+                        competitor.power += 10;
+                        competitor.share += 2;
+                        showModal('業界再編', `${competitor.name}が他社を買収！`);
+                        break;
+                }
+            }
+        }
+
+        // 市場シェア正規化
+        function normalizeMarketShares() {
+            const totalCompetitorShare = competitors.reduce((sum, comp) => sum + comp.share, 0);
+            const availableShare = 100 - game.marketShare;
+            
+            if (totalCompetitorShare > availableShare) {
+                const ratio = availableShare / totalCompetitorShare;
+                competitors.forEach(comp => {
+                    comp.share *= ratio;
+                });
+            }
+        }
+
+        // ランキング更新
+        function updateRanking() {
+            const allCompanies = [
+                ...competitors.map(c => ({ name: c.name, share: c.share })),
+                { name: 'あなた', share: game.marketShare, isPlayer: true }
+            ].sort((a, b) => b.share - a.share);
+
+            const rankingHtml = allCompanies.slice(0, 4).map((company, index) => 
+                `<div class="rank-item ${company.isPlayer ? 'player' : ''}">
+                    ${index + 1}位: ${company.name}(${company.share.toFixed(1)}%)
+                </div>`
+            ).join('');
+            
+            document.getElementById('rankingBar').innerHTML = rankingHtml;
+        }
+
+        // パネル切り替え
+        function showPanel(panelId) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(panelId).classList.add('active');
+            
+            if (panelId === 'employees') renderEmployees();
+            if (panelId === 'products') renderProducts();
+            if (panelId === 'market') renderMarket();
+            if (panelId === 'finance') renderFinance();
+        }
+
+        // 戦略選択画面
+        function showStrategySelection() {
+            const strategiesHtml = Object.entries(companyStrategies.options).map(([key, strategy]) => `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; ${game.companyStrategy === key ? 'background: #e3f2fd;' : ''}">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${strategy.name}</div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 8px;">${strategy.description}</div>
+                    <button class="btn" style="margin: 0; padding: 8px 16px; font-size: 12px;" onclick="selectStrategy('${key}')">${game.companyStrategy === key ? '適用中' : '選択'}</button>
+                </div>
+            `).join('');
+            
+            showModal('🎯 経営戦略選択', `
+                <div style="max-height: 350px; overflow-y: auto;">
+                    ${strategiesHtml}
+                    <div style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 12px; color: #666;">
+                        💡 戦略は会社の運営方針を決定し、様々な効果に影響します。変更は月初にのみ可能です。
+                    </div>
+                </div>
+            `);
+        }
+
+        // 戦略選択実行
+        function selectStrategy(strategyKey) {
+            if (game.week !== 1) {
+                showModal('変更失敗', '戦略変更は月初（第1週）にのみ可能です');
+                return;
+            }
+            
+            const strategy = companyStrategies.options[strategyKey];
+            game.companyStrategy = strategyKey;
+            
+            closeModal();
+            showModal('戦略変更完了', `${strategy.name}を採用しました！\n${strategy.description}`);
+            updateStrategyDisplay();
+        }
+
+        // 戦略表示更新
+        function updateStrategyDisplay() {
+            const strategyElement = document.getElementById('currentStrategy');
+            if (game.companyStrategy) {
+                const strategy = companyStrategies.options[game.companyStrategy];
+                strategyElement.innerHTML = `<strong>${strategy.name}</strong><br><small>${strategy.description}</small>`;
+            } else {
+                strategyElement.textContent = '戦略未設定';
+            }
+        }
+
+        // 表示更新（戦略対応）
+        function updateDisplay() {
+            document.getElementById('money').textContent = `${Math.floor(game.money / 10000)}万`;
+            document.getElementById('employeeCount').textContent = game.employees.length;
+            document.getElementById('revenue').textContent = `${Math.floor(game.monthlyRevenue / 10000)}万`;
+            document.getElementById('gameDate').textContent = `${game.year}年${game.month}月 第${game.week}週`;
+            document.getElementById('marketShare').textContent = `${game.marketShare.toFixed(1)}%`;
+            document.getElementById('brand').textContent = '⭐'.repeat(Math.min(5, game.brandPower));
+            document.getElementById('reputation').textContent = game.reputation;
+            document.getElementById('researchPoints').textContent = game.researchPoints;
+            
+            // 市場環境の表示
+            const trendText = game.marketTrend === 'boom' ? '📈 ブーム' : 
+                             game.marketTrend === 'recession' ? '📉 不況' : '📊 安定';
+            document.getElementById('marketTrend').textContent = trendText;
+            
+            // 戦略表示の更新
+            updateStrategyDisplay();
+            
+            // 実績表示の更新
+            if (game.achievements.length > 0) {
+                document.getElementById('achievementsList').style.display = 'block';
+            }
+        }
+
+        // 実績表示
+        function showAchievements() {
+            if (game.achievements.length === 0) {
+                showModal('🏆 実績', '実績がまだ解除されていません。頑張って経営を成功させましょう！');
+                return;
+            }
+            
+            const achievedList = achievements
+                .filter(a => game.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                    <div style="font-weight: bold;">${a.name}</div>
+                    <div style="color: #666; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+                
+            const unachievedList = achievements
+                .filter(a => !game.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; opacity: 0.6;">
+                    <div style="font-weight: bold;">🔒 ${a.name}</div>
+                    <div style="color: #999; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+            
+            showModal('🏆 実績一覧', 
+                `<div style="max-height: 300px; overflow-y: auto;">
+                    <h4>✅ 獲得済み (${game.achievements.length}/${achievements.length})</h4>
+                    ${achievedList}
+                    <h4 style="margin-top: 20px;">🎯 未獲得</h4>
+                    ${unachievedList}
+                </div>`
+            );
+        }
+
+        // 従業員表示（トレイト対応）
+        function renderEmployees() {
+            const list = document.getElementById('employeeList');
+            if (game.employees.length === 0) {
+                list.innerHTML = '<div class="empty">従業員がいません</div>';
+                return;
+            }
+            list.innerHTML = game.employees.map(emp => {
+                const traitsHtml = emp.traits && emp.traits.length > 0 ? 
+                    `<div style="margin: 5px 0;">
+                        ${emp.traits.map(t => `<span style="background: #4caf50; color: white; padding: 1px 4px; border-radius: 3px; font-size: 10px; margin: 1px;">${employeeTraits[t].name}</span>`).join(' ')}
+                    </div>` : '';
+                
+                return `
+                    <div class="employee">
+                        <div class="employee-header">
+                            <div class="employee-name">${emp.name}</div>
+                            <span class="personality">${emp.personality}</span>
+                        </div>
+                        <div class="abilities">
+                            <div class="ability">
+                                <span class="ability-name">技術:</span>
+                                <span class="ability-value">${emp.abilities.technical}</span>
+                            </div>
+                            <div class="ability">
+                                <span class="ability-name">営業:</span>
+                                <span class="ability-value">${emp.abilities.sales}</span>
+                            </div>
+                        </div>
+                        ${traitsHtml}
+                        <div>月給: ${Math.floor(emp.salary / 10000)}万円</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 製品表示（ライフサイクル対応）
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            if (game.products.length === 0) {
+                list.innerHTML = '<div class="empty">製品がありません</div>';
+                return;
+            }
+            list.innerHTML = game.products.map(product => {
+                const lifecycle = product.lifecycle || 'introduction';
+                const stageInfo = productLifecycle[lifecycle];
+                const lifecycleColor = {
+                    'introduction': '#ffa726',
+                    'growth': '#4caf50', 
+                    'maturity': '#2196f3',
+                    'decline': '#f44336'
+                }[lifecycle];
+                
+                return `
+                    <div class="product" style="border-left: 4px solid ${lifecycleColor};">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-weight: bold;">${product.name}</div>
+                            <span style="background: ${lifecycleColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">${stageInfo.name}</span>
+                        </div>
+                        <div>品質: ${product.quality}%</div>
+                        <div>月売上: ${Math.floor((product.currentRevenue || 0) / 10000)}万円</div>
+                        <div>累計売上: ${Math.floor((product.totalRevenue || 0) / 10000)}万円</div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">${stageInfo.description}</div>
+                        ${lifecycle === 'decline' ? `<button class="btn" style="margin: 5px 0; padding: 8px; font-size: 12px;" onclick="improveProduct(${product.id})">製品改良 (100万)</button>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 市場情報表示
+        function renderMarket() {
+            const info = document.getElementById('marketInfo');
+            const activeEvents = game.eventHistory.filter(e => e.remainingTurns > 0);
+            
+            info.innerHTML = `
+                <h4>🏆 競合企業</h4>
+                ${competitors.map(comp => `
+                    <div class="competitor">
+                        <strong>${comp.name}</strong>
+                        <div>CEO: ${comp.ceo}</div>
+                        <div>市場シェア: ${comp.share.toFixed(1)}%</div>
+                        <div>戦略: ${comp.strategy === 'aggressive' ? '攻撃的' : 
+                                   comp.strategy === 'balanced' ? 'バランス型' : '守備的'}</div>
+                        <div>警戒度: ${comp.alertLevel === 'aggressive' ? '🔴 高' : 
+                                     comp.alertLevel === 'cautious' ? '🟡 中' : '🟢 低'}</div>
+                    </div>
+                `).join('')}
+                
+                ${activeEvents.length > 0 ? `
+                    <h4 style="margin-top: 20px;">📊 進行中のイベント</h4>
+                    ${activeEvents.map(event => `
+                        <div class="info-box" style="background: #fff3cd; border-left: 3px solid #ff9800;">
+                            <div style="font-weight: bold;">${event.name}</div>
+                            <div style="font-size: 14px; color: #666;">${event.description}</div>
+                            <div style="font-size: 12px; color: #999;">残り${event.remainingTurns}ターン</div>
+                        </div>
+                    `).join('')}
+                ` : ''}
+            `;
+        }
+
+        // 財務情報表示
+        function renderFinance() {
+            const info = document.getElementById('financeInfo');
+            const salaryTotal = game.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            info.innerHTML = `
+                <div class="info-box">
+                    <div>売上高: ${Math.floor(game.monthlyRevenue / 10000)}万円</div>
+                    <div>人件費: ${Math.floor(salaryTotal / 10000)}万円</div>
+                    <div>純利益: ${Math.floor((game.monthlyRevenue - salaryTotal) / 10000)}万円</div>
+                    ${game.debt ? `<div>借金: ${Math.floor(game.debt / 10000)}万円</div>` : ''}
+                </div>
+            `;
+        }
+
+        // トレイト生成関数
+        function generateEmployeeTraits() {
+            const traits = [];
+            
+            // 各トレイトの確率チェック
+            Object.entries(employeeTraits).forEach(([key, trait]) => {
+                if (Math.random() < trait.probability) {
+                    traits.push(key);
+                }
+            });
+            
+            // 最大2つのトレイトまで
+            return traits.slice(0, 2);
+        }
+
+        // 採用（トレイト対応）
+        function showHiring() {
+            if (game.money < 200000) {
+                showModal('採用失敗', '資金不足です（最低20万円必要）');
+                return;
+            }
+            const names = ['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺', '中村', '小林'];
+            const firstNames = ['太郎', '花子', '一郎', '美咲', '健太', '愛', '翔', '結衣'];
+            const personalities = ['すなお', 'まじめ', 'お調子者', '野心家', '協調的'];
+            
+            const traits = generateEmployeeTraits();
+            let baseSalary = 300000 + Math.floor(Math.random() * 200000);
+            
+            // トレイトによる給与調整
+            traits.forEach(traitKey => {
+                const trait = employeeTraits[traitKey];
+                if (trait.effects.salaryMultiplier) {
+                    baseSalary *= trait.effects.salaryMultiplier;
+                }
+            });
+            
+            const candidate = {
+                id: Date.now(),
+                name: names[Math.floor(Math.random() * names.length)] + ' ' + 
+                      firstNames[Math.floor(Math.random() * firstNames.length)],
+                personality: personalities[Math.floor(Math.random() * personalities.length)],
+                abilities: {
+                    technical: 30 + Math.floor(Math.random() * 50),
+                    sales: 30 + Math.floor(Math.random() * 50),
+                    planning: 30 + Math.floor(Math.random() * 50),
+                    management: 30 + Math.floor(Math.random() * 50)
+                },
+                motivation: 70,
+                salary: Math.floor(baseSalary),
+                department: '開発部',
+                traits: traits,
+                experience: 0,
+                burnoutLevel: 0
+            };
+            
+            const traitsHtml = traits.length > 0 ? 
+                `<div style="margin: 10px 0;">
+                    <strong>特性:</strong><br>
+                    ${traits.map(t => `<span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 2px;">${employeeTraits[t].name}</span>`).join(' ')}
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ${traits.map(t => employeeTraits[t].description).join('<br>')}
+                    </div>
+                </div>` : '';
+            
+            const html = `
+                <div>候補者: ${candidate.name}</div>
+                <div>性格: ${candidate.personality}</div>
+                <div>技術: ${candidate.abilities.technical}</div>
+                <div>営業: ${candidate.abilities.sales}</div>
+                <div>希望給与: ${Math.floor(candidate.salary / 10000)}万円/月</div>
+                ${traitsHtml}
+                <button class="btn" onclick="hireEmployee(${JSON.stringify(candidate).replace(/"/g, '&quot;')})">採用する</button>
+            `;
+            showModal('採用面接', html);
+        }
+
+        // 採用実行
+        function hireEmployee(candidate) {
+            if (game.money < candidate.salary * 3) {
+                showModal('採用失敗', '資金不足です');
+                return;
+            }
+            game.money -= candidate.salary * 3;
+            game.employees.push(candidate);
+            game.lastPlayerAction = 'hiring'; // AI反応用
+            updateDisplay();
+            closeModal();
+            showModal('採用成功', `${candidate.name}さんを採用しました！`);
+        }
+
+        // 研修
+        function trainEmployees() {
+            if (game.employees.length === 0) {
+                showModal('研修失敗', '従業員がいません');
+                return;
+            }
+            const cost = 300000 * game.employees.length;
+            if (game.money < cost) {
+                showModal('研修失敗', `資金不足です（必要: ${cost / 10000}万円）`);
+                return;
+            }
+            game.money -= cost;
+            game.employees.forEach(emp => {
+                Object.keys(emp.abilities).forEach(key => {
+                    emp.abilities[key] = Math.min(100, emp.abilities[key] + 10);
+                });
+            });
+            showModal('研修完了', '従業員のスキルが向上しました！');
+            updateDisplay();
+        }
+
+        // 製品ライフサイクル管理
+        function updateProductLifecycle() {
+            game.products.forEach(product => {
+                if (!product.lifecycle) {
+                    product.lifecycle = 'introduction';
+                    product.lifecycleTurn = 0;
+                }
+                
+                product.lifecycleTurn++;
+                const currentStage = productLifecycle[product.lifecycle];
+                
+                // 次の段階へ移行チェック
+                if (currentStage.duration > 0 && product.lifecycleTurn >= currentStage.duration) {
+                    switch(product.lifecycle) {
+                        case 'introduction':
+                            product.lifecycle = 'growth';
+                            break;
+                        case 'growth':
+                            product.lifecycle = 'maturity';
+                            break;
+                        case 'maturity':
+                            product.lifecycle = 'decline';
+                            break;
+                    }
+                    product.lifecycleTurn = 0;
+                }
+                
+                // 売上計算（ライフサイクル考慮）
+                const stageInfo = productLifecycle[product.lifecycle];
+                const baseRevenue = product.quality * 10000;
+                product.currentRevenue = baseRevenue * stageInfo.revenueMultiplier;
+            });
+        }
+
+        // 製品改良機能
+        function improveProduct(productId) {
+            const product = game.products.find(p => p.id === productId);
+            if (!product) return;
+            
+            const cost = 1000000; // 100万円
+            if (game.money < cost) {
+                showModal('改良失敗', '資金不足です（100万円必要）');
+                return;
+            }
+            
+            game.money -= cost;
+            product.quality = Math.min(100, product.quality + 15);
+            
+            // 衰退期の製品は成熟期に戻る可能性
+            if (product.lifecycle === 'decline' && Math.random() < 0.3) {
+                product.lifecycle = 'maturity';
+                product.lifecycleTurn = 0;
+                showModal('製品復活', `${product.name}が市場で再注目を集めています！`);
+            } else {
+                showModal('改良完了', `${product.name}の品質が向上しました！`);
+            }
+            
+            updateDisplay();
+        }
+
+        // 製品開発（ライフサイクル対応）
+        function developProduct() {
+            if (game.employees.length < 2) {
+                showModal('開発失敗', '最低2名の従業員が必要です');
+                return;
+            }
+            if (game.money < 2000000) {
+                showModal('開発失敗', '資金不足です（200万円必要）');
+                return;
+            }
+            
+            // 戦略効果の適用
+            let developmentCost = 2000000;
+            let successRate = 0.8;
+            let qualityBonus = 0;
+            
+            if (game.companyStrategy) {
+                const strategy = companyStrategies.options[game.companyStrategy];
+                if (strategy.effects.developmentSuccess) {
+                    successRate *= strategy.effects.developmentSuccess;
+                }
+                if (strategy.effects.innovationBonus) {
+                    qualityBonus += strategy.effects.innovationBonus * 20;
+                }
+            }
+            
+            // 従業員のトレイト効果
+            const innovativeEmployees = game.employees.filter(e => 
+                e.traits && e.traits.includes('innovative')).length;
+            if (innovativeEmployees > 0) {
+                successRate *= (1 + innovativeEmployees * 0.1);
+                qualityBonus += innovativeEmployees * 10;
+            }
+            
+            game.money -= developmentCost;
+            
+            if (Math.random() < successRate) {
+                const baseQuality = 50 + Math.floor(Math.random() * 30);
+                const finalQuality = Math.min(100, baseQuality + qualityBonus);
+                
+                const product = {
+                    id: Date.now(),
+                    name: generateProductName(),
+                    quality: finalQuality,
+                    sales: 0,
+                    lifecycle: 'introduction',
+                    lifecycleTurn: 0,
+                    currentRevenue: 0,
+                    totalRevenue: 0
+                };
+                
+                game.products.push(product);
+                game.researchPoints += 10; // R&Dポイント獲得
+                game.lastPlayerAction = 'product_development'; // AI反応用
+                
+                showModal('開発成功', `${product.name}を開発しました！品質: ${finalQuality}%`);
+            } else {
+                showModal('開発失敗', '残念ながら開発に失敗しました...');
+            }
+            
+            updateDisplay();
+        }
+
+        // 製品名生成
+        function generateProductName() {
+            const prefixes = ['スマート', 'デジタル', 'AI', 'クラウド', 'モバイル', 'ウルトラ', 'プロ', 'エクスプレス'];
+            const bases = ['マネージャー', 'システム', 'ツール', 'プラットフォーム', 'ソリューション', 'アプリ', 'サービス'];
+            const versions = ['X', 'Pro', '2025', 'Plus', 'Max', 'One', 'Go'];
+            
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            const base = bases[Math.floor(Math.random() * bases.length)];
+            const version = versions[Math.floor(Math.random() * versions.length)];
+            
+            return `${prefix}${base} ${version}`;
+        }
+
+        // マーケティング
+        function doMarketing() {
+            if (game.money < 1000000) {
+                showModal('実施失敗', '資金不足です（100万円必要）');
+                return;
+            }
+            game.money -= 1000000;
+            game.marketShare = Math.min(15, game.marketShare + 0.3);
+            game.brandPower = Math.min(5, game.brandPower + 1);
+            game.lastPlayerAction = 'marketing'; // AI反応用
+            showModal('マーケティング成功', '市場シェアとブランド力が向上！');
+            updateDisplay();
+            updateRanking();
+        }
+
+        // 融資
+        function getLoan() {
+            game.money += 5000000;
+            game.debt += 5500000;
+            showModal('融資実行', '500万円の融資を受けました（利息込み返済額: 550万円）');
+            updateDisplay();
+        }
+
+        // ランダムイベント処理
+        function processRandomEvents() {
+            // 既存のイベント効果の継続時間を減らす
+            game.eventHistory = game.eventHistory.filter(event => {
+                event.remainingTurns--;
+                return event.remainingTurns > 0;
+            });
+            
+            // 新しいイベントの発生判定
+            randomEvents.forEach(eventTemplate => {
+                if (Math.random() < eventTemplate.probability) {
+                    const activeEvent = {
+                        ...eventTemplate,
+                        remainingTurns: eventTemplate.duration,
+                        triggeredTurn: game.turn
+                    };
+                    
+                    game.eventHistory.push(activeEvent);
+                    
+                    // 特別な処理があるイベント
+                    if (eventTemplate.id === 'big_contract') {
+                        handleBigContractEvent();
+                    } else {
+                        showModal(eventTemplate.name, eventTemplate.description);
+                    }
+                }
+            });
+        }
+
+        // 大口契約イベントの処理
+        function handleBigContractEvent() {
+            const contractValue = 5000000 + Math.random() * 10000000;
+            const requirements = Math.floor(3 + Math.random() * 5);
+            
+            showModal('🎯 大口契約のチャンス', 
+                `政府系プロジェクト（${Math.floor(contractValue/10000)}万円）の入札機会！\n` +
+                `必要人員: ${requirements}名以上\n` +
+                `<button class="btn" onclick="bidForContract(${contractValue}, ${requirements})">入札する</button>`
+            );
+        }
+
+        // 契約入札
+        function bidForContract(value, requiredEmployees) {
+            if (game.employees.length < requiredEmployees) {
+                showModal('入札失敗', `人員不足です（必要: ${requiredEmployees}名）`);
+                return;
+            }
+            
+            const successChance = Math.min(0.8, game.employees.length / requiredEmployees * 0.4 + game.brandPower * 0.1);
+            
+            if (Math.random() < successChance) {
+                game.money += value;
+                game.reputation += 20;
+                game.marketShare = Math.min(50, game.marketShare + 2);
+                showModal('契約獲得', `おめでとうございます！${Math.floor(value/10000)}万円の契約を獲得しました！`);
+            } else {
+                showModal('入札失敗', '残念ながら他社が契約を獲得しました...');
+            }
+            
+            closeModal();
+        }
+
+        // イベント効果の適用
+        function applyEventEffects() {
+            let revenueMultiplier = 1;
+            let salaryMultiplier = 1;
+            
+            game.eventHistory.forEach(event => {
+                if (event.effects.revenueMultiplier) {
+                    revenueMultiplier *= event.effects.revenueMultiplier;
+                }
+                if (event.effects.techSalaryMultiplier) {
+                    salaryMultiplier *= event.effects.techSalaryMultiplier;
+                }
+                if (event.effects.marketTrend) {
+                    game.marketTrend = event.effects.marketTrend;
+                }
+            });
+            
+            return { revenueMultiplier, salaryMultiplier };
+        }
+
+        // 実績チェック
+        function checkAchievements() {
+            achievements.forEach(achievement => {
+                if (achievement.condition(game)) {
+                    game.achievements.push(achievement.id);
+                    
+                    // 報酬の適用
+                    if (achievement.reward.money) {
+                        game.money += achievement.reward.money;
+                    }
+                    if (achievement.reward.brandPower) {
+                        game.brandPower = Math.min(5, game.brandPower + achievement.reward.brandPower);
+                    }
+                    if (achievement.reward.reputation) {
+                        game.reputation = Math.min(100, game.reputation + achievement.reward.reputation);
+                    }
+                    
+                    showModal('🏆 実績解除！', 
+                        `<div style="text-align: center; margin-bottom: 15px;">
+                            <div style="font-size: 24px;">${achievement.name}</div>
+                            <div style="color: #666; margin: 10px 0;">${achievement.description}</div>
+                            <div style="color: #4CAF50; font-weight: bold;">報酬を獲得しました！</div>
+                        </div>`
+                    );
+                }
+            });
+        }
+
+        // 戦略効果の適用
+        function applyStrategyEffects() {
+            let effects = {
+                profitMargin: 1,
+                hiringCostMultiplier: 1,
+                marketExpansionRate: 1,
+                salaryMultiplier: 1
+            };
+            
+            if (game.companyStrategy) {
+                const strategy = companyStrategies.options[game.companyStrategy];
+                if (strategy.effects.profitMargin) {
+                    effects.profitMargin = strategy.effects.profitMargin;
+                }
+                if (strategy.effects.hiringCostReduction) {
+                    effects.hiringCostMultiplier = strategy.effects.hiringCostReduction;
+                }
+                if (strategy.effects.marketExpansion) {
+                    effects.marketExpansionRate = strategy.effects.marketExpansion;
+                }
+                if (strategy.effects.salaryMultiplier) {
+                    effects.salaryMultiplier = strategy.effects.salaryMultiplier;
+                }
+            }
+            
+            return effects;
+        }
+
+        // ターン進行（フェーズ2対応）
+        function nextTurn() {
+            game.turn++;
+            game.week++;
+            
+            // 製品ライフサイクル更新
+            updateProductLifecycle();
+            
+            // ランダムイベント処理
+            processRandomEvents();
+            
+            if (game.week > 4) {
+                game.week = 1;
+                game.month++;
+                if (game.month > 12) {
+                    game.month = 1;
+                    game.year++;
+                }
+                
+                // 月次処理
+                const eventEffects = applyEventEffects();
+                const strategyEffects = applyStrategyEffects();
+                
+                // 売上計算（製品ライフサイクル考慮）
+                let totalRevenue = 0;
+                game.products.forEach(product => {
+                    if (product.currentRevenue) {
+                        product.totalRevenue = (product.totalRevenue || 0) + product.currentRevenue;
+                        totalRevenue += product.currentRevenue;
+                    }
+                });
+                
+                const revenue = totalRevenue * eventEffects.revenueMultiplier * strategyEffects.profitMargin;
+                const baseCosts = game.employees.reduce((sum, emp) => sum + emp.salary, 0);
+                const costs = baseCosts * eventEffects.salaryMultiplier * strategyEffects.salaryMultiplier;
+                
+                game.monthlyRevenue = revenue;
+                game.money += revenue - costs;
+                
+                // 実績チェック
+                checkAchievements();
+                
+                if (game.money < 0) {
+                    showModal('ゲームオーバー', '資金不足で倒産しました...');
+                    return;
+                }
+                
+                // 競合AI更新
+                updateCompetitors();
+                generateNews();
+                
+                let statusMessage = `売上: ${Math.floor(revenue/10000)}万円\n経費: ${Math.floor(costs/10000)}万円\n利益: ${Math.floor((revenue-costs)/10000)}万円`;
+                
+                // 戦略効果の表示
+                if (strategyEffects.profitMargin !== 1) {
+                    statusMessage += `\n\n🎯 戦略効果: 利益率${Math.round((strategyEffects.profitMargin - 1) * 100)}%`;
+                }
+                
+                // イベント効果の表示
+                if (eventEffects.revenueMultiplier !== 1) {
+                    statusMessage += `\n📊 市場環境: ${game.marketTrend === 'boom' ? 'ブーム' : game.marketTrend === 'recession' ? '不況' : '安定'}`;
+                }
+                
+                showModal('月次決算', statusMessage);
+            }
+            updateDisplay();
+        }
+
+        // セーブ
+        function saveGame() {
+            localStorage.setItem('businessEmpire', JSON.stringify(game));
+            showModal('保存完了', 'ゲームを保存しました');
+        }
+
+        // モーダル
+        function showModal(title, body) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = body.replace(/\n/g, '<br>');
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        // ゲーム開始
+        init();
+    </script>
+</body>
+</html>

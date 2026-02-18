@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ビジネスエンパイア - 経営シミュレーション（リファクタリング版）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .company-name { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+        .date { font-size: 14px; opacity: 0.9; }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 12px; opacity: 0.8; margin-bottom: 4px; }
+        .stat-value { font-size: 18px; font-weight: bold; }
+        
+        /* ニュースティッカー */
+        .news-ticker {
+            background: #333;
+            color: #ffd700;
+            padding: 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .news-ticker span {
+            display: inline-block;
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* ランキング表示 */
+        .ranking-bar {
+            background: #f0f0f0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+        }
+        .rank-item {
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .rank-item.player { background: #ffd700; font-weight: bold; }
+        
+        .tabs {
+            display: flex;
+            padding: 15px 15px 0;
+            gap: 10px;
+            overflow-x: auto;
+            background: white;
+        }
+        .tab {
+            padding: 10px 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .content {
+            padding: 20px;
+            min-height: 400px;
+            background: white;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn:active { transform: scale(0.98); }
+        .employee {
+            background: #f8f8f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .employee-name { font-weight: bold; font-size: 16px; }
+        .personality {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .abilities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .ability { font-size: 13px; }
+        .ability-name { color: #666; }
+        .ability-value { font-weight: bold; color: #333; }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 350px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 15px; }
+        .modal-close {
+            width: 100%;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        .empty { text-align: center; color: #999; padding: 40px 20px; }
+        .product {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .info-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .competitor {
+            background: #fff3cd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #ff9800;
+        }
+        
+        /* 実績表示用スタイル */
+        .achievement {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #ffa500;
+        }
+        
+        .achievement-unlocked {
+            animation: achievementPulse 2s ease-in-out;
+        }
+        
+        @keyframes achievementPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">株式会社スタートアップ</div>
+            <div class="date" id="gameDate">2025年1月 第1週</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">💰 資金</div>
+                    <div class="stat-value" id="money">1000万</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">👥 従業員</div>
+                    <div class="stat-value" id="employeeCount">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📊 売上</div>
+                    <div class="stat-value" id="revenue">0万</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ニュースティッカー -->
+        <div class="news-ticker">
+            <span id="newsText">📰 ゲーム開始！IT業界で成功を目指そう！</span>
+        </div>
+
+        <!-- ランキング表示 -->
+        <div class="ranking-bar" id="rankingBar">
+            <div class="rank-item">1位: テックコープ(35%)</div>
+            <div class="rank-item">2位: デジタルワークス(29%)</div>
+            <div class="rank-item">3位: サイバーソフト(22%)</div>
+            <div class="rank-item player">4位: あなた(0.1%)</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-panel="overview">📊 概要</button>
+            <button class="tab" data-panel="employees">👥 人事</button>
+            <button class="tab" data-panel="products">📦 製品</button>
+            <button class="tab" data-panel="market">🏢 市場</button>
+            <button class="tab" data-panel="finance">💰 財務</button>
+        </div>
+
+        <div class="content">
+            <div id="overview" class="panel active">
+                <h3>🏢 会社概要</h3>
+                <div class="info-box">
+                    <div>業界: IT・ソフトウェア</div>
+                    <div>市場シェア: <span id="marketShare">0.1%</span></div>
+                    <div>ブランド力: <span id="brand">⭐</span></div>
+                    <div>評判: <span id="reputation">50</span>/100</div>
+                    <div>市場環境: <span id="marketTrend">安定</span></div>
+                    <div>研究P: <span id="researchPoints">0</span></div>
+                </div>
+                
+                <div id="strategyBox" class="info-box">
+                    <h4>🎯 経営戦略</h4>
+                    <div id="currentStrategy">戦略未設定</div>
+                    <button class="btn" onclick="showStrategySelection()" style="margin: 5px 0; padding: 10px; font-size: 14px;">戦略変更</button>
+                </div>
+                
+                <div id="achievementsList" class="info-box" style="display: none;">
+                    <h4>🏆 獲得実績</h4>
+                    <div id="achievements"></div>
+                </div>
+                
+                <button class="btn" onclick="nextTurn()">⏭️ 次のターンへ</button>
+                <button class="btn" onclick="saveGame()">💾 ゲーム保存</button>
+                <button class="btn" onclick="showAchievements()">🏆 実績確認</button>
+            </div>
+
+            <div id="employees" class="panel">
+                <h3>👥 従業員管理</h3>
+                <div id="employeeList"></div>
+                <button class="btn" onclick="showHiring()">➕ 採用活動</button>
+                <button class="btn" onclick="trainEmployees()">📚 研修実施</button>
+            </div>
+
+            <div id="products" class="panel">
+                <h3>📦 製品開発</h3>
+                <div id="productList"></div>
+                <button class="btn" onclick="developProduct()">🔧 新製品開発</button>
+            </div>
+
+            <div id="market" class="panel">
+                <h3>🏢 市場状況</h3>
+                <div id="marketInfo"></div>
+                <button class="btn" onclick="doMarketing()">📢 マーケティング</button>
+            </div>
+
+            <div id="finance" class="panel">
+                <h3>💰 財務状況</h3>
+                <div id="financeInfo"></div>
+                <button class="btn" onclick="getLoan()">🏦 銀行融資</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div id="modalBody"></div>
+            <button class="modal-close">閉じる</button>
+        </div>
+    </div>
+
+    <!-- JavaScript ファイルの読み込み -->
+    <script src="js/game-constants.js"></script>
+    <script src="js/game-data.js"></script>
+    <script src="js/game-models.js"></script>
+    <script src="js/business-game.js"></script>
+    <script src="js/game-ui.js"></script>
+
+    <script>
+        // グローバル変数とゲーム初期化
+        let businessGame;
+        
+        /**
+         * ゲーム初期化
+         */
+        function initGame() {
+            try {
+                businessGame = new BusinessGame();
+                gameUI = new GameUI(businessGame);
+                
+                gameUI.updateDisplay();
+                gameUI.updateRanking();
+                gameUI.generateNews();
+                
+                console.log('ゲーム初期化完了');
+            } catch (error) {
+                console.error('ゲーム初期化エラー:', error);
+                alert('ゲームの初期化に失敗しました。ページを再読み込みしてください。');
+            }
+        }
+
+        /**
+         * ゲーム操作の互換性関数群
+         */
+        function nextTurn() {
+            const result = gameUI.executeGameAction('nextTurn');
+            if (result.success && businessGame.week === 1) {
+                // 月次処理の場合は追加情報を表示
+                gameUI.generateNews();
+                
+                // 月次決算情報を取得して表示
+                const state = businessGame.getGameState();
+                const salaryTotal = state.employees.reduce((sum, emp) => sum + emp.salary, 0);
+                const profit = state.monthlyRevenue - salaryTotal;
+                
+                let statusMessage = `売上: ${GameUtils.formatMoney(state.monthlyRevenue)}万円\n`;
+                statusMessage += `経費: ${GameUtils.formatMoney(salaryTotal)}万円\n`;
+                statusMessage += `利益: ${GameUtils.formatMoney(profit)}万円`;
+                
+                gameUI.showNotification('月次決算', statusMessage, 'info');
+            }
+        }
+
+        function showHiring() {
+            const candidate = businessGame.generateCandidate();
+            const totalCost = candidate.salary * GAME_CONSTANTS.COSTS.HIRING_MULTIPLIER;
+            
+            let traitsHtml = '';
+            if (candidate.traits && candidate.traits.length > 0) {
+                traitsHtml = `<div style="margin: 10px 0;">
+                    <strong>特性:</strong><br>
+                    ${candidate.traits.map(t => {
+                        const trait = EMPLOYEE_TRAITS[t];
+                        return trait ? `<span style="background: #667eea; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 2px;">${trait.name}</span>` : '';
+                    }).join(' ')}
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">
+                        ${candidate.traits.map(t => EMPLOYEE_TRAITS[t]?.description || '').join('<br>')}
+                    </div>
+                </div>`;
+            }
+            
+            const html = `
+                <div>候補者: ${candidate.name}</div>
+                <div>性格: ${candidate.personality}</div>
+                <div>技術: ${candidate.abilities.technical}</div>
+                <div>営業: ${candidate.abilities.sales}</div>
+                <div>希望給与: ${GameUtils.formatMoney(candidate.salary)}万円/月</div>
+                ${traitsHtml}
+                <button class="btn" onclick="hireEmployee()">採用する (${GameUtils.formatMoney(totalCost)}万円)</button>
+            `;
+            
+            gameUI.currentCandidate = candidate;
+            gameUI.showModal('採用面接', html);
+        }
+
+        function hireEmployee() {
+            if (gameUI.currentCandidate) {
+                const result = businessGame.hireEmployee();
+                gameUI.closeModal();
+                
+                if (result.success) {
+                    gameUI.showNotification('採用成功', `${result.employee.name}さんを採用しました！`, 'success');
+                    gameUI.updateDisplay();
+                } else {
+                    gameUI.showNotification('採用失敗', result.error, 'error');
+                }
+                
+                gameUI.currentCandidate = null;
+            }
+        }
+
+        function trainEmployees() {
+            const result = gameUI.executeGameAction('trainEmployees');
+            if (result.success) {
+                gameUI.showNotification('研修完了', 
+                    `従業員のスキルが向上しました！\n費用: ${GameUtils.formatMoney(result.cost)}万円`, 
+                    'success');
+            }
+        }
+
+        function developProduct() {
+            const result = gameUI.executeGameAction('developProduct');
+            if (result.success) {
+                gameUI.showNotification('開発成功', 
+                    `${result.product.name}を開発しました！\n品質: ${result.product.quality}%`, 
+                    'success');
+            }
+        }
+
+        function doMarketing() {
+            const result = gameUI.executeGameAction('doMarketing');
+            if (result.success) {
+                gameUI.showNotification('マーケティング成功', '市場シェアとブランド力が向上！', 'success');
+            }
+        }
+
+        function getLoan() {
+            const result = gameUI.executeGameAction('getLoan');
+            if (result.success) {
+                gameUI.showNotification('融資実行', 
+                    `${GameUtils.formatMoney(result.amount)}万円の融資を受けました\n（利息込み返済額: 550万円）`, 
+                    'success');
+            }
+        }
+
+        function saveGame() {
+            const result = gameUI.executeGameAction('saveGame');
+            if (result.success) {
+                gameUI.showNotification('保存完了', 'ゲームを保存しました', 'success');
+            }
+        }
+
+        function showStrategySelection() {
+            const strategiesHtml = Object.entries(COMPANY_STRATEGIES).map(([key, strategy]) => `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; ${businessGame.companyStrategy === key ? 'background: #e3f2fd;' : ''}">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${strategy.name}</div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 8px;">${strategy.description}</div>
+                    <button class="btn" style="margin: 0; padding: 8px 16px; font-size: 12px;" onclick="selectStrategy('${key}')">${businessGame.companyStrategy === key ? '適用中' : '選択'}</button>
+                </div>
+            `).join('');
+            
+            gameUI.showModal('🎯 経営戦略選択', `
+                <div style="max-height: 350px; overflow-y: auto;">
+                    ${strategiesHtml}
+                    <div style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 12px; color: #666;">
+                        💡 戦略は会社の運営方針を決定し、様々な効果に影響します。変更は月初にのみ可能です。
+                    </div>
+                </div>
+            `);
+        }
+
+        function selectStrategy(strategyKey) {
+            const result = businessGame.selectStrategy(strategyKey);
+            gameUI.closeModal();
+            
+            if (result.success) {
+                gameUI.showNotification('戦略変更完了', 
+                    `${result.strategy.name}を採用しました！\n${result.strategy.description}`, 
+                    'success');
+                gameUI.updateDisplay();
+            } else {
+                gameUI.showNotification('変更失敗', result.error, 'error');
+            }
+        }
+
+        function showAchievements() {
+            const state = businessGame.getGameState();
+            if (state.achievements.length === 0) {
+                gameUI.showNotification('🏆 実績', '実績がまだ解除されていません。頑張って経営を成功させましょう！', 'info');
+                return;
+            }
+            
+            const achievedList = ACHIEVEMENTS
+                .filter(a => state.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                    <div style="font-weight: bold;">${a.name}</div>
+                    <div style="color: #666; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+                
+            const unachievedList = ACHIEVEMENTS
+                .filter(a => !state.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; opacity: 0.6;">
+                    <div style="font-weight: bold;">🔒 ${a.name}</div>
+                    <div style="color: #999; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+            
+            gameUI.showModal('🏆 実績一覧', 
+                `<div style="max-height: 300px; overflow-y: auto;">
+                    <h4>✅ 獲得済み (${state.achievements.length}/${ACHIEVEMENTS.length})</h4>
+                    ${achievedList}
+                    <h4 style="margin-top: 20px;">🎯 未獲得</h4>
+                    ${unachievedList}
+                </div>`
+            );
+        }
+
+        // ページ読み込み完了時にゲーム初期化
+        document.addEventListener('DOMContentLoaded', initGame);
+        
+        // デバッグ用（開発時のみ使用）
+        window.debugGame = {
+            addMoney: (amount) => businessGame.money += amount,
+            getState: () => businessGame.getGameState(),
+            triggerEvent: (eventId) => {
+                const event = RANDOM_EVENTS.find(e => e.id === eventId);
+                if (event) {
+                    businessGame.eventHistory.push(new GameEvent({
+                        ...event,
+                        remainingTurns: event.duration,
+                        triggeredTurn: businessGame.turn
+                    }));
+                }
+            }
+        };
+    </script>
+</body>
+</html>

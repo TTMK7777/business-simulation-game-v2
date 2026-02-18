@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ビジネスエンパイア - 経営シミュレーション</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        /* グラスモーフィズムヘッダー */
+        .header {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .company-name {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .date { font-size: 14px; opacity: 0.9; }
+
+        /* 視覚的な統計カード */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .stat:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* プログレスバー */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            transition: width 0.5s ease;
+        }
+
+        /* ニュースティッカー改善 */
+        .news-ticker {
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+            color: #ffd700;
+            padding: 10px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 12px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .news-ticker span {
+            display: inline-block;
+            animation: scroll 25s linear infinite;
+            padding-left: 100%;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* ランキング表示 - アイコン追加 */
+        .ranking-bar {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 12px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 10px;
+            gap: 5px;
+        }
+
+        .rank-item {
+            text-align: center;
+            padding: 8px 6px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+            transition: transform 0.2s;
+        }
+
+        .rank-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .rank-item.player {
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .rank-medal {
+            font-size: 16px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* タブ改善 */
+        .tabs {
+            display: flex;
+            padding: 15px 15px 0;
+            gap: 8px;
+            overflow-x: auto;
+            background: white;
+            scrollbar-width: none;
+        }
+
+        .tabs::-webkit-scrollbar { display: none; }
+
+        .tab {
+            padding: 12px 16px;
+            background: rgba(240, 240, 240, 0.8);
+            backdrop-filter: blur(5px);
+            border: none;
+            border-radius: 12px 12px 0 0;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .content {
+            padding: 20px;
+            min-height: 450px;
+            background: white;
+        }
+
+        .panel { display: none; }
+        .panel.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ボタン改善 - 視覚的フィードバック強化 */
+        .btn {
+            width: 100%;
+            padding: 16px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            transition: left 0.3s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:disabled {
+            background: linear-gradient(135deg, #b0b0b0, #888);
+            cursor: not-allowed;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+
+        .btn:disabled:active { transform: none; }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
+        }
+
+        #restartButton {
+            display: none;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        /* 従業員カード - グラスモーフィズム */
+        .employee {
+            background: rgba(248, 248, 248, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .employee:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .employee-name {
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .personality {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        /* スキルバー */
+        .abilities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .ability {
+            font-size: 13px;
+        }
+
+        .ability-name {
+            color: #666;
+            font-size: 11px;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .ability-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .ability-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.5s ease;
+        }
+
+        .ability-value {
+            font-weight: bold;
+            color: #333;
+            font-size: 14px;
+        }
+
+        /* モーダル改善 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 28px;
+            border-radius: 20px;
+            max-width: 360px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-close {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #e0e0e0, #f0f0f0);
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-close:active {
+            transform: scale(0.98);
+            background: #d0d0d0;
+        }
+
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 50px 20px;
+            font-size: 14px;
+        }
+
+        /* 製品カード改善 */
+        .product {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(168, 237, 234, 0.4);
+            transition: transform 0.2s;
+        }
+
+        .product:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(168, 237, 234, 0.5);
+        }
+
+        .product-quality {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(5px);
+            border-radius: 12px;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        /* 情報ボックス - グラスモーフィズム */
+        .info-box {
+            background: rgba(240, 240, 240, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 16px;
+            border-radius: 12px;
+            margin: 12px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .info-box div {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .competitor {
+            background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 10px;
+            border-left: 4px solid #ff9800;
+            box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
+            transition: transform 0.2s;
+        }
+
+        .competitor:hover {
+            transform: translateX(4px);
+        }
+
+        /* チャートコンテナ */
+        .chart-container {
+            margin: 20px 0;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: relative;
+            height: 250px;
+        }
+
+        .chart-container canvas {
+            max-height: 200px !important;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        /* アイコンスタイル */
+        .icon-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">🏢 株式会社スタートアップ</div>
+            <div class="date" id="gameDate">2025年1月 第1週</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">💰 資金</div>
+                    <div class="stat-value" id="money">1000万</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="moneyProgress" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">👥 従業員</div>
+                    <div class="stat-value" id="employeeCount">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📊 売上</div>
+                    <div class="stat-value" id="revenue">0万</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="revenueProgress" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ニュースティッカー -->
+        <div class="news-ticker">
+            <span id="newsText">📰 ゲーム開始！IT業界で成功を目指そう！</span>
+        </div>
+
+        <!-- ランキング表示 -->
+        <div class="ranking-bar" id="rankingBar">
+            <div class="rank-item">
+                <span class="rank-medal">🥇</span>
+                テックコープ<br>(35%)
+            </div>
+            <div class="rank-item">
+                <span class="rank-medal">🥈</span>
+                デジタルワークス<br>(29%)
+            </div>
+            <div class="rank-item">
+                <span class="rank-medal">🥉</span>
+                サイバーソフト<br>(22%)
+            </div>
+            <div class="rank-item player">
+                <span class="rank-medal">4</span>
+                あなた<br>(0.1%)
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-panel="overview" onclick="showPanel(this, 'overview')">📊 概要</button>
+            <button class="tab" data-panel="employees" onclick="showPanel(this, 'employees')">👥 人事</button>
+            <button class="tab" data-panel="products" onclick="showPanel(this, 'products')">📦 製品</button>
+            <button class="tab" data-panel="market" onclick="showPanel(this, 'market')">🏢 市場</button>
+            <button class="tab" data-panel="finance" onclick="showPanel(this, 'finance')">💰 財務</button>
+        </div>
+
+        <div class="content">
+            <div id="overview" class="panel active">
+                <h3>🏢 会社概要</h3>
+                <div class="info-box">
+                    <div>
+                        <span>業界</span>
+                        <span>IT・ソフトウェア</span>
+                    </div>
+                    <div>
+                        <span>市場シェア</span>
+                        <span id="marketShare">0.1%</span>
+                    </div>
+                    <div>
+                        <span>ブランド力</span>
+                        <span id="brand">⭐</span>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-title">📈 売上推移</div>
+                    <canvas id="revenueChart" height="180"></canvas>
+                </div>
+
+                <button class="btn" data-requires-active="true" onclick="nextTurn()">⏭️ 次のターンへ</button>
+                <button class="btn" data-requires-active="true" onclick="saveGame()">💾 ゲーム保存</button>
+                <button class="btn" id="restartButton" onclick="restartGame()">🔄 ゲーム再スタート</button>
+            </div>
+
+            <div id="employees" class="panel">
+                <h3>👥 従業員管理</h3>
+                <div id="employeeList"></div>
+                <button class="btn" data-requires-active="true" onclick="showHiring()">➕ 採用活動</button>
+                <button class="btn" data-requires-active="true" onclick="trainEmployees()">📚 研修実施</button>
+            </div>
+
+            <div id="products" class="panel">
+                <h3>📦 製品開発</h3>
+                <div id="productList"></div>
+                <button class="btn" data-requires-active="true" onclick="developProduct()">🔧 新製品開発</button>
+            </div>
+
+            <div id="market" class="panel">
+                <h3>🏢 市場状況</h3>
+                <div class="chart-container">
+                    <div class="chart-title">📊 市場シェア分布</div>
+                    <canvas id="marketChart" height="200"></canvas>
+                </div>
+                <div id="marketInfo"></div>
+                <button class="btn" data-requires-active="true" onclick="doMarketing()">📢 マーケティング</button>
+            </div>
+
+            <div id="finance" class="panel">
+                <h3>💰 財務状況</h3>
+                <div id="financeInfo"></div>
+                <button class="btn" data-requires-active="true" onclick="getLoan()">🏦 銀行融資</button>
+                <button class="btn" data-requires-active="true" onclick="repayLoan()">💸 融資返済</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div id="modalBody"></div>
+            <button class="modal-close" onclick="closeModal()">閉じる</button>
+        </div>
+    </div>
+
+    <script>
+        const defaultGameState = {
+            money: 10000000,
+            employees: [],
+            products: [],
+            turn: 1,
+            year: 2025,
+            month: 1,
+            week: 1,
+            marketShare: 0.1,
+            brandPower: 1,
+            monthlyRevenue: 0,
+            debt: 0,
+            isBankrupt: false,
+            revenueHistory: []
+        };
+
+        const LOAN_AMOUNT = 5000000;
+        const LOAN_INTEREST_RATE = 0.02;
+        const SAVE_KEY = 'businessEmpire';
+
+        const game = cloneDefaults();
+        let activePanel = 'overview';
+        let revenueChart = null;
+        let marketChart = null;
+
+        const competitors = [
+            { name: 'テックコープ', share: 35, strategy: 'aggressive', power: 100 },
+            { name: 'デジタルワークス', share: 29, strategy: 'balanced', power: 85 },
+            { name: 'サイバーソフト', share: 22, strategy: 'defensive', power: 70 }
+        ];
+
+        const newsTemplates = [
+            '${company}が新製品を発表！業界に衝撃',
+            '${company}の売上が${percent}%増加',
+            'IT業界の成長率が${percent}%に',
+            '${company}が大型買収を検討中',
+            '新技術の登場で市場が活性化',
+            '${company}のCEOが今後の戦略を語る',
+            'スタートアップ企業の参入が相次ぐ'
+        ];
+
+        function cloneDefaults() {
+            return JSON.parse(JSON.stringify(defaultGameState));
+        }
+
+        function overwriteGameState(source) {
+            Object.keys(game).forEach(key => delete game[key]);
+            Object.assign(game, source);
+        }
+
+        function ensureCollections() {
+            if (!Array.isArray(game.employees)) game.employees = [];
+            if (!Array.isArray(game.products)) game.products = [];
+            if (!Array.isArray(game.revenueHistory)) game.revenueHistory = [];
+        }
+
+        function normalizeGameState() {
+            ensureCollections();
+            game.money = Number(game.money) || 0;
+            game.turn = Number(game.turn) || 1;
+            game.year = Number(game.year) || 2025;
+            game.month = Number(game.month) || 1;
+            game.week = Number(game.week) || 1;
+            game.marketShare = Number(game.marketShare) || 0;
+            game.brandPower = Number(game.brandPower) || 0;
+            game.monthlyRevenue = Number(game.monthlyRevenue) || 0;
+            game.debt = Math.max(0, Number(game.debt) || 0);
+            game.isBankrupt = Boolean(game.isBankrupt);
+            game.employees.forEach(emp => {
+                emp.salary = Number(emp.salary) || 0;
+                if (typeof emp.abilities !== 'object' || emp.abilities === null) {
+                    emp.abilities = { technical: 0, sales: 0, planning: 0, management: 0 };
+                }
+                Object.keys(emp.abilities).forEach(key => {
+                    emp.abilities[key] = Number(emp.abilities[key]) || 0;
+                });
+            });
+            game.products.forEach(product => {
+                product.sales = Number(product.sales) || 0;
+                product.quality = Number(product.quality) || 0;
+            });
+        }
+
+        function resetGameState() {
+            overwriteGameState(cloneDefaults());
+            normalizeGameState();
+            activePanel = 'overview';
+        }
+
+        function addInitialEmployee() {
+            ensureCollections();
+            if (game.employees.length > 0) return;
+            const initialEmployee = {
+                id: 1,
+                name: '山田 太郎',
+                personality: 'まじめ',
+                abilities: { technical: 65, sales: 45, planning: 55, management: 50 },
+                motivation: 75,
+                salary: 400000,
+                department: '開発部'
+            };
+            game.employees.push(initialEmployee);
+        }
+
+        function loadGameFromStorage() {
+            try {
+                const saved = localStorage.getItem(SAVE_KEY);
+                if (!saved) return false;
+                const parsed = JSON.parse(saved);
+                const merged = Object.assign(cloneDefaults(), parsed);
+                overwriteGameState(merged);
+                normalizeGameState();
+                activePanel = typeof parsed.activePanel === 'string' ? parsed.activePanel : 'overview';
+                delete game.activePanel;
+                return true;
+            } catch (error) {
+                console.error('Failed to load save data', error);
+                return false;
+            }
+        }
+
+        function init() {
+            const loaded = loadGameFromStorage();
+            if (!loaded) {
+                resetGameState();
+                addInitialEmployee();
+            } else {
+                normalizeGameState();
+                if (game.employees.length === 0) addInitialEmployee();
+            }
+            generateNews();
+            updateDisplay();
+            updateRanking();
+            initCharts();
+            showPanel(null, activePanel);
+        }
+
+        function initCharts() {
+            // 売上チャート
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx) {
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: game.revenueHistory.map((_, i) => `${i + 1}月`),
+                        datasets: [{
+                            label: '売上（万円）',
+                            data: game.revenueHistory.map(r => r / 10000),
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
+
+            // 市場シェアチャート
+            const marketCtx = document.getElementById('marketChart');
+            if (marketCtx) {
+                updateMarketChart();
+            }
+        }
+
+        function updateCharts() {
+            if (revenueChart) {
+                revenueChart.data.labels = game.revenueHistory.map((_, i) => `${i + 1}月`);
+                revenueChart.data.datasets[0].data = game.revenueHistory.map(r => r / 10000);
+                revenueChart.update();
+            }
+
+            if (activePanel === 'market') {
+                updateMarketChart();
+            }
+        }
+
+        function updateMarketChart() {
+            const marketCtx = document.getElementById('marketChart');
+            if (!marketCtx) return;
+
+            if (marketChart) {
+                marketChart.destroy();
+            }
+
+            const allCompanies = [
+                ...competitors.map(c => ({ name: c.name, share: c.share })),
+                { name: 'あなた', share: game.marketShare }
+            ];
+
+            marketChart = new Chart(marketCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: allCompanies.map(c => c.name),
+                    datasets: [{
+                        data: allCompanies.map(c => c.share),
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#f093fb',
+                            '#ffd700'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateNews() {
+            const template = newsTemplates[Math.floor(Math.random() * newsTemplates.length)];
+            const company = competitors[Math.floor(Math.random() * competitors.length)].name;
+            const percent = Math.floor(Math.random() * 30) + 10;
+            const news = template.replace('${company}', company).replace('${percent}', percent);
+            document.getElementById('newsText').textContent = '📰 ' + news;
+        }
+
+        function updateCompetitors() {
+            competitors.forEach(comp => {
+                if (game.marketShare > 5) {
+                    if (comp.strategy === 'aggressive') {
+                        comp.power += 5;
+                        generateNews();
+                    }
+                }
+                if (comp.strategy === 'aggressive') {
+                    comp.share += Math.random() * 2;
+                } else if (comp.strategy === 'defensive') {
+                    comp.share -= Math.random();
+                }
+                comp.share = Math.max(5, Math.min(60, comp.share));
+                if (comp.share > 40) {
+                    game.marketShare = Math.max(0.1, game.marketShare - 0.2);
+                    if (game.brandPower > 1) {
+                        game.brandPower--;
+                    }
+                }
+            });
+        }
+
+        function updateRanking() {
+            const allCompanies = [
+                ...competitors.map(c => ({ name: c.name, share: c.share })),
+                { name: 'あなた', share: game.marketShare, isPlayer: true }
+            ].sort((a, b) => b.share - a.share);
+
+            const medals = ['🥇', '🥈', '🥉', '4'];
+            const rankingHtml = allCompanies.slice(0, 4).map((company, index) =>
+                `<div class="rank-item ${company.isPlayer ? 'player' : ''}">
+                    <span class="rank-medal">${medals[index]}</span>
+                    ${company.name}<br>(${company.share.toFixed(1)}%)
+                </div>`
+            ).join('');
+
+            document.getElementById('rankingBar').innerHTML = rankingHtml;
+        }
+
+        function showPanel(tabButton, panelId) {
+            const targetPanelId = panelId || 'overview';
+            const targetTab = tabButton || document.querySelector(`.tab[data-panel="${targetPanelId}"]`);
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+            document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+            const panelElement = document.getElementById(targetPanelId);
+            if (panelElement) {
+                panelElement.classList.add('active');
+            }
+            activePanel = targetPanelId;
+            renderActivePanel();
+        }
+
+        function renderActivePanel() {
+            if (activePanel === 'employees') {
+                renderEmployees();
+            } else if (activePanel === 'products') {
+                renderProducts();
+            } else if (activePanel === 'market') {
+                renderMarket();
+                updateMarketChart();
+            } else if (activePanel === 'finance') {
+                renderFinance();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('money').textContent = `${Math.floor(game.money / 10000)}万`;
+            document.getElementById('employeeCount').textContent = game.employees.length;
+            document.getElementById('revenue').textContent = `${Math.floor(game.monthlyRevenue / 10000)}万`;
+            document.getElementById('gameDate').textContent = `${game.year}年${game.month}月 第${game.week}週`;
+            document.getElementById('marketShare').textContent = `${game.marketShare.toFixed(1)}%`;
+            const brandCount = Math.max(0, Math.min(5, Math.floor(game.brandPower)));
+            document.getElementById('brand').textContent = brandCount > 0 ? '⭐'.repeat(brandCount) : '―';
+
+            // プログレスバー更新
+            const moneyPercent = Math.min(100, (game.money / 20000000) * 100);
+            document.getElementById('moneyProgress').style.width = moneyPercent + '%';
+
+            const revenuePercent = Math.min(100, (game.monthlyRevenue / 10000000) * 100);
+            document.getElementById('revenueProgress').style.width = revenuePercent + '%';
+
+            updateControls();
+            updateCharts();
+        }
+
+        function updateControls() {
+            const disabled = game.isBankrupt;
+            document.querySelectorAll('[data-requires-active="true"]').forEach(btn => {
+                btn.disabled = disabled;
+            });
+            const restartBtn = document.getElementById('restartButton');
+            if (restartBtn) {
+                restartBtn.style.display = disabled ? 'block' : 'none';
+            }
+        }
+
+        function renderEmployees() {
+            const list = document.getElementById('employeeList');
+            if (game.employees.length === 0) {
+                list.innerHTML = '<div class="empty">従業員がいません</div>';
+                return;
+            }
+            list.innerHTML = game.employees.map(emp => `
+                <div class="employee">
+                    <div class="employee-header">
+                        <div class="employee-name">
+                            <span class="icon-badge">👤</span>
+                            ${emp.name}
+                        </div>
+                        <span class="personality">${emp.personality}</span>
+                    </div>
+                    <div class="abilities">
+                        <div class="ability">
+                            <span class="ability-name">⚙️ 技術: ${emp.abilities.technical}</span>
+                            <div class="ability-bar">
+                                <div class="ability-bar-fill" style="width: ${emp.abilities.technical}%"></div>
+                            </div>
+                        </div>
+                        <div class="ability">
+                            <span class="ability-name">💼 営業: ${emp.abilities.sales}</span>
+                            <div class="ability-bar">
+                                <div class="ability-bar-fill" style="width: ${emp.abilities.sales}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; color: #667eea; font-weight: 600;">💰 月給: ${Math.floor(emp.salary / 10000)}万円</div>
+                </div>
+            `).join('');
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('productList');
+            if (game.products.length === 0) {
+                list.innerHTML = '<div class="empty">製品がありません<br>💡 新製品を開発しましょう!</div>';
+                return;
+            }
+            list.innerHTML = game.products.map(product => `
+                <div class="product">
+                    <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">📦 ${product.name}</div>
+                    <div class="product-quality">⭐ 品質: ${product.quality}%</div>
+                    <div style="margin-top: 8px; font-weight: 600;">💵 累計売上: ${Math.floor(product.sales / 10000)}万円</div>
+                </div>
+            `).join('');
+        }
+
+        function renderMarket() {
+            const info = document.getElementById('marketInfo');
+            info.innerHTML = `
+                <h4 style="margin-top: 20px; margin-bottom: 12px; color: #667eea;">🏆 競合企業</h4>
+                ${competitors.map(comp => `
+                    <div class="competitor">
+                        <strong style="font-size: 15px;">🏢 ${comp.name}</strong>
+                        <div style="margin-top: 6px;">市場シェア: <strong>${comp.share.toFixed(1)}%</strong></div>
+                        <div style="margin-top: 4px; font-size: 12px; color: #666;">
+                            戦略: ${comp.strategy === 'aggressive' ? '⚔️ 攻撃的' :
+                                   comp.strategy === 'balanced' ? '⚖️ バランス型' : '🛡️ 守備的'}
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function renderFinance() {
+            const info = document.getElementById('financeInfo');
+            const salaryTotal = game.employees.reduce((sum, emp) => sum + emp.salary, 0);
+            const interestPreview = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0;
+            info.innerHTML = `
+                <div class="info-box">
+                    <div>
+                        <span>📊 売上高</span>
+                        <strong>${Math.floor(game.monthlyRevenue / 10000)}万円</strong>
+                    </div>
+                    <div>
+                        <span>👥 人件費</span>
+                        <strong>${Math.floor(salaryTotal / 10000)}万円</strong>
+                    </div>
+                    <div style="border-top: 2px solid #667eea; padding-top: 8px; margin-top: 8px;">
+                        <span>💰 純利益</span>
+                        <strong style="color: ${(game.monthlyRevenue - salaryTotal - interestPreview) >= 0 ? '#4caf50' : '#f44336'}">
+                            ${Math.floor((game.monthlyRevenue - salaryTotal - interestPreview) / 10000)}万円
+                        </strong>
+                    </div>
+                    ${game.debt ? `<div style="margin-top: 8px;">
+                        <span>🏦 借金残高</span>
+                        <strong style="color: #ff9800;">${Math.floor(game.debt / 10000)}万円</strong>
+                    </div>` : ''}
+                    ${interestPreview ? `<div>
+                        <span>📈 次月利息見込</span>
+                        <strong>${Math.floor(interestPreview / 10000)}万円</strong>
+                    </div>` : ''}
+                </div>
+            `;
+        }
+
+        function requireCompanyActive() {
+            if (!game.isBankrupt) return true;
+            showModal('操作不可', '倒産状態のため操作できません。再スタートしてください。');
+            return false;
+        }
+
+        function showHiring() {
+            if (!requireCompanyActive()) return;
+            if (game.money < 200000) {
+                showModal('採用失敗', '資金不足です（最低20万円必要）');
+                return;
+            }
+            const names = ['佐藤', '鈴木', '高橋', '田中', '伊藤', '渡辺'];
+            const firstNames = ['太郎', '花子', '一郎', '美咲', '健太', '優子'];
+            const personalities = ['すなお', 'まじめ', 'お調子者', '野心家', '協調的'];
+
+            const candidate = {
+                id: Date.now(),
+                name: names[Math.floor(Math.random() * names.length)] + ' ' +
+                      firstNames[Math.floor(Math.random() * firstNames.length)],
+                personality: personalities[Math.floor(Math.random() * personalities.length)],
+                abilities: {
+                    technical: 30 + Math.floor(Math.random() * 50),
+                    sales: 30 + Math.floor(Math.random() * 50),
+                    planning: 30 + Math.floor(Math.random() * 50),
+                    management: 30 + Math.floor(Math.random() * 50)
+                },
+                motivation: 70,
+                salary: 300000 + Math.floor(Math.random() * 200000),
+                department: '開発部'
+            };
+
+            const html = `
+                <div style="margin: 12px 0;">👤 候補者: <strong>${candidate.name}</strong></div>
+                <div style="margin: 8px 0;">🎭 性格: <strong>${candidate.personality}</strong></div>
+                <div style="margin: 8px 0;">⚙️ 技術力: <strong>${candidate.abilities.technical}</strong></div>
+                <div style="margin: 8px 0;">💼 営業力: <strong>${candidate.abilities.sales}</strong></div>
+                <div style="margin: 12px 0; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                    💰 希望給与: <strong style="color: #667eea;">${Math.floor(candidate.salary / 10000)}万円/月</strong>
+                </div>
+                <button class="btn" onclick="hireEmployee(${JSON.stringify(candidate).replace(/"/g, '&quot;')})">✅ 採用する</button>
+            `;
+            showModal('📋 採用面接', html);
+        }
+
+        function hireEmployee(candidate) {
+            if (!requireCompanyActive()) return;
+            if (game.money < candidate.salary * 3) {
+                showModal('採用失敗', '資金不足です（3ヶ月分の給与が必要）');
+                return;
+            }
+            game.money -= candidate.salary * 3;
+            game.employees.push(candidate);
+            updateDisplay();
+            renderActivePanel();
+            closeModal();
+            showModal('🎉 採用成功', `${candidate.name}さんを採用しました！`);
+        }
+
+        function trainEmployees() {
+            if (!requireCompanyActive()) return;
+            if (game.employees.length === 0) {
+                showModal('研修失敗', '従業員がいません');
+                return;
+            }
+            const cost = 300000 * game.employees.length;
+            if (game.money < cost) {
+                showModal('研修失敗', `資金不足です（必要: ${cost / 10000}万円）`);
+                return;
+            }
+            game.money -= cost;
+            game.employees.forEach(emp => {
+                Object.keys(emp.abilities).forEach(key => {
+                    emp.abilities[key] = Math.min(100, emp.abilities[key] + 10);
+                });
+            });
+            updateDisplay();
+            renderActivePanel();
+            showModal('📚 研修完了', '従業員のスキルが向上しました！<br>すべての能力が +10 上がりました');
+        }
+
+        function developProduct() {
+            if (!requireCompanyActive()) return;
+            if (game.employees.length < 2) {
+                showModal('開発失敗', '最低2名の従業員が必要です');
+                return;
+            }
+            if (game.money < 2000000) {
+                showModal('開発失敗', '資金不足です（200万円必要）');
+                return;
+            }
+            game.money -= 2000000;
+            const avgTech = game.employees.reduce((sum, emp) => sum + emp.abilities.technical, 0) / game.employees.length;
+            const quality = Math.min(100, Math.floor(50 + (avgTech / 2) + Math.random() * 20));
+            const product = {
+                id: Date.now(),
+                name: `製品${game.products.length + 1}`,
+                quality: quality,
+                sales: 0
+            };
+            game.products.push(product);
+            updateDisplay();
+            renderActivePanel();
+            showModal('🔧 開発成功', `${product.name}を開発しました！<br>品質: ${quality}%`);
+        }
+
+        function doMarketing() {
+            if (!requireCompanyActive()) return;
+            if (game.money < 1000000) {
+                showModal('実施失敗', '資金不足です（100万円必要）');
+                return;
+            }
+            game.money -= 1000000;
+            game.marketShare = Math.min(15, game.marketShare + 0.3);
+            game.brandPower = Math.min(5, game.brandPower + 1);
+            updateDisplay();
+            renderActivePanel();
+            updateRanking();
+            showModal('📢 マーケティング成功', '市場シェアとブランド力が向上！');
+        }
+
+        function getLoan() {
+            if (!requireCompanyActive()) return;
+            game.money += LOAN_AMOUNT;
+            game.debt += LOAN_AMOUNT;
+            updateDisplay();
+            renderActivePanel();
+            showModal('🏦 融資実行', `500万円の融資を受けました<br>利率: ${(LOAN_INTEREST_RATE * 100).toFixed(1)}%/月`);
+        }
+
+        function repayLoan() {
+            if (!requireCompanyActive()) return;
+            if (game.debt <= 0) {
+                showModal('返済不要', '現在の借入はありません');
+                return;
+            }
+            const maxRepay = Math.min(game.debt, game.money);
+            if (maxRepay <= 0) {
+                showModal('返済失敗', '返済に充てる資金がありません');
+                return;
+            }
+            game.money -= maxRepay;
+            game.debt -= maxRepay;
+            updateDisplay();
+            renderActivePanel();
+            showModal('💸 返済完了', `${Math.floor(maxRepay / 10000)}万円を返済しました`);
+        }
+
+        function nextTurn() {
+            if (!requireCompanyActive()) return;
+            game.turn++;
+            game.week++;
+            if (game.week > 4) {
+                game.week = 1;
+                game.month++;
+                if (game.month > 12) {
+                    game.month = 1;
+                    game.year++;
+                }
+                let revenue = 0;
+                game.products.forEach(product => {
+                    const productRevenue = product.quality * 10000;
+                    product.sales += productRevenue;
+                    revenue += productRevenue;
+                });
+                const salaryTotal = game.employees.reduce((sum, emp) => sum + emp.salary, 0);
+                const interest = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0;
+                game.monthlyRevenue = revenue;
+                game.revenueHistory.push(revenue);
+                const profit = revenue - salaryTotal - interest;
+                game.money += profit;
+                if (game.money < 0) {
+                    game.isBankrupt = true;
+                    updateDisplay();
+                    renderActivePanel();
+                    updateRanking();
+                    showModal('💔 ゲームオーバー', '資金不足で倒産しました...<br>再スタートしてください。');
+                    return;
+                }
+                const summaryLines = [
+                    `📊 売上: ${Math.floor(revenue / 10000)}万円`,
+                    `👥 人件費: ${Math.floor(salaryTotal / 10000)}万円`
+                ];
+                if (interest > 0) {
+                    summaryLines.push(`📈 利息: ${Math.floor(interest / 10000)}万円`);
+                }
+                const profitColor = profit >= 0 ? '#4caf50' : '#f44336';
+                summaryLines.push(`<div style="margin-top: 8px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                    💰 最終利益: <strong style="color: ${profitColor}">${Math.floor(profit / 10000)}万円</strong>
+                </div>`);
+                showModal('📅 月次決算', summaryLines.join('<br>'));
+                updateCompetitors();
+                generateNews();
+            }
+            updateDisplay();
+            renderActivePanel();
+            updateRanking();
+        }
+
+        function saveGame() {
+            if (!requireCompanyActive()) return;
+            try {
+                const saveData = Object.assign({}, game, { activePanel });
+                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+                showModal('💾 保存完了', 'ゲームを保存しました');
+            } catch (error) {
+                console.error('Failed to save game', error);
+                showModal('保存失敗', '保存に失敗しました');
+            }
+        }
+
+        function restartGame() {
+            closeModal();
+            resetGameState();
+            addInitialEmployee();
+            updateDisplay();
+            renderEmployees();
+            renderProducts();
+            renderMarket();
+            renderFinance();
+            updateRanking();
+            initCharts();
+            showPanel(null, 'overview');
+            generateNews();
+            localStorage.removeItem(SAVE_KEY);
+            showModal('🔄 再スタート', '新しいゲームを開始しました');
+        }
+
+        function showModal(title, body) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = body.replace(/\n/g, '<br>');
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+        }
+
+        init();
+    </script>
+</body>
+</html>

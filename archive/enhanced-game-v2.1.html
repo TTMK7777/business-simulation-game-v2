@@ -1,0 +1,2369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ビジネスエンパイア 2.1 - 拡張版経営シミュレーション</title>
+    
+    <!-- PWA設定 -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ビジネスエンパイア">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- アイコン設定 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'><rect width='180' height='180' fill='%23667eea'/><text x='90' y='100' font-size='60' text-anchor='middle' fill='white'>🏢</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23667eea'/><text x='16' y='22' font-size='16' text-anchor='middle' fill='white'>🏢</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 400% 400%;
+            animation: morphing 15s ease infinite;
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 10px;
+            overflow-x: hidden;
+            font-feature-settings: 'kern' 1;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* 高級デザインシステム */
+        :root {
+            --primary-color: #667eea;
+            --primary-light: #8ba4f3;
+            --primary-dark: #4c63d2;
+            --secondary-color: #764ba2;
+            --accent-color: #00d9ff;
+            --accent-green: #4ecdc4;
+            --warning-color: #ffa726;
+            --danger-color: #ef5350;
+            --success-color: #66bb6a;
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --text-light: #a0aec0;
+            --background-primary: #ffffff;
+            --background-secondary: #f7fafc;
+            --background-tertiary: #edf2f7;
+            --border-color: #e2e8f0;
+            --border-light: #f7fafc;
+            
+            /* シャドウシステム */
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-colored: 0 10px 25px rgba(102, 126, 234, 0.3);
+            --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.4);
+            
+            /* グラデーション */
+            --gradient-primary: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --gradient-accent: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-green) 100%);
+            --gradient-warm: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            
+            /* ボーダーラディウス */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+            --radius-full: 9999px;
+            
+            /* トランジション */
+            --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            
+            /* スペーシング */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
+            --spacing-2xl: 48px;
+        }
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px) saturate(180%);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: var(--shadow-2xl);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            z-index: 1;
+        }
+        
+        /* レスポンシブデザイン */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 750px;
+                border-radius: 15px;
+            }
+            .content {
+                padding: 30px;
+                min-height: 600px;
+            }
+            .tabs {
+                padding: 20px 20px 0;
+                gap: 12px;
+            }
+            .tab {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            .stats {
+                padding: 20px;
+            }
+            .stat-value {
+                font-size: 20px;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1000px;
+                border-radius: 10px;
+            }
+            .main-layout {
+                display: grid;
+                grid-template-columns: 300px 1fr;
+                gap: 20px;
+            }
+            .sidebar {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 10px;
+            }
+            .content {
+                padding: 40px;
+                min-height: 700px;
+            }
+            .stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 15px;
+                padding: 25px;
+            }
+            .tab {
+                padding: 15px 25px;
+                font-size: 15px;
+            }
+        }
+        .header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: var(--spacing-xl);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .company-name { 
+            font-size: 24px; 
+            font-weight: 700; 
+            margin-bottom: var(--spacing-sm); 
+            letter-spacing: -0.025em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .date { 
+            font-size: 14px; 
+            opacity: 0.9; 
+            font-weight: 500;
+            letter-spacing: 0.025em;
+            position: relative;
+            z-index: 1;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            gap: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat { 
+            text-align: center; 
+            transition: var(--transition-normal);
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+        }
+        
+        .stat:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .stat-label { 
+            font-size: 12px; 
+            opacity: 0.8; 
+            margin-bottom: var(--spacing-xs); 
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .stat-value { 
+            font-size: 20px; 
+            font-weight: 700; 
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: -0.025em;
+        }
+        
+        /* ニュースティッカー */
+        .news-ticker {
+            background: #333;
+            color: #ffd700;
+            padding: 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+        .news-ticker span {
+            display: inline-block;
+            animation: scroll 20s linear infinite;
+        }
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        /* ランキング表示 */
+        .ranking-bar {
+            background: #f0f0f0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-around;
+            font-size: 11px;
+        }
+        .rank-item {
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .rank-item.player { background: #ffd700; font-weight: bold; }
+        
+        .tabs {
+            display: flex;
+            padding: 15px 15px 0;
+            gap: 8px;
+            overflow-x: auto;
+            background: white;
+        }
+        .tab {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            font-size: 12px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .tab:hover::before {
+            left: 100%;
+        }
+        
+        .tab:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .tab.active:hover {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        }
+        .content {
+            padding: var(--spacing-xl);
+            min-height: 450px;
+            background: transparent;
+            font-size: 14px;
+            position: relative;
+        }
+        
+        /* 情報階層の改善 */
+        .content h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-lg);
+            letter-spacing: -0.025em;
+            position: relative;
+            padding-bottom: var(--spacing-sm);
+        }
+        
+        .content h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: var(--radius-full);
+        }
+        
+        .content h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            letter-spacing: -0.015em;
+        }
+        
+        .content h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 14px;
+        }
+        
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn.small {
+            padding: 8px 12px;
+            font-size: 12px;
+            margin: 4px 2px;
+            width: auto;
+            display: inline-block;
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .btn.success {
+            background: #28a745;
+        }
+        .btn:active { transform: scale(0.98); }
+        
+        /* 情報ボックス */
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        /* 従業員カード */
+        .employee {
+            background: #f8f8f8;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .employee-name { font-weight: bold; font-size: 16px; }
+        .personality {
+            background: #667eea;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .abilities {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .ability { font-size: 13px; }
+        .ability-name { color: #666; }
+        .ability-value { font-weight: bold; color: #333; }
+        
+        /* 部署関連 */
+        .dept-tabs {
+            display: flex;
+            gap: 5px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .dept-tab {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .dept-tab.active { background: #667eea; color: white; }
+        
+        .department-detail {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .dept-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .dept-efficiency {
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 5px 0;
+        }
+        .skill-tag {
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            color: white;
+        }
+        .skill-tag.primary { background: #dc3545; }
+        .skill-tag.secondary { background: #6c757d; }
+        
+        .dept-employee {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            cursor: pointer;
+        }
+        .dept-employee:hover { background: #f0f0f0; }
+        .emp-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .emp-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* 採用関連 */
+        .candidate-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+        }
+        .candidate-card.interviewed { border-color: #28a745; background: #f8fff8; }
+        .candidate-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .candidate-name { font-weight: bold; }
+        .candidate-info {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .candidate-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .interview-result {
+            font-size: 12px;
+        }
+        .recommendation.recommend { color: #28a745; }
+        .recommendation.neutral { color: #ffc107; }
+        .recommendation.not_recommend { color: #dc3545; }
+        
+        /* 統計表示 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+        .stat-item .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-item .stat-label {
+            font-size: 11px;
+            color: #666;
+        }
+        .stat-value.warning { color: #ffc107; }
+        
+        /* HRダッシュボード */
+        .hr-dashboard {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .hr-summary {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+        }
+        .hr-stat {
+            text-align: center;
+        }
+        .hr-stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .hr-stat-label {
+            font-size: 11px;
+            color: #666;
+        }
+        .hr-issues {
+            margin: 15px 0;
+        }
+        .hr-issue {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+        }
+        .hr-issue.high { border-left-color: #dc3545; }
+        .hr-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        
+        /* モーダル */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .modal-close {
+            width: 100%;
+            padding: 12px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        
+        /* フォーム要素 */
+        .form-select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .budget-option {
+            margin: 10px 0;
+        }
+        .budget-option input[type="radio"] {
+            margin-right: 8px;
+        }
+        .budget-label {
+            font-weight: bold;
+        }
+        .budget-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 従業員詳細 */
+        .employee-sections {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .employee-section {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 5px;
+            font-size: 12px;
+        }
+        .mental-bars {
+            margin: 10px 0;
+        }
+        .mental-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .bar {
+            flex: 1;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .fill {
+            height: 100%;
+            background: #28a745;
+            transition: width 0.3s;
+        }
+        .fill.stress {
+            background: #dc3545;
+        }
+        .quit-risk {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 5px;
+            border-radius: 5px;
+        }
+        .quit-risk.low-risk { background: #d4edda; color: #155724; }
+        .quit-risk.medium-risk { background: #fff3cd; color: #856404; }
+        .quit-risk.high-risk { background: #f8d7da; color: #721c24; }
+        
+        .empty { text-align: center; color: #999; padding: 40px 20px; font-size: 14px; }
+        .product {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .competitor {
+            background: #fff3cd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #ff9800;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 480px) {
+            .container { max-width: 100%; margin: 0; border-radius: 0; }
+            .stats { flex-direction: column; gap: 10px; }
+            .tabs { padding: 10px 10px 0; gap: 5px; }
+            .content { padding: 15px; min-height: 400px; }
+            .modal-content { margin: 10px; max-width: calc(100% - 20px); }
+        }
+        
+        /* 高級UIコンポーネント */
+        .btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-lg);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+            font-family: inherit;
+            letter-spacing: 0.025em;
+            text-transform: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: var(--shadow-colored);
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:active {
+            transform: translateY(-1px) scale(0.98);
+            transition: var(--transition-fast);
+        }
+        
+        .btn:focus {
+            outline: none;
+            box-shadow: var(--shadow-colored), 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn.small {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+        
+        .btn.success {
+            background: linear-gradient(135deg, var(--accent-color), #45a049);
+        }
+        
+        .btn.warning {
+            background: linear-gradient(135deg, var(--warning-color), #f57c00);
+        }
+        
+        .btn.danger {
+            background: linear-gradient(135deg, var(--danger-color), #d32f2f);
+        }
+        
+        /* プレミアムカードコンポーネント */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px) saturate(180%);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin: var(--spacing-md) 0;
+            overflow: hidden;
+            transition: var(--transition-normal);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--gradient-glass);
+        }
+        
+        .card:hover {
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-4px) scale(1.01);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+        
+        .card:hover::before {
+            background: var(--gradient-primary);
+            height: 2px;
+        }
+        
+        .card-header {
+            padding: 16px 20px;
+            background: var(--background-light);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* インプットフィールド */
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        /* バッジとタグ */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .badge.success {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .badge.warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .skill-tag {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .skill-tag.primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        
+        .skill-tag.secondary {
+            background: var(--background-light);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* プログレスバー */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--background-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        /* ツールチップ */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--text-primary);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 4px;
+        }
+        
+        /* 拡張採用システムのスタイル */
+        .hiring-system-enhanced {
+            max-width: 100%;
+            font-family: inherit;
+        }
+        
+        .hiring-header {
+            background: var(--background-light);
+            padding: 24px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
+        }
+        
+        .dept-info h2 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        
+        .dept-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .required-skills-summary {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .required-skills-summary h4 {
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        
+        .hiring-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        
+        .step-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+        }
+        
+        .step-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .step-number {
+            background: rgba(255, 255, 255, 0.2);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .step-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+        
+        .budget-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+        
+        .budget-card {
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            background: white;
+        }
+        
+        .budget-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+        
+        .budget-card.selected {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .budget-card.recommended {
+            border-color: var(--accent-color);
+            background: rgba(76, 175, 80, 0.05);
+        }
+        
+        .budget-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+        
+        .budget-amount {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .budget-type {
+            font-size: 14px;
+            color: var(--primary-color);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .budget-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .recommended-badge {
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 0 var(--border-radius) 0 8px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .affordability {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .affordability.affordable {
+            background: rgba(76, 175, 80, 0.1);
+            color: var(--accent-color);
+        }
+        
+        .affordability.unaffordable {
+            background: rgba(244, 67, 54, 0.1);
+            color: var(--danger-color);
+        }
+        
+        .position-selector {
+            padding: 24px;
+        }
+        
+        .form-select-enhanced {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background: white;
+            margin-bottom: 12px;
+        }
+        
+        .form-select-enhanced:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .position-info {
+            color: var(--text-secondary);
+            background: var(--background-light);
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+        
+        .hiring-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            padding: 24px;
+            background: var(--background-light);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .btn.large {
+            padding: 16px 32px;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        
+        .btn.secondary {
+            background: var(--background-light);
+            color: var(--text-secondary);
+            border: 2px solid var(--border-color);
+        }
+        
+        .btn.secondary:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        .section-card {
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(20px) saturate(150%);
+            transition: var(--transition-normal);
+        }
+        
+        .section-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .section-header h4 {
+            margin: 0;
+            font-size: 13px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+        
+        .section-subtitle {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .missions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .mission-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            background: var(--gradient-glass);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        
+        .mission-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(102, 126, 234, 0.2), transparent);
+            opacity: 0;
+            pointer-events: none;
+            transition: var(--transition-normal);
+        }
+        
+        .mission-card:hover::after {
+            opacity: 1;
+        }
+        
+        .mission-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: var(--spacing-xs);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .mission-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .mission-progress {
+            width: 100%;
+            height: 8px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+            margin: var(--spacing-sm) 0 var(--spacing-md);
+        }
+        
+        .mission-progress span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--gradient-accent);
+            transition: width 0.3s ease;
+        }
+        
+        .mission-rewards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .mission-reward {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(10px);
+        }
+        
+        .mission-status {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .mission-card button {
+            width: 100%;
+            padding: 10px;
+            border-radius: var(--radius-md);
+            border: none;
+            background: var(--gradient-accent);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+        }
+        
+        .mission-card button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--text-secondary);
+        }
+        
+        .mission-card.completed {
+            box-shadow: var(--shadow-colored);
+            border-color: rgba(78, 205, 196, 0.7);
+        }
+        
+        .growth-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .growth-chart-card {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+            backdrop-filter: blur(18px);
+        }
+        
+        .growth-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+        
+        .growth-pill {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: 10px 14px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: var(--shadow-xs);
+            font-size: 12px;
+            color: var(--text-secondary);
+            backdrop-filter: blur(12px);
+        }
+        
+        .growth-pill strong {
+            font-size: 14px;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .chart-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(6px);
+        }
+        
+        .chart-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .story-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+        }
+        
+        .story-card {
+            position: relative;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            backdrop-filter: blur(18px);
+        }
+        
+        .story-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.25), transparent 70%);
+            transform: rotate(25deg);
+        }
+        
+        .story-header {
+            position: relative;
+            z-index: 1;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .story-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.01em;
+        }
+        
+        .story-role {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-light);
+        }
+        
+        .story-traits {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-xs);
+            margin: var(--spacing-sm) 0;
+        }
+        
+        .story-trait {
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 12px;
+            background: rgba(118, 75, 162, 0.15);
+            color: var(--secondary-color);
+            backdrop-filter: blur(8px);
+        }
+        
+        .story-meta {
+            display: flex;
+            gap: var(--spacing-md);
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .story-background {
+            position: relative;
+            z-index: 1;
+            font-size: 13px;
+            line-height: 1.65;
+            color: var(--text-secondary);
+            letter-spacing: 0.01em;
+        }
+        
+        .story-background strong {
+            color: var(--text-primary);
+        }
+        
+        /* モーダルサイズ */
+        .modal-large .modal-content {
+            max-width: 900px;
+            width: 90vw;
+            max-height: 90vh;
+        }
+        
+        .modal-small .modal-content {
+            max-width: 400px;
+        }
+        
+        /* タッチデバイス最適化 */
+        .touch-device .btn,
+        .touch-device .tab,
+        .touch-device .card,
+        .touch-device .stat {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        .touch-active {
+            transform: scale(0.95) !important;
+            opacity: 0.8 !important;
+            transition: all 0.1s ease !important;
+        }
+        
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .container {
+                margin: 5px;
+                border-radius: var(--radius-lg);
+            }
+            
+            .section-card {
+                padding: var(--spacing-md);
+            }
+            
+            .missions-grid,
+            .growth-dashboard,
+            .growth-summary,
+            .story-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .growth-chart-card {
+                padding: var(--spacing-md);
+            }
+            
+            .chart-legend {
+                gap: var(--spacing-xs);
+            }
+            
+            .budget-grid {
+                grid-template-columns: 1fr;
+                padding: 16px;
+                gap: 12px;
+            }
+            
+            .dept-stats {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .hiring-header {
+                padding: 16px;
+            }
+            
+            .hiring-actions {
+                flex-direction: column;
+                padding: 16px;
+                gap: 12px;
+            }
+            
+            .btn.large {
+                min-width: auto;
+                width: 100%;
+                padding: var(--spacing-lg);
+                font-size: 16px;
+            }
+            
+            .tabs {
+                padding: 10px;
+                gap: 6px;
+            }
+            
+            .tab {
+                min-height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            .stat {
+                min-height: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            
+            /* パーティクルを小さくしてモバイルで軽量化 */
+            .particle {
+                width: 30px !important;
+                height: 30px !important;
+                opacity: 0.5;
+            }
+        }
+        
+        /* 小さなモバイル画面 */
+        @media (max-width: 480px) {
+            .content {
+                padding: var(--spacing-md);
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--spacing-xs);
+            }
+            
+            .mission-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
+            }
+            
+            .header {
+                padding: var(--spacing-lg);
+            }
+            
+            .company-name {
+                font-size: 20px;
+            }
+            
+            .stats {
+                padding: var(--spacing-md);
+                gap: var(--spacing-sm);
+            }
+            
+            .stat-value {
+                font-size: 18px;
+            }
+        }
+        
+        /* ローディング機能 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .content.loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        /* 通知システム */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-medium);
+            z-index: 9998;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: var(--accent-color);
+        }
+        
+        .notification.warning {
+            background: var(--warning-color);
+        }
+        
+        .notification.error {
+            background: var(--danger-color);
+        }
+        
+        /* フローティングエフェクト */
+        .floating-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+        
+        .particle:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 60px; height: 60px; left: 20%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 40px; height: 40px; left: 80%; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 100px; height: 100px; left: 70%; animation-delay: 6s; }
+        .particle:nth-child(5) { width: 50px; height: 50px; left: 50%; animation-delay: 8s; }
+        
+        /* グラスモーフィズム要素 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+        
+        .glass-overlay {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* モーフィング効果 */
+        .morphing-bg {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 400% 400%;
+            animation: morphing 15s ease infinite;
+        }
+        
+        /* アニメーション */
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+        
+        @keyframes morphing {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideInFromTop {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .achievement-unlocked {
+            animation: pulse 2s ease-in-out;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .slide-in {
+            animation: slideInFromTop 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="company-name">株式会社スタートアップ</div>
+            <div class="date" id="gameDate">2025年1月 第1週</div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">💰 資金</div>
+                    <div class="stat-value" id="money">1000万</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">👥 従業員</div>
+                    <div class="stat-value" id="employeeCount">1</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">📊 売上</div>
+                    <div class="stat-value" id="revenue">0万</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">🎯 シェア</div>
+                    <div class="stat-value" id="marketShare">0.1%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ニュースティッカー -->
+        <div class="news-ticker">
+            <span id="newsText">📰 ゲーム開始！IT業界で成功を目指そう！</span>
+        </div>
+
+        <!-- ランキング表示 -->
+        <div class="ranking-bar" id="rankingBar">
+            <div class="rank-item">1位: テックコープ(35%)</div>
+            <div class="rank-item">2位: デジタルワークス(29%)</div>
+            <div class="rank-item">3位: サイバーソフト(22%)</div>
+            <div class="rank-item player">4位: あなた(0.1%)</div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-panel="overview">📊 概要</button>
+            <button class="tab" data-panel="departments">🏢 部署</button>
+            <button class="tab" data-panel="employees">👥 人事</button>
+            <button class="tab" data-panel="hiring">📋 採用</button>
+            <button class="tab" data-panel="products">📦 製品</button>
+            <button class="tab" data-panel="market">📈 市場</button>
+            <button class="tab" data-panel="finance">💰 財務</button>
+        </div>
+
+        <div class="content">
+            <!-- 概要パネル -->
+            <div id="overview" class="panel active">
+                <div id="businessSector"></div>
+                <div id="teamStats"></div>
+                
+                <div class="info-box">
+                    <div>ブランド力: <span id="brand">⭐</span></div>
+                    <div>評判: <span id="reputation">50</span>/100</div>
+                    <div>市場環境: <span id="marketTrend">安定</span></div>
+                    <div>研究P: <span id="researchPoints">0</span></div>
+                </div>
+                
+                <div id="strategyBox" class="info-box">
+                    <h4>🎯 経営戦略</h4>
+                    <div id="currentStrategy">戦略未設定</div>
+                    <button class="btn small" onclick="showStrategySelection()">戦略変更</button>
+                </div>
+
+                <div class="section-card missions-section">
+                    <div class="section-header">
+                        <h4>🎯 デイリーミッション</h4>
+                        <span id="missionRefreshInfo" class="section-subtitle"></span>
+                    </div>
+                    <div id="dailyMissions" class="missions-grid"></div>
+                </div>
+
+                <div class="section-card growth-section">
+                    <div class="section-header">
+                        <h4>📈 成長ダッシュボード</h4>
+                        <div id="growthLegend" class="chart-legend"></div>
+                    </div>
+                    <div class="growth-dashboard">
+                        <div class="growth-chart-card">
+                            <canvas id="financialGrowthChart" height="220"></canvas>
+                        </div>
+                        <div class="growth-chart-card">
+                            <canvas id="teamGrowthChart" height="220"></canvas>
+                        </div>
+                    </div>
+                    <div id="growthSummary" class="growth-summary"></div>
+                </div>
+                
+                <button class="btn" onclick="nextTurn()">⏭️ 次のターンへ</button>
+                <button class="btn" onclick="saveGame()">💾 ゲーム保存</button>
+                <button class="btn" onclick="showAchievements()">🏆 実績確認</button>
+            </div>
+
+            <!-- 部署パネル -->
+            <div id="departments" class="panel">
+                <h3>🏢 部署管理</h3>
+                <div id="departmentTabs" class="dept-tabs"></div>
+                <div id="departmentContent"></div>
+            </div>
+
+            <!-- 人事パネル -->
+            <div id="employees" class="panel">
+                <h3>👥 従業員管理</h3>
+                <div id="hrDashboard"></div>
+                <div id="employeeStories" class="story-grid"></div>
+                <div id="employeeList"></div>
+            </div>
+
+            <!-- 採用パネル -->
+            <div id="hiring" class="panel">
+                <h3>📋 採用システム</h3>
+                <div id="interviewPanel">
+                    <div class="info-box">
+                        <h4>💼 採用活動</h4>
+                        <p>部署ごとの戦略的採用で最適な人材を確保しましょう。</p>
+                        <button class="btn" onclick="enhancedGameUI.showDepartmentHiring('development')">🔧 開発部向け採用</button>
+                        <button class="btn" onclick="enhancedGameUI.showDepartmentHiring('sales')">💼 営業部向け採用</button>
+                        <button class="btn" onclick="enhancedGameUI.showDepartmentHiring('planning')">📊 企画部向け採用</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 製品パネル -->
+            <div id="products" class="panel">
+                <h3>📦 製品開発</h3>
+                <div id="productList"></div>
+                <button class="btn" onclick="developProduct()">🔧 新製品開発</button>
+            </div>
+
+            <!-- 市場パネル -->
+            <div id="market" class="panel">
+                <h3>📈 市場状況</h3>
+                <div id="marketInfo"></div>
+                <button class="btn" onclick="doMarketing()">📢 マーケティング</button>
+            </div>
+
+            <!-- 財務パネル -->
+            <div id="finance" class="panel">
+                <h3>💰 財務状況</h3>
+                <div id="financeInfo"></div>
+                <button class="btn" onclick="getLoan()">🏦 銀行融資</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- モーダル -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle"></div>
+            <div id="modalBody"></div>
+            <button class="modal-close">閉じる</button>
+        </div>
+    </div>
+
+    <!-- JavaScript ファイルの読み込み -->
+    <script src="js/game-constants.js"></script>
+    <script src="js/game-data.js"></script>
+    <script src="js/enhanced-game-data.js"></script>
+    <script src="js/game-models.js"></script>
+    <script src="js/enhanced-employee.js"></script>
+    <script src="js/interview-system.js"></script>
+    <script src="js/business-game.js"></script>
+    <script src="js/enhanced-business-game.js"></script>
+    <script src="js/game-ui.js"></script>
+    <script src="js/enhanced-ui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+
+    <script>
+        // グローバル変数とゲーム初期化
+        let enhancedBusinessGame;
+        let dailyMissionSystem;
+        let growthDashboard;
+        let employeeStoryManager;
+        
+        /**
+         * 拡張ゲーム初期化
+         */
+        function initEnhancedGame() {
+            try {
+                enhancedBusinessGame = new EnhancedBusinessGame();
+                enhancedGameUI = new EnhancedGameUI(enhancedBusinessGame);
+                
+                enhancedGameUI.updateDisplay();
+                enhancedGameUI.updateRanking();
+                enhancedGameUI.generateNews();
+                
+                console.log('拡張ゲーム初期化完了');
+                console.log('利用可能機能:', {
+                    personalities: Object.keys(ENHANCED_PERSONALITIES).length + '種類',
+                    departments: Object.keys(ENHANCED_DEPARTMENTS).length + '部署',
+                    businessSectors: Object.keys(BUSINESS_SECTORS).length + '業界',
+                    certifications: Object.keys(CERTIFICATIONS).length + '資格'
+                });
+            } catch (error) {
+                console.error('拡張ゲーム初期化エラー:', error);
+                alert('ゲームの初期化に失敗しました。ページを再読み込みしてください。');
+            }
+        }
+
+        /**
+         * 基本ゲーム機能（互換性維持）
+         */
+        function nextTurn() {
+            const result = enhancedBusinessGame.nextTurn();
+            if (result.success) {
+                enhancedGameUI.updateDisplay();
+                enhancedGameUI.updateRanking();
+                
+                if (enhancedBusinessGame.week === 1) {
+                    enhancedGameUI.generateNews();
+                    
+                    // 月次結果表示
+                    const state = enhancedBusinessGame.getGameState();
+                    const salaryTotal = state.employees.reduce((sum, emp) => sum + emp.salary, 0);
+                    const profit = state.monthlyRevenue - salaryTotal;
+                    
+                    let statusMessage = `売上: ${GameUtils.formatMoney(state.monthlyRevenue)}万円\n`;
+                    statusMessage += `経費: ${GameUtils.formatMoney(salaryTotal)}万円\n`;
+                    statusMessage += `利益: ${GameUtils.formatMoney(profit)}万円`;
+                    
+                    // HR統計追加
+                    if (result.hr) {
+                        statusMessage += `\n\nチームモラール: ${Math.round(result.hr.teamStats.teamMorale)}%`;
+                        if (result.hr.retentionIssues.length > 0) {
+                            statusMessage += `\n⚠️ 人事課題: ${result.hr.retentionIssues.length}件`;
+                        }
+                    }
+                    
+                    enhancedGameUI.showNotification('月次決算', statusMessage, 'info');
+                }
+            }
+        }
+
+        function developProduct() {
+            const result = enhancedBusinessGame.developProduct();
+            if (result.success) {
+                enhancedGameUI.showNotification('開発成功', 
+                    `${result.product.name}を開発しました！\n品質: ${result.product.quality}%`, 
+                    'success');
+                enhancedGameUI.updateDisplay();
+            } else {
+                enhancedGameUI.showNotification('開発失敗', result.error, 'error');
+            }
+        }
+
+        function doMarketing() {
+            const result = enhancedBusinessGame.doMarketing();
+            if (result.success) {
+                enhancedGameUI.showNotification('マーケティング成功', '市場シェアとブランド力が向上！', 'success');
+                enhancedGameUI.updateDisplay();
+            } else {
+                enhancedGameUI.showNotification('マーケティング失敗', result.error, 'error');
+            }
+        }
+
+        function getLoan() {
+            const result = enhancedBusinessGame.getLoan();
+            if (result.success) {
+                enhancedGameUI.showNotification('融資実行', 
+                    `${GameUtils.formatMoney(result.amount)}万円の融資を受けました\n（利息込み返済額: 550万円）`, 
+                    'success');
+                enhancedGameUI.updateDisplay();
+            }
+        }
+
+        function saveGame() {
+            const result = enhancedBusinessGame.saveGame();
+            if (result.success) {
+                enhancedGameUI.showNotification('保存完了', 'ゲームを保存しました', 'success');
+            } else {
+                enhancedGameUI.showNotification('保存失敗', result.error, 'error');
+            }
+        }
+
+        function showStrategySelection() {
+            const strategiesHtml = Object.entries(COMPANY_STRATEGIES).map(([key, strategy]) => `
+                <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 8px; ${enhancedBusinessGame.companyStrategy === key ? 'background: #e3f2fd;' : ''}">
+                    <div style="font-weight: bold; margin-bottom: 5px;">${strategy.name}</div>
+                    <div style="font-size: 13px; color: #666; margin-bottom: 8px;">${strategy.description}</div>
+                    <button class="btn small" onclick="selectStrategy('${key}')">${enhancedBusinessGame.companyStrategy === key ? '適用中' : '選択'}</button>
+                </div>
+            `).join('');
+            
+            enhancedGameUI.showModal('🎯 経営戦略選択', `
+                <div style="max-height: 350px; overflow-y: auto;">
+                    ${strategiesHtml}
+                    <div style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 12px; color: #666;">
+                        💡 戦略は会社の運営方針を決定し、様々な効果に影響します。変更は月初にのみ可能です。
+                    </div>
+                </div>
+            `);
+        }
+
+        function selectStrategy(strategyKey) {
+            const result = enhancedBusinessGame.selectStrategy(strategyKey);
+            enhancedGameUI.closeModal();
+            
+            if (result.success) {
+                enhancedGameUI.showNotification('戦略変更完了', 
+                    `${result.strategy.name}を採用しました！\n${result.strategy.description}`, 
+                    'success');
+                enhancedGameUI.updateDisplay();
+            } else {
+                enhancedGameUI.showNotification('変更失敗', result.error, 'error');
+            }
+        }
+
+        function showAchievements() {
+            const state = enhancedBusinessGame.getGameState();
+            if (state.achievements.length === 0) {
+                enhancedGameUI.showNotification('🏆 実績', '実績がまだ解除されていません。頑張って経営を成功させましょう！', 'info');
+                return;
+            }
+            
+            const achievedList = ACHIEVEMENTS
+                .filter(a => state.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                    <div style="font-weight: bold;">${a.name}</div>
+                    <div style="color: #666; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+                
+            const unachievedList = ACHIEVEMENTS
+                .filter(a => !state.achievements.includes(a.id))
+                .map(a => `<div style="margin: 10px 0; padding: 10px; background: #f9f9f9; border-radius: 5px; opacity: 0.6;">
+                    <div style="font-weight: bold;">🔒 ${a.name}</div>
+                    <div style="color: #999; font-size: 14px;">${a.description}</div>
+                </div>`)
+                .join('');
+            
+            enhancedGameUI.showModal('🏆 実績一覧', 
+                `<div style="max-height: 300px; overflow-y: auto;">
+                    <h4>✅ 獲得済み (${state.achievements.length}/${ACHIEVEMENTS.length})</h4>
+                    ${achievedList}
+                    <h4 style="margin-top: 20px;">🎯 未獲得</h4>
+                    ${unachievedList}
+                </div>`
+            );
+        }
+
+        // ページ読み込み完了時にゲーム初期化
+        document.addEventListener('DOMContentLoaded', initEnhancedGame);
+        
+        // デバッグ用（開発時のみ使用）
+        window.debugEnhancedGame = {
+            game: () => enhancedBusinessGame,
+            ui: () => enhancedGameUI,
+            addMoney: (amount) => enhancedBusinessGame.money += amount,
+            getState: () => enhancedBusinessGame.getGameState(),
+            addEmployee: () => {
+                const emp = new EnhancedEmployee({
+                    name: GameUtils.generateEmployeeName(),
+                    personalityId: 'innovator',
+                    department: 'development'
+                });
+                enhancedBusinessGame.employees.push(emp);
+                enhancedBusinessGame.assignEmployeeToDepartment(emp.id, 'development');
+            },
+            showAllPersonalities: () => {
+                console.log('利用可能な性格:', Object.keys(ENHANCED_PERSONALITIES));
+                Object.entries(ENHANCED_PERSONALITIES).forEach(([key, p]) => {
+                    console.log(`${key}: ${p.name} - ${p.description}`);
+                });
+            }
+        };
+        
+        console.log('🎮 ビジネスエンパイア 2.2 プレミアム版');
+        console.log('Debug: window.debugEnhancedGame で開発者機能にアクセス可能');
+        console.log('スキル名テスト: window.testSkillNames() で実行');
+        console.log('💡 表示が更新されない場合: Ctrl+Shift+R で強制リロード');
+        
+        // タッチデバイス最適化
+        if ('ontouchstart' in window) {
+            document.body.classList.add('touch-device');
+            
+            // タッチフィードバック強化
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.matches('.btn, .tab, .card, .stat')) {
+                    e.target.classList.add('touch-active');
+                }
+            });
+            
+            document.addEventListener('touchend', function(e) {
+                if (e.target.matches('.btn, .tab, .card, .stat')) {
+                    setTimeout(() => {
+                        e.target.classList.remove('touch-active');
+                    }, 150);
+                }
+            });
+        }
+        
+        // PWA Service Worker登録
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                        
+                        // アップデート通知
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 新しいバージョンが利用可能
+                                    if (confirm('新しいバージョンが利用可能です。更新しますか？')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+        
+        // インストールプロンプト処理
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // インストールボタンを表示（将来的にUIに追加）
+            console.log('PWAインストールプロンプトが利用可能です');
+        });
+        
+        // アプリインストール関数（将来的にUIから呼び出し）
+        window.installPWA = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`PWAインストール結果: ${outcome}`);
+                deferredPrompt = null;
+            }
+        };
+        
+        // デバッグ用: スキル名変換テスト
+        window.testSkillNames = function() {
+            console.log('=== スキル名変換テスト ===');
+            const testSkills = ['development', 'system_design', 'emerging_tech', 'sales', 'negotiation'];
+            testSkills.forEach(skill => {
+                const displayName = enhancedGameUI ? enhancedGameUI.getSkillDisplayName(skill) : skill;
+                console.log(`${skill} → ${displayName}`);
+            });
+        };
+        
+        // UI改善機能
+        window.uiHelper = {
+            showLoading() {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('active');
+                }
+            },
+            
+            hideLoading() {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.remove('active');
+                }
+            },
+            
+            showNotification(message, type = 'info', duration = 3000) {
+                // 既存の通知を削除
+                const existing = document.querySelector('.notification');
+                if (existing) {
+                    existing.remove();
+                }
+                
+                // 新しい通知を作成
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                // 表示アニメーション
+                setTimeout(() => notification.classList.add('show'), 100);
+                
+                // 自動非表示
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }, duration);
+            },
+            
+            smoothScrollTo(element) {
+                if (element) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }
+            }
+        };
+    </script>
+    
+    <!-- ローディングオーバーレイ -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <!-- フローティングパーティクル -->
+    <div class="floating-particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+</body>
+</html>

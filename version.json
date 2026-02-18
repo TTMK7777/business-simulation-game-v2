@@ -1,0 +1,34 @@
+{
+  "name": "📊 ビジネスエンパイア - 経営シミュレーション",
+  "version": "1.0",
+  "edition": "",
+  "release_date": "2025-12",
+  "description": "📊 ビジネスエンパイア - 経営シミュレーション",
+  "highlights": [
+    "TypeScript による型安全な開発"
+  ],
+  "features": [
+    "Static Assets",
+    "Documentation",
+    "Automation Scripts",
+    "GitHub Actions CI/CD"
+  ],
+  "changelog": [
+    {
+      "version": "1.0",
+      "date": "2025-12",
+      "changes": [
+        "Initial release"
+      ]
+    }
+  ],
+  "quick_start": {
+    "install": "npm install",
+    "run": "npm run dev",
+    "env_vars": []
+  },
+  "tech_stack": [
+    "TypeScript"
+  ],
+  "project_type": "Node.js Application"
+}

@@ -1,0 +1,47 @@
+{
+  "name": "business-simulation-game",
+  "version": "2.0.0",
+  "description": "IT業界で成功を目指す本格的な経営シミュレーションゲーム",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:sp": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "test": "vitest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TTMK7777/business-simulation-game.git"
+  },
+  "keywords": [
+    "game",
+    "simulation",
+    "business",
+    "tauri",
+    "desktop"
+  ],
+  "author": "TTMK7777",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TTMK7777/business-simulation-game/issues"
+  },
+  "homepage": "https://github.com/TTMK7777/business-simulation-game#readme",
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "@vitejs/plugin-legacy": "^7.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12",
+    "vite-plugin-pwa": "^1.1.0"
+  },
+  "dependencies": {
+    "@lit-labs/signals": "^0.2.0",
+    "@lit/context": "^1.1.6",
+    "chart.js": "^4.5.1",
+    "lit": "^3.3.2",
+    "localforage": "^1.10.0",
+    "markdown-it": "^14.1.0",
+    "signal-utils": "^0.21.1",
+    "zod": "^4.1.12"
+  }
+}

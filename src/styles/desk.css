@@ -1,0 +1,799 @@
+/* ==========================================
+   社長モード - デスクビュー CSS
+   ========================================== */
+
+/* === KPIバー === */
+.ceo-kpi-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+  border-radius: 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.ceo-kpi-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.ceo-kpi-label {
+  color: #666;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ceo-kpi-value {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ceo-kpi-bar-wrap {
+  width: 60px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ceo-kpi-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.ceo-kpi-policy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  flex-basis: 100%;
+}
+
+/* === デスクタブ === */
+.desk-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.desk-tab {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px 10px 0 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.desk-tab.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  box-shadow: 0 -2px 8px rgba(102, 126, 234, 0.15);
+}
+
+.desk-tab:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* === 書類スタック === */
+.document-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doc-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  padding: 8px 4px 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.doc-card:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateX(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.doc-card.investigating {
+  opacity: 0.7;
+  background: rgba(52, 152, 219, 0.08);
+  border-color: rgba(52, 152, 219, 0.2);
+}
+
+.doc-card-priority {
+  width: 8px;
+  height: 40px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.doc-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.doc-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.doc-card-meta {
+  font-size: 12px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.doc-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.doc-card-deadline {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.doc-card-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: rgba(52, 152, 219, 0.15);
+  color: #3498db;
+  border-radius: 10px;
+}
+
+/* === 書類詳細モーダル === */
+.doc-detail {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.doc-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.doc-category-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.doc-deadline {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.doc-detail-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.doc-submitter {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.doc-summary h4,
+.doc-clues h4,
+.doc-investigation-result h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 8px;
+}
+
+.doc-summary p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.doc-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.doc-detail-item {
+  padding: 10px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+}
+
+.doc-detail-label {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.doc-detail-value {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* === 気になる点 === */
+.doc-clues {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(241, 196, 15, 0.08);
+  border-radius: 10px;
+  border-left: 3px solid #f1c40f;
+}
+
+.doc-clue-item {
+  display: flex;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.doc-clue-item:last-child {
+  border-bottom: none;
+}
+
+.doc-clue-field {
+  color: #888;
+  min-width: 80px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.doc-clue-obs {
+  color: #555;
+}
+
+/* === 調査報告 === */
+.doc-investigation-result {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(52, 152, 219, 0.08);
+  border-radius: 10px;
+  border-left: 3px solid #3498db;
+}
+
+.doc-investigation-result p {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* === 決裁ボタン === */
+.doc-verdict-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.doc-verdict-buttons .btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.approve-btn { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+.reject-btn { background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; }
+.hold-btn { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; }
+.remand-btn { background: linear-gradient(135deg, #f1c40f, #f39c12); color: white; }
+.investigate-btn { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+
+.doc-verdict-buttons .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.doc-verdict-buttons .btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* === 決裁結果表示 === */
+.doc-verdict-result,
+.verdict-result {
+  margin-top: 16px;
+  padding: 14px;
+  background: rgba(102, 126, 234, 0.08);
+  border-radius: 10px;
+}
+
+.verdict-changes {
+  margin-top: 8px;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* === 訪問者ダイアログ === */
+.visitor-dialog {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.visitor-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.visitor-icon {
+  font-size: 36px;
+}
+
+.visitor-info {
+  flex: 1;
+}
+
+.visitor-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.visitor-meta {
+  font-size: 12px;
+  color: #888;
+}
+
+.visitor-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.visitor-dialog-lines {
+  margin-bottom: 16px;
+}
+
+.visitor-dialog-line {
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dialog-speaker {
+  font-weight: 600;
+  color: #667eea;
+  margin-right: 4px;
+}
+
+.dialog-text {
+  color: #444;
+}
+
+.visitor-clue-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(241, 196, 15, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.visitor-responses h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.visitor-response-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.visitor-response-btn:hover {
+  background: rgba(102, 126, 234, 0.08);
+  border-color: rgba(102, 126, 234, 0.3);
+  transform: translateX(4px);
+}
+
+.response-tone {
+  display: block;
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.response-text {
+  font-size: 14px;
+  color: #333;
+}
+
+.visitor-result {
+  padding: 14px;
+  background: rgba(102, 126, 234, 0.08);
+  border-radius: 10px;
+}
+
+.visitor-result-changes {
+  margin-top: 8px;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* === 空の状態 === */
+.desk-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.desk-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+/* === フッター === */
+.desk-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+}
+
+.desk-footer-info {
+  font-size: 12px;
+  color: #888;
+  flex: 1;
+}
+
+.desk-btn {
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  transition: all 0.2s;
+}
+
+.desk-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.desk-btn-small {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgba(102, 126, 234, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  background: rgba(102, 126, 234, 0.05);
+  color: #667eea;
+  transition: all 0.2s;
+}
+
+.desk-btn-small:hover {
+  background: rgba(102, 126, 234, 0.15);
+}
+
+.next-turn-btn {
+  background: linear-gradient(135deg, #2ecc71, #27ae60) !important;
+}
+
+/* === 部門指示パネル === */
+.directive-panel h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.directive-dept {
+  margin-bottom: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+}
+
+.directive-dept-header {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.directive-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* === 経営状況パネル === */
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.status-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.status-bar-wrap {
+  width: 50px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 8px;
+}
+
+.status-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.quarterly-mini-grade {
+  font-size: 36px;
+  font-weight: 800;
+  text-align: center;
+  color: #667eea;
+}
+
+/* === 方針選択 === */
+.policy-selection h3 {
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.policy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.policy-option {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.policy-option:hover {
+  border-color: rgba(102, 126, 234, 0.4);
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.policy-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.policy-emoji {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.policy-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.policy-desc {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* === CEO特性選択 === */
+.ceo-trait-selection {
+  padding: 20px;
+}
+
+.trait-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.trait-option {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.trait-option:hover {
+  border-color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.trait-emoji {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.trait-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #333;
+}
+
+.trait-desc {
+  font-size: 12px;
+  color: #777;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* === 四半期レビュー === */
+.quarterly-review-modal {
+  text-align: center;
+}
+
+.quarterly-grade {
+  font-size: 64px;
+  font-weight: 900;
+  margin: 16px 0;
+}
+
+.quarterly-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.quarterly-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(102, 126, 234, 0.05);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+/* === モード選択 === */
+.mode-selection {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.mode-option {
+  padding: 24px 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  min-width: 180px;
+}
+
+.mode-option:hover {
+  border-color: #667eea;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.mode-option .mode-emoji {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.mode-option .mode-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.mode-option .mode-desc {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}
