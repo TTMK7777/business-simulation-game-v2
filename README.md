@@ -2,7 +2,7 @@
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
 
-> **最終更新**: 2025-12-16 | **バージョン**: v1.0
+> **最終更新**: 2026-02-18 | **バージョン**: v1.0
 > **プロジェクトタイプ**: Node.js Application
 
 ## 目次
