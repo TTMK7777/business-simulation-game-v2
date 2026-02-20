@@ -1,0 +1,16 @@
+{
+  "deny": [
+    ".env",
+    ".env.local",
+    ".env.development",
+    ".env.production",
+    ".env.test",
+    "*.pem",
+    "*.key",
+    "*.cert",
+    ".aws/credentials",
+    ".ssh/*",
+    "secrets.json",
+    "credentials.json"
+  ]
+}

@@ -52,16 +52,3 @@ credentials.json
 # AWS & SSH
 .aws/credentials
 .ssh/
-
-# Claude Code
-.claude/
-
-# Internal documents
-HANDOVER.md
-HANDOFF_*.md
-CLAUDE_CODE_*.md
-CODE_REVIEW_*.md
-*_REPORT.md
-*_PLAN.md
-SESSION_LOG_*.md
-*.backup
