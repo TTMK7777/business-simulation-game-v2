@@ -289,7 +289,7 @@ export function generateFromDirective(state: any, directive: string): ApprovalDo
     if (deptEmployees.length > 0) {
       const avgAbility = deptEmployees.reduce((sum: number, e: any) => {
         const abilities = e.abilities || {}
-        return sum + (abilities.technical || 0 + abilities.sales || 0 + abilities.planning || 0 + abilities.management || 0) / 4
+        return sum + ((abilities.technical || 0) + (abilities.sales || 0) + (abilities.planning || 0) + (abilities.management || 0)) / 4
       }, 0) / deptEmployees.length
       doc.actualBenefit = Math.floor(doc.actualBenefit * (avgAbility / 60))
     } else {

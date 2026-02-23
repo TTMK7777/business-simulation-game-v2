@@ -2,6 +2,16 @@
  * 経営シミュレーションゲーム - UI管理クラス
  */
 
+function escapeHtml(str) {
+    if (str == null) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 class GameUI {
     constructor(game) {
         this.game = game;
@@ -202,17 +212,17 @@ class GameUI {
             return `
                 <div class="employee">
                     <div class="employee-header">
-                        <div class="employee-name">${emp.name}</div>
-                        <span class="personality">${emp.personality}</span>
+                        <div class="employee-name">${escapeHtml(emp.name)}</div>
+                        <span class="personality">${escapeHtml(emp.personality)}</span>
                     </div>
                     <div class="abilities">
                         <div class="ability">
                             <span class="ability-name">技術:</span>
-                            <span class="ability-value">${emp.abilities.technical}</span>
+                            <span class="ability-value">${Number(emp.abilities.technical) || 0}</span>
                         </div>
                         <div class="ability">
                             <span class="ability-name">営業:</span>
-                            <span class="ability-value">${emp.abilities.sales}</span>
+                            <span class="ability-value">${Number(emp.abilities.sales) || 0}</span>
                         </div>
                     </div>
                     ${traitsHtml}
@@ -247,7 +257,7 @@ class GameUI {
             return `
                 <div class="product" style="border-left: 4px solid ${lifecycleColor};">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div style="font-weight: bold;">${product.name}</div>
+                        <div style="font-weight: bold;">${escapeHtml(product.name)}</div>
                         <span style="background: ${lifecycleColor}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">${stageInfo.name}</span>
                     </div>
                     <div>品質: ${product.quality}%</div>
@@ -275,8 +285,8 @@ class GameUI {
             <h4>🏆 競合企業</h4>
             ${state.competitors.map(comp => `
                 <div class="competitor">
-                    <strong>${comp.name}</strong>
-                    <div>CEO: ${comp.ceo}</div>
+                    <strong>${escapeHtml(comp.name)}</strong>
+                    <div>CEO: ${escapeHtml(comp.ceo)}</div>
                     <div>市場シェア: ${GameUtils.formatPercentage(comp.share)}%</div>
                     <div>戦略: ${this.getStrategyText(comp.strategy)}</div>
                     <div>警戒度: ${this.getAlertLevelText(comp.alertLevel)}</div>
@@ -287,8 +297,8 @@ class GameUI {
                 <h4 style="margin-top: 20px;">📊 進行中のイベント</h4>
                 ${activeEvents.map(event => `
                     <div class="info-box" style="background: #fff3cd; border-left: 3px solid #ff9800;">
-                        <div style="font-weight: bold;">${event.name}</div>
-                        <div style="font-size: 14px; color: #666;">${event.description}</div>
+                        <div style="font-weight: bold;">${escapeHtml(event.name)}</div>
+                        <div style="font-size: 14px; color: #666;">${escapeHtml(event.description)}</div>
                         <div style="font-size: 12px; color: #999;">残り${event.remainingTurns}ターン</div>
                     </div>
                 `).join('')}
@@ -350,7 +360,7 @@ class GameUI {
 
         const rankingHtml = allCompanies.slice(0, 4).map((company, index) => 
             `<div class="rank-item ${company.isPlayer ? 'player' : ''}">
-                ${index + 1}位: ${company.name}(${GameUtils.formatPercentage(company.share)}%)
+                ${index + 1}位: ${escapeHtml(company.name)}(${GameUtils.formatPercentage(company.share)}%)
             </div>`
         ).join('');
         
@@ -376,7 +386,7 @@ class GameUI {
      */
     showModal(title, body) {
         this.elements.modalTitle.textContent = title;
-        this.elements.modalBody.innerHTML = body.replace(/\n/g, '<br>');
+        this.elements.modalBody.innerHTML = escapeHtml(body).replace(/\n/g, '<br>');
         this.elements.modal.classList.add('active');
     }
 

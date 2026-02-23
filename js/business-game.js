@@ -566,15 +566,26 @@ class BusinessGame {
             }
             
             const data = JSON.parse(saveData);
-            
-            // 基本データの復元
-            Object.assign(this, data);
-            
+
+            // 許可リスト方式でプリミティブ値のみ復元（prototype pollution防止）
+            const ALLOWED_KEYS = [
+                'money', 'turn', 'year', 'month', 'week',
+                'marketShare', 'brandPower', 'monthlyRevenue', 'debt',
+                'reputation', 'marketTrend', 'companyStrategy', 'researchPoints',
+                'lastPlayerAction'
+            ];
+            for (const key of ALLOWED_KEYS) {
+                if (key in data) this[key] = data[key];
+            }
+            if (Array.isArray(data.achievements)) {
+                this.achievements = [...data.achievements];
+            }
+
             // オブジェクトの再構築
-            this.employees = data.employees.map(emp => new Employee(emp));
-            this.products = data.products.map(prod => new Product(prod));
-            this.competitors = data.competitors.map(comp => new AICompetitor(comp));
-            this.eventHistory = data.eventHistory.map(event => new GameEvent(event));
+            this.employees = Array.isArray(data.employees) ? data.employees.map(emp => new Employee(emp)) : [];
+            this.products = Array.isArray(data.products) ? data.products.map(prod => new Product(prod)) : [];
+            this.competitors = Array.isArray(data.competitors) ? data.competitors.map(comp => new AICompetitor(comp)) : [];
+            this.eventHistory = Array.isArray(data.eventHistory) ? data.eventHistory.map(event => new GameEvent(event)) : [];
             
             return { success: true };
         } catch (error) {

@@ -42,8 +42,9 @@ export function requireCompanyActive(): boolean {
 // ============================================
 export function showModal(title: string, body: string, isHtml: boolean = false): void {
     document.getElementById('modalTitle')!.textContent = title
-    // isHtmlがtrueの場合は改行置換をスキップ
-    document.getElementById('modalBody')!.innerHTML = isHtml ? body : body.replace(/\n/g, '<br>')
+    // isHtml=false: テキストをエスケープしてから改行を<br>に変換
+    // isHtml=true: 呼び出し元が安全なHTMLを構築済みと想定
+    document.getElementById('modalBody')!.innerHTML = isHtml ? body : escapeHtml(body).replace(/\n/g, '<br>')
     document.getElementById('modal')!.classList.add('active')
 }
 
