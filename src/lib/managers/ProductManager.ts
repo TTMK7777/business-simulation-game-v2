@@ -99,27 +99,27 @@ export function developProduct(): DevelopProductResult {
 
     // チーム相性と特性・性格を考慮した品質計算
     const teamCompatibility = calculateTeamCompatibility(game.employees)
-    const avgTech = game.employees.reduce((sum, emp) => sum + emp.abilities.technical, 0) / game.employees.length
+    const avgTech = game.employees.reduce((sum: number, emp: any) => sum + emp.abilities.technical, 0) / game.employees.length
 
     let qualityMultiplier = 1.0
     const bonusMessages: string[] = []
 
     // 完璧主義者で品質+20%
-    const perfectionists = game.employees.filter(emp => emp.personalityKey === 'perfectionist')
+    const perfectionists = game.employees.filter((emp: any) => emp.personalityKey === 'perfectionist')
     if (perfectionists.length > 0) {
         qualityMultiplier *= 1.2
         bonusMessages.push('完璧主義者がいて品質アップ！')
     }
 
     // 孤高の天才で能力+40%
-    const geniuses = game.employees.filter(emp => emp.personalityKey === 'lone_genius')
+    const geniuses = game.employees.filter((emp: any) => emp.personalityKey === 'lone_genius')
     if (geniuses.length > 0) {
         qualityMultiplier *= 1.4
         bonusMessages.push('孤高の天才の力で大幅品質アップ！')
     }
 
     // アーキテクト特性
-    const architects = game.employees.filter(emp => emp.subTraits && emp.subTraits.includes('architect'))
+    const architects = game.employees.filter((emp: any) => emp.subTraits && emp.subTraits.includes('architect'))
     if (architects.length > 0) {
         qualityMultiplier *= 1.5
         bonusMessages.push('アーキテクトの設計力で品質向上！')

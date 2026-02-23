@@ -38,7 +38,7 @@ export interface RankingEntry {
 export function generateNews(forceCategory?: string): { emoji: string; text: string } | null {
     const game = getGame()
     const competitors = getCompetitors()
-    const difficultyConfig = DIFFICULTY_SETTINGS[game.difficulty || 'normal']
+    const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
     // 条件に合うニューステンプレートをフィルタリング
     const eligibleNews = NEWS_TEMPLATES.filter(news => {
@@ -91,8 +91,8 @@ export function updateCompetitors(): CompetitorAttackResult[] {
         return attackResults
     }
 
-    const difficultyConfig = DIFFICULTY_SETTINGS[game.difficulty || 'normal']
-    const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[game.difficulty || 'normal']
+    const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
+    const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
     const aggressiveness = difficultyConfig.competitorAggressiveness * difficultyMultiplier.competitorStrength
 
     competitors.forEach(comp => {
@@ -153,7 +153,7 @@ export function updateCompetitors(): CompetitorAttackResult[] {
 export function executeCompetitorAction(comp: CompetitorConfig): CompetitorAttackResult | null {
     const game = getGame()
     const strategyConfig = COMPETITOR_STRATEGIES[comp.strategy]
-    const difficultyConfig = DIFFICULTY_SETTINGS[game.difficulty || 'normal']
+    const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
     // アクションの種類を決定
     const rand = Math.random()

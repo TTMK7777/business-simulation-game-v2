@@ -261,7 +261,7 @@ export function promoteEmployee(employeeId: number): PromotionResult {
         return { success: false, message: '倒産状態のため操作できません。再スタートしてください。' }
     }
 
-    const employee = game.employees.find(e => e.id === employeeId)
+    const employee = game.employees.find((e: any) => e.id === employeeId)
     if (!employee) {
         return { success: false, message: '従業員が見つかりません' }
     }
@@ -323,7 +323,7 @@ export function changeDepartment(employeeId: number, newDepartmentKey: string): 
         return { success: false, message: '倒産状態のため操作できません。再スタートしてください。' }
     }
 
-    const employee = game.employees.find(e => e.id === employeeId)
+    const employee = game.employees.find((e: any) => e.id === employeeId)
     if (!employee) {
         return { success: false, message: '従業員が見つかりません' }
     }
@@ -390,7 +390,7 @@ export function unlockSkill(employeeId: number, category: string, skillId: strin
         return { success: false, message: '倒産状態のため操作できません。再スタートしてください。' }
     }
 
-    const employee = game.employees.find(e => e.id === employeeId)
+    const employee = game.employees.find((e: any) => e.id === employeeId)
     if (!employee) {
         return { success: false, message: '従業員が見つかりません' }
     }
@@ -476,7 +476,7 @@ export function executeTraining(focusType: string): TrainingResult {
     const bonusMessages: string[] = []
     const growthDetails: { name: string; growth: number }[] = []
 
-    game.employees.forEach(emp => {
+    game.employees.forEach((emp: any) => {
         let baseIncrease = 10
 
         // fast_learner特性で研修効果+50%

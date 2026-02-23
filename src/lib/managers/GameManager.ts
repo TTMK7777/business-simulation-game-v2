@@ -119,7 +119,7 @@ export function addInitialEmployee(): void {
         salary: 400000,
         department: 'development',
         position: 'staff',
-        qualification: null,
+        qualification: null as string | null,
         growthHistory: [
             { turn: 1, event: '入社', description: '会社に参加しました' }
         ]
@@ -449,7 +449,7 @@ export function nextTurn(): void {
         })
 
         let revenue = 0
-        const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[game.difficulty || 'normal']
+        const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
 
         game.products.forEach((product: any) => {
             let salesMultiplier = 1.0

@@ -48,7 +48,7 @@ export function checkAchievementCondition(achievement: Achievement): boolean {
             return compare(game.officeLevel)
 
         case 'monthly_profit':
-            const salaryTotal = game.employees.reduce((sum, emp) => sum + emp.salary, 0)
+            const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
             const profit = game.monthlyRevenue - salaryTotal
             return compare(profit)
 
@@ -57,7 +57,7 @@ export function checkAchievementCondition(achievement: Achievement): boolean {
 
         case 'avg_ability':
             if (game.employees.length === 0) return false
-            const avgAbility = game.employees.reduce((sum, emp) => {
+            const avgAbility = game.employees.reduce((sum: number, emp: any) => {
                 const abilities = emp.abilities
                 const avg = (abilities.technical + abilities.sales + abilities.planning + abilities.management) / 4
                 return sum + avg
@@ -65,11 +65,11 @@ export function checkAchievementCondition(achievement: Achievement): boolean {
             return compare(avgAbility)
 
         case 'max_quality':
-            const maxQuality = Math.max(0, ...game.products.map(p => p.quality || 0))
+            const maxQuality = Math.max(0, ...game.products.map((p: any) => p.quality || 0))
             return compare(maxQuality)
 
         case 'product_sales':
-            const maxProductSales = Math.max(0, ...game.products.map(p => p.sales || 0))
+            const maxProductSales = Math.max(0, ...game.products.map((p: any) => p.sales || 0))
             return compare(maxProductSales)
 
         case 'comeback':
@@ -138,7 +138,7 @@ export function getAchievementsList() {
 export function getAchievementProgress() {
     const game = getGame()
     const total = ACHIEVEMENTS.filter(a => !a.hidden).length
-    const unlocked = (game.unlockedAchievements || []).filter(id => {
+    const unlocked = (game.unlockedAchievements || []).filter((id: string) => {
         const achievement = ACHIEVEMENTS.find(a => a.id === id)
         return achievement && !achievement.hidden
     }).length

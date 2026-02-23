@@ -7,7 +7,7 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
   const catName = CATEGORY_NAMES[doc.category] || doc.category
   const priority = PRIORITY_DISPLAY[doc.priority]
   const ceoTrait = state.ceo?.trait || 'analyst'
-  const traitConfig = CEO_TRAITS[ceoTrait]
+  const traitConfig = CEO_TRAITS[ceoTrait as keyof typeof CEO_TRAITS]
   const remandsLeft = (state.ceo?.remandsThisWeek || 0) < 1 ? 1 : 0
   const canAffordInvestigation = state.money >= 50000
 

@@ -88,14 +88,14 @@ export function repayLoan(): RepayResult {
 export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     const game = getGame()
     let revenue = 0
-    const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[game.difficulty || 'normal']
+    const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
     const productRevenues: { name: string; revenue: number }[] = []
 
-    game.products.forEach(product => {
+    game.products.forEach((product: any) => {
         let salesMultiplier = 1.0
 
         // カリスマ性格で売上+25%
-        const charismaticCount = game.employees.filter(emp => emp.personalityKey === 'charismatic').length
+        const charismaticCount = game.employees.filter((emp: any) => emp.personalityKey === 'charismatic').length
         if (charismaticCount > 0) {
             salesMultiplier *= (1 + charismaticCount * 0.25)
         }
@@ -127,7 +127,7 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         })
     })
 
-    const salaryTotal = game.employees.reduce((sum, emp) => sum + emp.salary, 0)
+    const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
     const interest = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
     game.monthlyRevenue = revenue
     game.revenueHistory.push(revenue)

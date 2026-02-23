@@ -468,7 +468,7 @@ export class CharacterEffectManager {
       this.scene.tweens.killTweensOf(effect.list)
 
       // T8: 子オブジェクトをプールに戻す
-      effect.list.forEach((child) => {
+      effect.list.forEach((child: any) => {
         if (child instanceof Phaser.GameObjects.Graphics) {
           this.graphicsPool.release(child)
         } else if (child instanceof Phaser.GameObjects.Text) {

@@ -7,7 +7,7 @@ import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { SKILL_TREE, SKILL_EFFECTS } from '../config/skills'
 import { OFFICE_LEVELS } from '../config/offices'
 import { ACHIEVEMENT_RARITIES, COMPETITOR_ACTIONS, COMPETITOR_STRATEGIES, DIFFICULTY_SETTINGS } from '../gameConfig'
-import { Chart } from '../charts'
+import { Chart, ensureRegistered } from '../charts'
 import { QUALIFICATIONS_30, TIER_EMOJIS, QUALIFICATION_TIERS } from '../qualifications'
 import { renderQualificationBadge, renderQualificationDetails } from '../qualificationGenerator'
 import { generateCandidateForDepartment, canPromote, canUnlockSkill } from '../managers/HRManager'
@@ -116,7 +116,7 @@ export function showAchievementUnlocked(achievement: any): void {
                 game.brandPower += achievement.reward.value
                 break
             case 'motivation':
-                game.employees.forEach(emp => {
+                game.employees.forEach((emp: any) => {
                     emp.motivation = Math.min(100, (emp.motivation || 80) + achievement.reward!.value)
                 })
                 break
@@ -164,7 +164,7 @@ export function showDepartmentSelectionForHiring(): void {
     // 各部署の現在の従業員数を集計
     const departmentCounts: Record<string, number> = {}
     Object.keys(DEPARTMENTS).forEach(key => {
-        departmentCounts[key] = game.employees.filter(emp => emp.department === key).length
+        departmentCounts[key] = game.employees.filter((emp: any) => emp.department === key).length
     })
 
     const departmentCardsHtml = Object.keys(DEPARTMENTS).map(deptKey => {
@@ -454,8 +454,8 @@ export function showPersonalityDetail(personalityKey: string, fromHiring: boolea
         })
         .join('')
 
-    const compatibleList = personality.compatible?.map(k => PERSONALITIES[k]?.name).filter(Boolean).join('、') || 'なし'
-    const incompatibleList = personality.incompatible?.map(k => PERSONALITIES[k]?.name).filter(Boolean).join('、') || 'なし'
+    const compatibleList = personality.compatible?.map((k: string) => PERSONALITIES[k]?.name).filter(Boolean).join('、') || 'なし'
+    const incompatibleList = personality.incompatible?.map((k: string) => PERSONALITIES[k]?.name).filter(Boolean).join('、') || 'なし'
 
     // 採用画面から開かれた場合は、閉じるボタンで採用画面に戻る
     const closeAction = (fromHiring || (window as any).hireCandidates) ? 'closeDetailModal()' : 'closeModal()'
@@ -581,12 +581,12 @@ export function showEmployeeDetail(employee: any): void {
             </div>
             ${personality.compatible ? `
                 <div style="font-size: 12px; color: #4caf50; margin-top: 8px;">
-                    \u2705 相性良好: ${personality.compatible.map(k => PERSONALITIES[k]?.name || k).join(', ')}
+                    \u2705 相性良好: ${personality.compatible.map((k: string) => PERSONALITIES[k]?.name || k).join(', ')}
                 </div>
             ` : ''}
             ${personality.incompatible ? `
                 <div style="font-size: 12px; color: #f44336; margin-top: 4px;">
-                    \u274C 相性悪い: ${personality.incompatible.map(k => PERSONALITIES[k]?.name || k).join(', ')}
+                    \u274C 相性悪い: ${personality.incompatible.map((k: string) => PERSONALITIES[k]?.name || k).join(', ')}
                 </div>
             ` : ''}
         </div>
@@ -783,6 +783,7 @@ export function showEmployeeDetail(employee: any): void {
 // 従業員レーダーチャート描画
 // ============================================
 export function renderEmployeeRadarChart(employee: any): void {
+    ensureRegistered()
     const canvas = document.getElementById('employeeRadarChart') as HTMLCanvasElement | null
     if (!canvas) return
 

@@ -1,7 +1,7 @@
 // ビジネスエンパイア 2.0 - Chart.js統合モジュール
 // game.ts:741-742, 1530-1565, 1639-1688 から抽出
 
-import { Chart } from '../charts'
+import { Chart, ensureRegistered } from '../charts'
 import { getGame, getActivePanel, getCompetitors } from '../store/gameStore'
 
 // ============================================
@@ -15,6 +15,7 @@ let marketChart: any = null
 // ============================================
 
 export function initCharts(): void {
+    ensureRegistered()
     const game = getGame()
 
     // 売上チャート

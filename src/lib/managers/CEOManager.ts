@@ -148,7 +148,7 @@ export function checkPolicyAlignment(state: any, category: string): number {
 
   const focuses = state.ceo.currentPolicy.focus
   for (const focus of focuses) {
-    const config = POLICY_FOCUSES[focus]
+    const config = POLICY_FOCUSES[focus as keyof typeof POLICY_FOCUSES]
     if (config && config.alignmentCategories.includes(category)) {
       return CEO_BALANCE.policyAlignmentBonus
     }

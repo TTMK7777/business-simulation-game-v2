@@ -93,7 +93,7 @@ export function renderAchievements(): void {
     const recentUnlocked = (game.unlockedAchievements || [])
         .slice(-5)
         .reverse()
-        .map(id => ACHIEVEMENTS.find(a => a.id === id))
+        .map((id: string) => ACHIEVEMENTS.find(a => a.id === id))
         .filter(Boolean)
 
     const html = `
@@ -105,8 +105,8 @@ export function renderAchievements(): void {
             <div class="achievement-progress-fill" style="width: ${progress.percentage}%"></div>
         </div>
         <div class="achievement-list">
-            ${recentUnlocked.length > 0 ? recentUnlocked.map(ach => {
-                const rarity = ACHIEVEMENT_RARITIES[ach!.rarity]
+            ${recentUnlocked.length > 0 ? recentUnlocked.map((ach: any) => {
+                const rarity = ACHIEVEMENT_RARITIES[ach!.rarity as keyof typeof ACHIEVEMENT_RARITIES]
                 return `
                     <div class="achievement-badge" style="background: ${rarity.bgColor}; border: 2px solid ${rarity.color};"
                          title="${ach!.name}: ${ach!.description}">
@@ -206,7 +206,7 @@ export function showCompetitorAttackNotification(
     targetName?: string
 ): void {
     const game = getGame()
-    const strategyEmoji = COMPETITOR_STRATEGIES[comp.strategy].emoji
+    const strategyEmoji = COMPETITOR_STRATEGIES[comp.strategy as keyof typeof COMPETITOR_STRATEGIES].emoji
     let message = action.description.replace('${company}', comp.name)
     if (targetName) {
         message += `\n対象: ${targetName}さん`
@@ -518,7 +518,7 @@ export function renderEmployees(): void {
                 </div>
             </div>
         ` : ''}
-        ${game.employees.map((emp, empIndex) => {
+        ${game.employees.map((emp: any, empIndex: number) => {
             const personality = PERSONALITIES[emp.personalityKey] || PERSONALITIES.logical
             return `
                 <div class="employee" onclick="showEmployeeDetail(game.employees[${empIndex}])">
@@ -619,7 +619,7 @@ export function renderMarket(): void {
     const info = document.getElementById('marketInfo')
     if (!info) return
 
-    const difficultyConfig = DIFFICULTY_SETTINGS[game.difficulty || 'normal']
+    const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
     info.innerHTML = `
         <div style="background: linear-gradient(135deg, #f8f9ff, #e8ecff); padding: 12px; border-radius: 12px; margin-bottom: 16px;">

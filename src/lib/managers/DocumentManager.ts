@@ -54,7 +54,7 @@ function getCategoryWeights(state: any): Map<DocumentCategory, number> {
   if (state.ceo?.currentPolicy) {
     const focuses = state.ceo.currentPolicy.focus
     for (const focus of focuses) {
-      const config = POLICY_FOCUSES[focus]
+      const config = POLICY_FOCUSES[focus as keyof typeof POLICY_FOCUSES]
       if (config) {
         for (const [cat, mult] of Object.entries(config.documentWeights)) {
           weights.set(cat as DocumentCategory, (weights.get(cat as DocumentCategory) || 1) * mult)
@@ -82,7 +82,7 @@ function weightedRandomCategory(weights: Map<DocumentCategory, number>): Documen
 function selectNature(state: any): DocumentNature {
   const dist = { ...CEO_BALANCE.natureDistribution }
   const difficulty = state.difficulty || 'normal'
-  dist.clear_bad = CEO_BALANCE.trapBaseRate[difficulty] || 0.15
+  dist.clear_bad = CEO_BALANCE.trapBaseRate[difficulty as keyof typeof CEO_BALANCE.trapBaseRate] || 0.15
 
   // ターン経過で罠確率増加
   dist.clear_bad = Math.min(CEO_BALANCE.maxTrapRate, dist.clear_bad + state.turn * CEO_BALANCE.trapGrowthPerTurn)

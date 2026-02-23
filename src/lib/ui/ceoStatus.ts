@@ -6,7 +6,7 @@ export function renderCEOKPIBar(state: any): string {
   if (!state.ceo) return ''
 
   const ceo = state.ceo
-  const traitConfig = CEO_TRAITS[ceo.trait]
+  const traitConfig = CEO_TRAITS[ceo.trait as keyof typeof CEO_TRAITS]
   const approvalColor = ceo.approvalRating > 60 ? '#2ecc71' : ceo.approvalRating > 30 ? '#f1c40f' : '#e74c3c'
   const policyDisplay = ceo.currentPolicy
     ? ceo.currentPolicy.focus.map((f: PolicyFocus) => `${POLICY_FOCUSES[f].emoji}${POLICY_FOCUSES[f].name}`).join(' ')
