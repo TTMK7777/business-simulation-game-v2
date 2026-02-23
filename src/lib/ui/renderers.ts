@@ -1,6 +1,7 @@
 // ビジネスエンパイア 2.0 - パネル描画モジュール
 // game.ts:1046-1153, 1849-1865, 1867-2396 から抽出
 
+import { html as litHtml, render as litRender, nothing } from 'lit'
 import { getGame, getActivePanel, setActivePanel, getCompetitors } from '../store/gameStore'
 import { renderDeskView } from './deskView'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
@@ -83,7 +84,7 @@ function getAchievementProgress() {
     return { unlocked, total, percentage: Math.round((unlocked / total) * 100) }
 }
 
-// 実績パネルをレンダリング
+// 実績パネルをレンダリング（Lit html — 自動エスケープ）
 export function renderAchievements(): void {
     const game = getGame()
     const achievementDisplay = document.getElementById('achievementDisplay')
@@ -96,7 +97,7 @@ export function renderAchievements(): void {
         .map((id: string) => ACHIEVEMENTS.find(a => a.id === id))
         .filter(Boolean)
 
-    const html = `
+    const template = litHtml`
         <div class="achievement-header">
             <h4 style="margin: 0; font-size: 14px;">🏆 実績</h4>
             <span class="achievement-progress">${progress.unlocked}/${progress.total}</span>
@@ -107,24 +108,24 @@ export function renderAchievements(): void {
         <div class="achievement-list">
             ${recentUnlocked.length > 0 ? recentUnlocked.map((ach: any) => {
                 const rarity = ACHIEVEMENT_RARITIES[ach!.rarity as keyof typeof ACHIEVEMENT_RARITIES]
-                return `
+                return litHtml`
                     <div class="achievement-badge" style="background: ${rarity.bgColor}; border: 2px solid ${rarity.color};"
                          title="${ach!.name}: ${ach!.description}">
                         <span class="achievement-emoji">${ach!.emoji}</span>
                     </div>
                 `
-            }).join('') : `
+            }) : litHtml`
                 <div style="color: #999; font-size: 12px; text-align: center; width: 100%;">
                     まだ実績がありません
                 </div>
             `}
         </div>
-        <button class="btn-small" onclick="showAllAchievements()" style="margin-top: 8px; width: 100%;">
+        <button class="btn-small" @click=${showAllAchievements} style="margin-top: 8px; width: 100%;">
             すべての実績を見る
         </button>
     `
 
-    achievementDisplay.innerHTML = html
+    litRender(template, achievementDisplay)
 }
 
 // 全実績モーダルを表示
@@ -501,14 +502,14 @@ export function renderEmployees(): void {
     if (!list) return
 
     if (game.employees.length === 0) {
-        list.innerHTML = '<div class="empty">従業員がいません</div>'
+        litRender(litHtml`<div class="empty">従業員がいません</div>`, list)
         return
     }
 
     const teamCompatibility = calculateTeamCompatibility(game.employees)
 
-    list.innerHTML = `
-        ${game.employees.length > 1 ? `
+    const template = litHtml`
+        ${game.employees.length > 1 ? litHtml`
             <div class="info-box" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: 600;">🤝 チーム相性</span>
@@ -517,11 +518,11 @@ export function renderEmployees(): void {
                     </span>
                 </div>
             </div>
-        ` : ''}
+        ` : nothing}
         ${game.employees.map((emp: any, empIndex: number) => {
             const personality = PERSONALITIES[emp.personalityKey] || PERSONALITIES.logical
-            return `
-                <div class="employee" onclick="showEmployeeDetail(game.employees[${empIndex}])">
+            return litHtml`
+                <div class="employee" @click=${() => (window as any).showEmployeeDetail(game.employees[empIndex])}>
                     <div class="employee-header">
                         <div class="employee-name">
                             <span class="icon-badge">👤</span>
@@ -533,27 +534,27 @@ export function renderEmployees(): void {
                         <span class="department-badge">${DEPARTMENTS[emp.department]?.emoji || '💻'} ${DEPARTMENTS[emp.department]?.name || '開発部'}</span>
                         <span class="position-badge">${POSITIONS[emp.position]?.emoji || '👤'} ${POSITIONS[emp.position]?.name || 'スタッフ'}</span>
                     </div>
-                    ${emp.subTraits && emp.subTraits.length > 0 ? `
+                    ${emp.subTraits && emp.subTraits.length > 0 ? litHtml`
                         <div style="margin: 12px 0; display: flex; flex-wrap: wrap; gap: 6px;">
                             ${emp.subTraits.map((traitKey: string) => {
                                 const trait = SUB_TRAITS[traitKey]
-                                if (!trait) return ''
-                                return `<span style="background: ${trait.negative ? 'rgba(244, 67, 54, 0.15)' : 'rgba(76, 175, 80, 0.15)'};
+                                if (!trait) return nothing
+                                return litHtml`<span style="background: ${trait.negative ? 'rgba(244, 67, 54, 0.15)' : 'rgba(76, 175, 80, 0.15)'};
                                                color: ${trait.negative ? '#f44336' : '#4caf50'};
                                                padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
                                     ${trait.emoji} ${trait.name}
                                 </span>`
-                            }).join('')}
+                            })}
                         </div>
-                    ` : ''}
-                    ${emp.hiddenTraitRevealed ? `
+                    ` : nothing}
+                    ${emp.hiddenTraitRevealed ? litHtml`
                         <div style="margin: 8px 0;">
                             <span style="background: linear-gradient(135deg, #ffd700, #ffed4e);
                                    padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #333;">
                                 ✨ ${HIDDEN_TRAITS[emp.hiddenTrait].emoji} ${HIDDEN_TRAITS[emp.hiddenTrait].name}
                             </span>
                         </div>
-                    ` : ''}
+                    ` : nothing}
                     <div class="abilities">
                         <div class="ability">
                             <span class="ability-name">⚙️ 技術: ${emp.abilities.technical}</span>
@@ -583,8 +584,10 @@ export function renderEmployees(): void {
                     <div style="margin-top: 8px; color: #667eea; font-weight: 600;">💰 月給: ${Math.floor(emp.salary / 10000)}万円</div>
                 </div>
             `
-        }).join('')}
+        })}
     `
+
+    litRender(template, list)
 }
 
 // ============================================
@@ -597,16 +600,16 @@ export function renderProducts(): void {
     if (!list) return
 
     if (game.products.length === 0) {
-        list.innerHTML = '<div class="empty">製品がありません<br>💡 新製品を開発しましょう!</div>'
+        litRender(litHtml`<div class="empty">製品がありません<br>💡 新製品を開発しましょう!</div>`, list)
         return
     }
-    list.innerHTML = game.products.map((product: any) => `
+    litRender(litHtml`${game.products.map((product: any) => litHtml`
         <div class="product">
             <div style="font-weight: bold; font-size: 16px; margin-bottom: 8px;">📦 ${product.name}</div>
             <div class="product-quality">⭐ 品質: ${product.quality}%</div>
             <div style="margin-top: 8px; font-weight: 600;">💵 累計売上: ${Math.floor(product.sales / 10000)}万円</div>
         </div>
-    `).join('')
+    `)}`, list)
 }
 
 // ============================================
