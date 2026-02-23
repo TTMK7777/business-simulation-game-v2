@@ -634,10 +634,7 @@ export function processLongTermEffects(state: any): DocumentOutcome[] {
 
 export function pruneHistory(state: any): void {
   if (state.documentHistory.length > CEO_BALANCE.maxDocumentHistory) {
-    const excess = state.documentHistory.splice(0, state.documentHistory.length - CEO_BALANCE.maxDocumentHistory)
-    for (const doc of excess) {
-      if (doc.verdict === 'approve') state.documentStats.totalApproved++
-      if (doc.verdict === 'reject') state.documentStats.totalRejected++
-    }
+    // 古い履歴を削除するだけ（統計はprocessVerdictで計上済み）
+    state.documentHistory.splice(0, state.documentHistory.length - CEO_BALANCE.maxDocumentHistory)
   }
 }

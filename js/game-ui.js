@@ -447,15 +447,22 @@ class GameUI {
      * ゲームアクション実行（結果に基づいてUI更新）
      */
     executeGameAction(action, ...args) {
+        const ALLOWED_ACTIONS = [
+            'nextTurn', 'trainEmployees', 'developProduct',
+            'doMarketing', 'getLoan', 'saveGame'
+        ];
+        if (!ALLOWED_ACTIONS.includes(action)) {
+            return { success: false, error: '不正なアクションです' };
+        }
         const result = this.game[action](...args);
-        
+
         if (result.success) {
             this.updateDisplay();
             this.updateRanking();
         } else if (result.error) {
             this.showNotification('エラー', result.error, 'error');
         }
-        
+
         return result;
     }
 

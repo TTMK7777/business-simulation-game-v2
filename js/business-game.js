@@ -494,7 +494,7 @@ class BusinessGame {
      */
     checkAchievements() {
         ACHIEVEMENTS.forEach(achievement => {
-            if (achievement.condition(this)) {
+            if (!this.achievements.includes(achievement.id) && achievement.condition(this)) {
                 this.achievements.push(achievement.id);
                 this.applyAchievementReward(achievement.reward);
             }

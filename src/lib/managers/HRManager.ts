@@ -19,9 +19,15 @@ import { selectQualificationForCandidate, calculateCandidateSalaryWithQualificat
 // チーム相性計算
 // ============================================
 
-/** チーム相性を計算 (game.ts:781-810) */
+/** チーム相性を計算（キャッシュ付き） (game.ts:781-810) */
+let _compatCache: { key: string; value: number } | null = null
+
 export function calculateTeamCompatibility(employees: Employee[]): number {
     if (!employees || employees.length < 2) return 1.0
+
+    // キャッシュキー: 従業員IDと性格の組み合わせ
+    const cacheKey = employees.map(e => `${e.id}:${e.personalityKey || ''}`).join(',')
+    if (_compatCache && _compatCache.key === cacheKey) return _compatCache.value
 
     let compatibilityScore = 1.0
 
@@ -48,7 +54,9 @@ export function calculateTeamCompatibility(employees: Employee[]): number {
         }
     }
 
-    return Math.max(0.7, Math.min(1.3, compatibilityScore))
+    const result = Math.max(0.7, Math.min(1.3, compatibilityScore))
+    _compatCache = { key: cacheKey, value: result }
+    return result
 }
 
 // ============================================

@@ -10,6 +10,7 @@ import { ACHIEVEMENT_RARITIES, COMPETITOR_ACTIONS, COMPETITOR_STRATEGIES, DIFFIC
 import { Chart } from '../charts'
 import { QUALIFICATIONS_30, TIER_EMOJIS, QUALIFICATION_TIERS } from '../qualifications'
 import { renderQualificationBadge, renderQualificationDetails } from '../qualificationGenerator'
+import { generateCandidateForDepartment, canPromote, canUnlockSkill } from '../managers/HRManager'
 
 // レーダーチャートインスタンス
 let employeeRadarChart: any = null
@@ -226,14 +227,12 @@ export function showHiringForDepartment(departmentKey: string): void {
 
     // 採用募集費を支払う
     game.money -= recruitmentCost
-    // TODO: Manager接続 - updateDisplay() を呼び出す
+    ;(window as any).updateDisplay?.()
 
-    // TODO: Manager接続 - generateCandidateForDepartment を HRManager から import
-    // 候補者生成は window.generateCandidateForDepartment を一時使用
     const candidates = [
-        (window as any).generateCandidateForDepartment(departmentKey),
-        (window as any).generateCandidateForDepartment(departmentKey),
-        (window as any).generateCandidateForDepartment(departmentKey)
+        generateCandidateForDepartment(departmentKey),
+        generateCandidateForDepartment(departmentKey),
+        generateCandidateForDepartment(departmentKey)
     ];
     (window as any).hireCandidates = candidates
 
@@ -269,7 +268,6 @@ export function hireSelectedCandidate(index: number): void {
         showModal('エラー', '候補者データが見つかりません')
         return
     }
-    // TODO: Manager接続 - hireEmployee を呼び出す
     ;(window as any).hireEmployee(candidate)
 }
 
@@ -281,7 +279,6 @@ export function hireCurrentCandidate(): void {
         showModal('エラー', '候補者データが見つかりません')
         return
     }
-    // TODO: Manager接続 - hireEmployee を呼び出す
     ;(window as any).hireEmployee((window as any).currentCandidate)
 }
 
@@ -707,8 +704,7 @@ export function showEmployeeDetail(employee: any): void {
     // 部署・役職情報と操作ボタン
     const dept = DEPARTMENTS[employee.department]
     const position = POSITIONS[employee.position]
-    // TODO: Manager接続 - canPromote を HRManager から import
-    const canPromoteNow = (window as any).canPromote ? (window as any).canPromote(employee) : false
+    const canPromoteNow = canPromote(employee)
 
     const deptPositionHtml = `
         <div style="margin-bottom: 16px; padding: 16px; background: rgba(102, 126, 234, 0.05); border-radius: 12px;">
@@ -870,8 +866,7 @@ export function showSkillTreeModal(employee: any): void {
         const skillsHtml = Object.keys(cat.skills).map(skillId => {
             const skill = cat.skills[skillId]
             const isUnlocked = employee.unlockedSkills.includes(skillId)
-            // TODO: Manager接続 - canUnlockSkill を正式に import
-            const canUnlock = (window as any).canUnlockSkill ? (window as any).canUnlockSkill(employee, catKey, skillId) : false
+            const canUnlock = canUnlockSkill(employee, catKey, skillId)
             const isLocked = !isUnlocked && !canUnlock
 
             // 前提スキル表示

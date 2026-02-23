@@ -149,12 +149,22 @@ export type SaveMetadata = z.infer<typeof SaveMetadataSchema>
  */
 async function calculateChecksum(data: unknown): Promise<string> {
   const jsonString = JSON.stringify(data)
-  const encoder = new TextEncoder()
-  const dataBuffer = encoder.encode(jsonString)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-  return hashHex
+  // crypto.subtleはHTTPS/localhost環境でのみ利用可能
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const encoder = new TextEncoder()
+    const dataBuffer = encoder.encode(jsonString)
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  }
+  // HTTP/file://環境: 簡易ハッシュ（改ざん検知のみ、暗号的強度は不要）
+  let hash = 0
+  for (let i = 0; i < jsonString.length; i++) {
+    const char = jsonString.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash |= 0
+  }
+  return hash.toString(16)
 }
 
 /**

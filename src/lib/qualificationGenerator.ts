@@ -51,8 +51,12 @@ export function selectQualificationForCandidate(candidate: Candidate): string | 
         if (qual.tier === 'B' && avgAbility < 55) continue;
         if (qual.tier === 'C' && avgAbility < 45) continue;
 
-        // 前提資格チェック（簡易版 - 実装時は要改善）
-        // 現状は前提条件をスキップ
+        // 前提資格チェック: 前提資格を持たない候補者には割り当てない
+        if (qual.requirements && qual.requirements.length > 0) {
+            // 候補者は単一資格のみなので、前提が必要な資格は既存社員からの取得のみ
+            // 新規候補者には前提なし資格のみ割り当て可能
+            continue;
+        }
 
         // スポーン確率で抽選
         if (Math.random() < qual.spawnRate) {

@@ -9,7 +9,7 @@ import { getGame } from './store/gameStore'
 import { init, initWithSlot, saveGame, restartGame, nextTurn, initAnimationSystem, syncEmployeeAnimations } from './managers/GameManager'
 
 // UI: renderers
-import { showPanel, showAllAchievements } from './ui/renderers'
+import { showPanel, showAllAchievements, updateDisplay, renderActivePanel, updateRanking, renderEmployees, renderProducts, renderMarket, renderFinance } from './ui/renderers'
 
 // UI: modals
 import {
@@ -28,8 +28,17 @@ import { executeTraining } from './managers/HRManager'
 import { developProduct, executeMarketing } from './managers/ProductManager'
 import { getLoan, repayLoan } from './managers/FinanceManager'
 
+// MarketManager
+import { generateNews, updateCompetitors } from './managers/MarketManager'
+
+// AchievementManager
+import { checkAchievements } from './managers/AchievementManager'
+
+// Charts
+import { initCharts } from './ui/charts.integration'
+
 // TutorialManager
-import { startTutorial, advanceTutorial, skipTutorial, toggleTutorial } from './managers/TutorialManager'
+import { startTutorial, advanceTutorial, skipTutorial, toggleTutorial, advanceTutorialByAction } from './managers/TutorialManager'
 
 // ============================================
 // Window バインディング（34個）
@@ -49,6 +58,7 @@ import { startTutorial, advanceTutorial, skipTutorial, toggleTutorial } from './
 
 // パネル・モーダル制御 (renderers / modals)
 ;(window as any).showPanel = showPanel
+;(window as any).showModal = showModal
 ;(window as any).closeModal = closeModal
 ;(window as any).closeDetailModal = closeDetailModal
 
@@ -78,13 +88,31 @@ import { startTutorial, advanceTutorial, skipTutorial, toggleTutorial } from './
 ;(window as any).getLoan = getLoan
 ;(window as any).repayLoan = repayLoan
 
-// 実績システム (renderers)
+// 実績システム (renderers + AchievementManager)
 ;(window as any).showAllAchievements = showAllAchievements
+;(window as any).checkAchievements = checkAchievements
+
+// 表示更新 (renderers)
+;(window as any).updateDisplay = updateDisplay
+;(window as any).renderActivePanel = renderActivePanel
+;(window as any).updateRanking = updateRanking
+;(window as any).renderEmployees = renderEmployees
+;(window as any).renderProducts = renderProducts
+;(window as any).renderMarket = renderMarket
+;(window as any).renderFinance = renderFinance
+
+// 市場・ニュース (MarketManager)
+;(window as any).generateNews = generateNews
+;(window as any).updateCompetitors = updateCompetitors
+
+// チャート (charts.integration)
+;(window as any).initCharts = initCharts
 
 // チュートリアルシステム (TutorialManager)
 ;(window as any).startTutorial = startTutorial
 ;(window as any).advanceTutorial = advanceTutorial
 ;(window as any).skipTutorial = skipTutorial
 ;(window as any).toggleTutorial = toggleTutorial
+;(window as any).advanceTutorialByAction = advanceTutorialByAction
 
-console.log('[windowBridge] 34 functions bound to window')
+console.log('[windowBridge] 46 functions bound to window')
