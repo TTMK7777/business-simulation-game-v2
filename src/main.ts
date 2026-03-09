@@ -270,11 +270,16 @@ const gameHTML = `
         </div>
     </div>
 
-    <div id="modal" class="modal">
+    <div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
         <div class="modal-content">
-            <div class="modal-title" id="modalTitle"></div>
-            <div id="modalBody"></div>
-            <button class="modal-close" onclick="closeModal()">閉じる</button>
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle"></div>
+                <button class="modal-close-x" onclick="closeModal()" aria-label="閉じる">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="modal-close" onclick="closeModal()">閉じる</button>
+            </div>
         </div>
     </div>
 `

@@ -72,6 +72,11 @@ npm test -- --run  # CI用 (watchなし)
 
 ## 変更履歴
 
+### v2.0.1 (2026-03)
+
+- showModal HTMLエスケープバグ修正（12箇所に isHtml=true 追加）
+- モーダルUI改善（header/body/footer分離、×ボタン、背景クリック、Escキー対応）
+
 ### v2.0 (2026-02)
 
 - game.ts 4,406行 → モジュール分割 (86%削減)

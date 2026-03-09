@@ -434,7 +434,7 @@ function executeTraining(focusType: string) {
 
     message += '<br><br><small style="color: #666;">💡 高能力者は成長が鈍化します (70+: 60%, 80+: 40%, 90+: 20%)</small>'
 
-    showModal('📚 研修完了', message)
+    showModal('📚 研修完了', message, true)
 }
 
 function developProduct() {
@@ -495,7 +495,7 @@ function developProduct() {
     if (teamCompatibility !== 1.0) {
         message += `<br>チーム相性: ${(teamCompatibility * 100).toFixed(0)}%`
     }
-    showModal('🔧 開発成功', message)
+    showModal('🔧 開発成功', message, true)
 
     advanceTutorialByAction('develop_product')
 }
@@ -527,7 +527,7 @@ function executeMarketing(strategy: string) {
     message += `📊 市場シェア: +${selected.share}% → ${game.marketShare.toFixed(2)}%<br>`
     message += `✨ ブランド力: ${selected.brand >= 0 ? '+' : ''}${selected.brand} → ${game.brandPower.toFixed(1)}`
 
-    showModal('📢 マーケティング完了', message)
+    showModal('📢 マーケティング完了', message, true)
 }
 
 function getLoan() {
@@ -536,7 +536,7 @@ function getLoan() {
     game.debt += GAME_CONSTANTS.LOAN_AMOUNT
     updateDisplay()
     renderActivePanel()
-    showModal('🏦 融資実行', `500万円の融資を受けました<br>利率: ${(GAME_CONSTANTS.LOAN_INTEREST_RATE * 100).toFixed(1)}%/月`)
+    showModal('🏦 融資実行', `500万円の融資を受けました<br>利率: ${(GAME_CONSTANTS.LOAN_INTEREST_RATE * 100).toFixed(1)}%/月`, true)
 }
 
 function repayLoan() {
@@ -564,7 +564,7 @@ function repayLoan() {
 function openDocument(docId: string) {
     const doc = game.documentQueue.find((d: any) => d.id === docId)
     if (!doc) return
-    showModal('📋 書類詳細', renderDocumentDetail(doc, game))
+    showModal('📋 書類詳細', renderDocumentDetail(doc, game), true)
 }
 
 function verdictDocument(docId: string, verdict: string) {
@@ -572,9 +572,9 @@ function verdictDocument(docId: string, verdict: string) {
     if (!outcome) return
     const doc = game.documentHistory.find((d: any) => d.id === docId) || game.documentQueue.find((d: any) => d.id === docId)
     if (doc && doc.outcome) {
-        showModal('📋 決裁結果', renderVerdictResult(doc))
+        showModal('📋 決裁結果', renderVerdictResult(doc), true)
     } else {
-        showModal('📋 決裁結果', `<p>${outcome.description}</p>`)
+        showModal('📋 決裁結果', `<p>${outcome.description}</p>`, true)
     }
     updateDisplay()
     renderActivePanel()
@@ -585,7 +585,7 @@ function respondToVisitor(eventId: string, responseId: string) {
     if (!result) return
     const event = game.visitorHistory[game.visitorHistory.length - 1]
     if (event) {
-        showModal('🚪 訪問者対応完了', renderVisitorResult(event, result.effects))
+        showModal('🚪 訪問者対応完了', renderVisitorResult(event, result.effects), true)
     }
     updateDisplay()
     renderActivePanel()
@@ -666,7 +666,7 @@ function selectCEOTrait(trait: string) {
     closeModal()
     showPanel(null, 'desk')
     updateDisplay()
-    showModal('🏢 社長就任', `<div style="text-align:center;"><div style="font-size:48px;margin:16px;">🏢</div><p>社長に就任しました！</p><p>デスクに届いた書類を処理し、会社を成長させましょう。</p></div>`)
+    showModal('🏢 社長就任', `<div style="text-align:center;"><div style="font-size:48px;margin:16px;">🏢</div><p>社長に就任しました！</p><p>デスクに届いた書類を処理し、会社を成長させましょう。</p></div>`, true)
 }
 
 // ============================================

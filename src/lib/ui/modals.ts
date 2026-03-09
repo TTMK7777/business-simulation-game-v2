@@ -49,8 +49,14 @@ export function showModal(title: string, body: string, isHtml: boolean = false):
     document.getElementById('modal')!.classList.add('active')
 }
 
+// Escキーでモーダルを閉じる
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal()
+})
+
 export function closeModal(): void {
-    const modalEl = document.getElementById('modal')!
+    const modalEl = document.getElementById('modal')
+    if (!modalEl) return
     modalEl.classList.remove('active', 'employee-detail-modal')
 
     // レーダーチャートの破棄
@@ -102,7 +108,8 @@ export function showAchievementUnlocked(achievement: any): void {
                     ${achievement.description}
                 </div>
                 ${rewardText}
-            </div>`
+            </div>`,
+            true
         )
     }, 600)
 
@@ -146,7 +153,8 @@ export function showHiring(): void {
         showModal(
             '\u{1F3E2} 採用上限に達しました',
             `現在のオフィス（${currentOffice.emoji} ${currentOffice.name}）では、これ以上従業員を採用できません。<br>
-            <br>最大従業員数: <strong>${currentOffice.maxEmployees}名</strong>${upgradeInfo}`
+            <br>最大従業員数: <strong>${currentOffice.maxEmployees}名</strong>${upgradeInfo}`,
+            true
         )
         return
     }
@@ -527,7 +535,7 @@ export function showDepartmentChangeModal(employee: any): void {
         </div>
     `
 
-    showModal('\u{1F3E2} 部署異動', html)
+    showModal('\u{1F3E2} 部署異動', html, true)
 }
 
 // ============================================
