@@ -18,17 +18,6 @@ import {
     type AchievementRarity
 } from '../gameConfig'
 
-// XSS対策用エスケープ関数
-function escapeHtml(unsafe: any): string {
-    if (unsafe === null || unsafe === undefined) return ''
-    return String(unsafe)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-}
-
 // チーム相性スコア計算（renderEmployeesで使用）
 function calculateTeamCompatibility(employees: any[]): number {
     if (!employees || employees.length < 2) return 1.0
@@ -214,12 +203,7 @@ export function showCompetitorAttackNotification(
     }
 
     document.getElementById('newsText')!.textContent = `${action.emoji} ${message}`
-
-    if (!game.competitorAttacks) game.competitorAttacks = []
-    game.competitorAttacks.push(`${comp.name}: ${action.name}`)
-    if (game.competitorAttacks.length > 5) {
-        game.competitorAttacks.shift()
-    }
+    // competitorAttacks への追加は MarketManager.executeCompetitorAction() で実施済み
 }
 
 // ============================================
@@ -235,18 +219,19 @@ export function updateRanking(): void {
         { name: 'あなた', share: game.marketShare, isPlayer: true }
     ].sort((a, b) => b.share - a.share)
 
-    const medals = ['🥇', '🥈', '🥉', '4']
-    const rankingHtml = allCompanies.slice(0, 4).map((company, index) =>
-        `<div class="rank-item ${company.isPlayer ? 'player' : ''}">
-            <span class="rank-medal">${medals[index]}</span>
-            ${company.name}<br>(${company.share.toFixed(1)}%)
-        </div>`
-    ).join('')
-
     const rankingBar = document.getElementById('rankingBar')
-    if (rankingBar) {
-        rankingBar.innerHTML = rankingHtml
-    }
+    if (!rankingBar) return
+
+    const medals = ['🥇', '🥈', '🥉', '4']
+    const template = litHtml`
+        ${allCompanies.slice(0, 4).map((company, index) => litHtml`
+            <div class="rank-item ${company.isPlayer ? 'player' : ''}">
+                <span class="rank-medal">${medals[index]}</span>
+                ${company.name}<br>(${company.share.toFixed(1)}%)
+            </div>
+        `)}
+    `
+    litRender(template, rankingBar)
 }
 
 // ============================================
@@ -275,6 +260,9 @@ export function showPanel(tabButton: any, panelId?: string): void {
 
 export function renderOfficeDisplay(): void {
     const game = getGame()
+    const officeDisplayEl = document.getElementById('officeDisplay')
+    if (!officeDisplayEl) return
+
     const office = OFFICE_LEVELS[game.officeLevel]
     const nextOffice = OFFICE_LEVELS[game.officeLevel + 1]
 
@@ -299,19 +287,7 @@ export function renderOfficeDisplay(): void {
         progressPercent = 100
     }
 
-    const evolutionDisplay = Object.keys(OFFICE_LEVELS).map(level => {
-        const lvl = parseInt(level)
-        const isActive = lvl <= game.officeLevel
-        const isCurrent = lvl === game.officeLevel
-        return `
-            <div class="office-evolution-step ${isActive ? 'active' : ''} ${isCurrent ? 'current' : ''}">
-                <div class="evolution-emoji">${OFFICE_LEVELS[lvl].emoji}</div>
-                ${isCurrent ? '<div class="current-indicator">▲</div>' : ''}
-            </div>
-        `
-    }).join('<div class="evolution-connector"></div>')
-
-    const html = `
+    const template = litHtml`
         <div class="office-display enhanced">
             <div class="office-header" style="background: ${levelColor.gradient};">
                 <div class="office-level-badge-new">Lv.${game.officeLevel}</div>
@@ -320,7 +296,18 @@ export function renderOfficeDisplay(): void {
             </div>
 
             <div class="office-evolution-line">
-                ${evolutionDisplay}
+                ${Object.keys(OFFICE_LEVELS).map((level, index) => {
+                    const lvl = parseInt(level)
+                    const isActive = lvl <= game.officeLevel
+                    const isCurrent = lvl === game.officeLevel
+                    return litHtml`
+                        ${index > 0 ? litHtml`<div class="evolution-connector"></div>` : nothing}
+                        <div class="office-evolution-step ${isActive ? 'active' : ''} ${isCurrent ? 'current' : ''}">
+                            <div class="evolution-emoji">${OFFICE_LEVELS[lvl].emoji}</div>
+                            ${isCurrent ? litHtml`<div class="current-indicator">▲</div>` : nothing}
+                        </div>
+                    `
+                })}
             </div>
 
             <div class="office-body">
@@ -329,7 +316,7 @@ export function renderOfficeDisplay(): void {
                     ${office.description}
                 </div>
 
-                ${nextOffice ? `
+                ${nextOffice ? litHtml`
                     <div class="next-level-section">
                         <div class="next-level-header">
                             <span>${nextOffice.emoji}</span>
@@ -373,7 +360,7 @@ export function renderOfficeDisplay(): void {
                             </div>
                         </div>
                     </div>
-                ` : `
+                ` : litHtml`
                     <div class="max-level-banner">
                         <div class="max-level-icon">🏆</div>
                         <div class="max-level-text">最高レベル達成！</div>
@@ -387,12 +374,12 @@ export function renderOfficeDisplay(): void {
                         ${Array(Math.ceil(office.maxEmployees / 10)).fill(0).map((_: any, i: number) => {
                             const filled = Math.min(10, game.employees.length - i * 10)
                             const total = Math.min(10, office.maxEmployees - i * 10)
-                            return `<div class="capacity-row">
+                            return litHtml`<div class="capacity-row">
                                 ${Array(total).fill(0).map((_: any, j: number) =>
-                                    `<span class="capacity-dot ${j < filled ? 'filled' : ''}">●</span>`
-                                ).join('')}
+                                    litHtml`<span class="capacity-dot ${j < filled ? 'filled' : ''}">●</span>`
+                                )}
                             </div>`
-                        }).join('')}
+                        })}
                     </div>
                     <div class="capacity-text">${game.employees.length} / ${office.maxEmployees} 名</div>
                 </div>
@@ -400,10 +387,7 @@ export function renderOfficeDisplay(): void {
         </div>
     `
 
-    const officeDisplayEl = document.getElementById('officeDisplay')
-    if (officeDisplayEl) {
-        officeDisplayEl.innerHTML = html
-    }
+    litRender(template, officeDisplayEl)
 }
 
 // ============================================
@@ -433,7 +417,7 @@ export function renderActivePanel(): void {
         // ======= 社長モード: デスクビュー =======
         const deskPanel = document.getElementById('desk')
         if (deskPanel) {
-            deskPanel.innerHTML = renderDeskView(game)
+            deskPanel.innerHTML = renderDeskView(getGame())
         }
     }
 }
@@ -624,7 +608,7 @@ export function renderMarket(): void {
 
     const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
-    info.innerHTML = `
+    const template = litHtml`
         <div style="background: linear-gradient(135deg, #f8f9ff, #e8ecff); padding: 12px; border-radius: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 20px;">${difficultyConfig.emoji}</span>
@@ -639,8 +623,8 @@ export function renderMarket(): void {
             const strategyConfig = COMPETITOR_STRATEGIES[comp.strategy]
             const alertColor = comp.alertLevel > 70 ? '#f44336' : comp.alertLevel > 40 ? '#ff9800' : '#4caf50'
 
-            return `
-            <div class="competitor" style="border-left: 4px solid ${comp.color}; padding-left: 12px; margin-bottom: 16px; background: #f9f9f9; padding: 12px; border-radius: 8px;">
+            return litHtml`
+            <div class="competitor" style="border-left: 4px solid ${comp.color}; padding: 12px; margin-bottom: 16px; background: #f9f9f9; border-radius: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <strong style="font-size: 15px;">🏢 ${comp.name}</strong>
                     <span style="font-size: 12px; background: ${alertColor}; color: white; padding: 2px 8px; border-radius: 10px;">
@@ -660,21 +644,22 @@ export function renderMarket(): void {
                     <div>${strategyConfig.emoji} ${strategyConfig.name}</div>
                     <div>🎯 ${comp.speciality}</div>
                 </div>
-                ${comp.lastAction ? `
+                ${comp.lastAction ? litHtml`
                     <div style="margin-top: 8px; font-size: 12px; color: #e74c3c; background: #fff5f5; padding: 6px 10px; border-radius: 6px;">
                         ⚠️ 最近の動き: ${COMPETITOR_ACTIONS[comp.lastAction as keyof typeof COMPETITOR_ACTIONS]?.name || comp.lastAction}
                     </div>
-                ` : ''}
+                ` : nothing}
             </div>
-        `}).join('')}
+        `})}
 
-        ${game.competitorAttacks && game.competitorAttacks.length > 0 ? `
+        ${game.competitorAttacks && game.competitorAttacks.length > 0 ? litHtml`
             <h4 style="margin-top: 20px; margin-bottom: 12px; color: #e74c3c;">⚔️ 最近の競合動向</h4>
             <div style="background: #fff5f5; padding: 12px; border-radius: 8px; font-size: 13px;">
-                ${game.competitorAttacks.map((attack: string) => `<div style="margin-bottom: 4px;">• ${attack}</div>`).join('')}
+                ${game.competitorAttacks.map((attack: string) => litHtml`<div style="margin-bottom: 4px;">• ${attack}</div>`)}
             </div>
-        ` : ''}
+        ` : nothing}
     `
+    litRender(template, info)
 }
 
 // ============================================
@@ -690,7 +675,7 @@ export function renderFinance(): void {
 
     const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
     const interestPreview = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
-    info.innerHTML = `
+    const template = litHtml`
         <div class="info-box">
             <div>
                 <span>📊 売上高</span>
@@ -706,16 +691,17 @@ export function renderFinance(): void {
                     ${Math.floor((game.monthlyRevenue - salaryTotal - interestPreview) / 10000)}万円
                 </strong>
             </div>
-            ${game.debt ? `<div style="margin-top: 8px;">
+            ${game.debt ? litHtml`<div style="margin-top: 8px;">
                 <span>🏦 借金残高</span>
                 <strong style="color: #ff9800;">${Math.floor(game.debt / 10000)}万円</strong>
-            </div>` : ''}
-            ${interestPreview ? `<div>
+            </div>` : nothing}
+            ${interestPreview ? litHtml`<div>
                 <span>📈 次月利息見込</span>
                 <strong>${Math.floor(interestPreview / 10000)}万円</strong>
-            </div>` : ''}
+            </div>` : nothing}
         </div>
     `
+    litRender(template, info)
 }
 
 // ============================================
@@ -728,7 +714,7 @@ export function renderDepartments(): void {
     if (!grid) return
 
     if (game.employees.length === 0) {
-        grid.innerHTML = '<div class="empty">従業員がまだいません</div>'
+        litRender(litHtml`<div class="empty">従業員がまだいません</div>`, grid)
         return
     }
 
@@ -760,82 +746,80 @@ export function renderDepartments(): void {
         }
     })
 
-    const departmentCardsHtml = Object.keys(DEPARTMENTS).map(deptKey => {
-        const dept = DEPARTMENTS[deptKey]
-        const stats = departmentStats[deptKey]
-        const empCount = stats.employees.length
-        const avgAbility = empCount > 0 ? Math.round(stats.totalAbility / empCount) : 0
+    const template = litHtml`
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+            ${Object.keys(DEPARTMENTS).map(deptKey => {
+                const dept = DEPARTMENTS[deptKey]
+                const stats = departmentStats[deptKey]
+                const empCount = stats.employees.length
+                const avgAbility = empCount > 0 ? Math.round(stats.totalAbility / empCount) : 0
 
-        const efficiency = Math.min(100, avgAbility * 1.2)
-        const efficiencyColor = efficiency >= 80 ? '#4caf50' : efficiency >= 50 ? '#ff9800' : '#f44336'
+                const efficiency = Math.min(100, avgAbility * 1.2)
+                const efficiencyColor = efficiency >= 80 ? '#4caf50' : efficiency >= 50 ? '#ff9800' : '#f44336'
 
-        return `
-            <div class="department-card">
-                <div class="department-card-header">
-                    <div style="font-size: 32px; margin-bottom: 8px;">${dept.emoji}</div>
-                    <div style="font-size: 18px; font-weight: 700; color: #333;">${dept.name}</div>
-                    <div style="font-size: 12px; color: #999; margin-top: 4px;">${dept.description}</div>
-                </div>
+                return litHtml`
+                    <div class="department-card">
+                        <div class="department-card-header">
+                            <div style="font-size: 32px; margin-bottom: 8px;">${dept.emoji}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #333;">${dept.name}</div>
+                            <div style="font-size: 12px; color: #999; margin-top: 4px;">${dept.description}</div>
+                        </div>
 
-                <div class="department-stats">
-                    <div class="stat-item">
-                        <div class="department-stat-label">👥 人数</div>
-                        <div class="department-stat-value">${empCount}名</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="department-stat-label">💪 平均能力</div>
-                        <div class="department-stat-value">${avgAbility}</div>
-                    </div>
-                </div>
-
-                <div class="department-manager">
-                    <div style="font-size: 12px; font-weight: 600; color: #667eea; margin-bottom: 6px;">👔 責任者</div>
-                    ${stats.manager ? `
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 20px;">${PERSONALITIES[stats.manager.personalityKey]?.emoji || '👤'}</span>
-                            <div>
-                                <div style="font-size: 13px; font-weight: 600;">${escapeHtml(stats.manager.name)}</div>
-                                <div style="font-size: 11px; color: #999;">
-                                    ${POSITIONS[stats.manager.position]?.emoji || '👤'} ${POSITIONS[stats.manager.position]?.name || 'スタッフ'}
-                                </div>
+                        <div class="department-stats">
+                            <div class="stat-item">
+                                <div class="department-stat-label">👥 人数</div>
+                                <div class="department-stat-value">${empCount}名</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="department-stat-label">💪 平均能力</div>
+                                <div class="department-stat-value">${avgAbility}</div>
                             </div>
                         </div>
-                    ` : '<div style="font-size: 12px; color: #999;">未配置</div>'}
-                </div>
 
-                <div class="department-efficiency">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-size: 12px; font-weight: 600; color: #667eea;">📊 効率性</span>
-                        <span style="font-size: 14px; font-weight: 700; color: ${efficiencyColor};">${Math.round(efficiency)}%</span>
-                    </div>
-                    <div style="background: rgba(0,0,0,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div style="background: ${efficiencyColor}; height: 100%; width: ${efficiency}%;
-                                   transition: width 0.3s ease; border-radius: 4px;"></div>
-                    </div>
-                </div>
-
-                ${empCount > 0 ? `
-                    <div class="department-employees">
-                        <div style="font-size: 11px; color: #999; margin-bottom: 6px;">所属メンバー</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                            ${stats.employees.slice(0, 8).map((emp: any) =>
-                                `<span style="font-size: 16px;" title="${escapeHtml(emp.name)}">
-                                    ${PERSONALITIES[emp.personalityKey]?.emoji || '👤'}
-                                </span>`
-                            ).join('')}
-                            ${empCount > 8 ? `<span style="font-size: 11px; color: #999; align-self: center;">+${empCount - 8}</span>` : ''}
+                        <div class="department-manager">
+                            <div style="font-size: 12px; font-weight: 600; color: #667eea; margin-bottom: 6px;">👔 責任者</div>
+                            ${stats.manager ? litHtml`
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 20px;">${PERSONALITIES[stats.manager.personalityKey]?.emoji || '👤'}</span>
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 600;">${stats.manager.name}</div>
+                                        <div style="font-size: 11px; color: #999;">
+                                            ${POSITIONS[stats.manager.position]?.emoji || '👤'} ${POSITIONS[stats.manager.position]?.name || 'スタッフ'}
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : litHtml`<div style="font-size: 12px; color: #999;">未配置</div>`}
                         </div>
-                    </div>
-                ` : ''}
-            </div>
-        `
-    }).join('')
 
-    grid.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-            ${departmentCardsHtml}
+                        <div class="department-efficiency">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 12px; font-weight: 600; color: #667eea;">📊 効率性</span>
+                                <span style="font-size: 14px; font-weight: 700; color: ${efficiencyColor};">${Math.round(efficiency)}%</span>
+                            </div>
+                            <div style="background: rgba(0,0,0,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
+                                <div style="background: ${efficiencyColor}; height: 100%; width: ${efficiency}%;
+                                           transition: width 0.3s ease; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+
+                        ${empCount > 0 ? litHtml`
+                            <div class="department-employees">
+                                <div style="font-size: 11px; color: #999; margin-bottom: 6px;">所属メンバー</div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                    ${stats.employees.slice(0, 8).map((emp: any) =>
+                                        litHtml`<span style="font-size: 16px;" title="${emp.name}">
+                                            ${PERSONALITIES[emp.personalityKey]?.emoji || '👤'}
+                                        </span>`
+                                    )}
+                                    ${empCount > 8 ? litHtml`<span style="font-size: 11px; color: #999; align-self: center;">+${empCount - 8}</span>` : nothing}
+                                </div>
+                            </div>
+                        ` : nothing}
+                    </div>
+                `
+            })}
         </div>
     `
+    litRender(template, grid)
 }
 
-export { escapeHtml }
