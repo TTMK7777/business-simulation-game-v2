@@ -21,7 +21,7 @@ npm test           # テスト実行
 
 | カテゴリ | 技術 |
 |---------|------|
-| 言語 | TypeScript 5.9 (`strict: true`) |
+| 言語 | TypeScript 5.9 (`strict: true`, `noUnusedLocals`) |
 | UI | Lit 3 (段階移行中) + テンプレートリテラル |
 | ビルド | Vite 7, PWA対応 |
 | チャート | Chart.js 4 (遅延初期化) |
@@ -71,6 +71,13 @@ npm test -- --run  # CI用 (watchなし)
 - storage — チェックサム・メタデータバリデーション
 
 ## 変更履歴
+
+### v2.0.2 (2026-03)
+
+- XSS対策強化: escapeHtml統一 + innerHTML→Lit render移行
+- npm audit: HIGH脆弱性5件解消（serialize-javascript RCE, picomatch ReDoS）
+- noUnusedLocals/noUnusedParameters有効化（90件修正）
+- コード削減: 22ファイル -163行/+67行
 
 ### v2.0.1 (2026-03)
 
