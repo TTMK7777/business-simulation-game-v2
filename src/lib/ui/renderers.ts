@@ -2,6 +2,7 @@
 // game.ts:1046-1153, 1849-1865, 1867-2396 から抽出
 
 import { html as litHtml, render as litRender, nothing } from 'lit'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import { getGame, getActivePanel, setActivePanel, getCompetitors } from '../store/gameStore'
 import { renderDeskView } from './deskView'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
@@ -13,9 +14,6 @@ import {
     DIFFICULTY_SETTINGS,
     COMPETITOR_STRATEGIES,
     COMPETITOR_ACTIONS,
-    GAME_CONSTANTS,
-    type Achievement,
-    type AchievementRarity
 } from '../gameConfig'
 
 // チーム相性スコア計算（renderEmployeesで使用）
@@ -195,8 +193,6 @@ export function showCompetitorAttackNotification(
     action: typeof COMPETITOR_ACTIONS[keyof typeof COMPETITOR_ACTIONS],
     targetName?: string
 ): void {
-    const game = getGame()
-    const strategyEmoji = COMPETITOR_STRATEGIES[comp.strategy as keyof typeof COMPETITOR_STRATEGIES].emoji
     let message = action.description.replace('${company}', comp.name)
     if (targetName) {
         message += `\n対象: ${targetName}さん`
@@ -417,7 +413,7 @@ export function renderActivePanel(): void {
         // ======= 社長モード: デスクビュー =======
         const deskPanel = document.getElementById('desk')
         if (deskPanel) {
-            deskPanel.innerHTML = renderDeskView(getGame())
+            litRender(litHtml`${unsafeHTML(renderDeskView(getGame()))}`, deskPanel)
         }
     }
 }

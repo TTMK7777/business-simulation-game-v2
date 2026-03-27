@@ -136,8 +136,8 @@ class GameUI {
         const state = this.game.getGameState();
         if (state.companyStrategy && COMPANY_STRATEGIES[state.companyStrategy]) {
             const strategy = COMPANY_STRATEGIES[state.companyStrategy];
-            this.elements.currentStrategy.innerHTML = 
-                `<strong>${strategy.name}</strong><br><small>${strategy.description}</small>`;
+            this.elements.currentStrategy.innerHTML =
+                `<strong>${escapeHtml(strategy.name)}</strong><br><small>${escapeHtml(strategy.description)}</small>`;
         } else {
             this.elements.currentStrategy.textContent = '戦略未設定';
         }

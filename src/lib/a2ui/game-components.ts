@@ -18,7 +18,6 @@ export class A2UIAdvisorCard extends LitElement {
   @property({ type: String }) category: 'finance' | 'hr' | 'market' | 'product' | 'general' = 'general'
   @property({ type: String }) sentiment: 'positive' | 'neutral' | 'warning' | 'critical' = 'neutral'
   @property({ type: Array }) suggestions: string[] = []
-  @state() private isExpanded = false
 
   static styles = css`
     :host {

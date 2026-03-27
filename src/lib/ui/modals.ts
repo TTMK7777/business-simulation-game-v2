@@ -1,14 +1,16 @@
 // ビジネスエンパイア 2.0 - モーダルUI
 // game.ts から全モーダル関連関数を抽出
 
+import { html as litHtml, render as litRender } from 'lit'
+import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import { getGame } from '../store/gameStore'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS, TEMPERAMENT_TRAITS } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { SKILL_TREE, SKILL_EFFECTS } from '../config/skills'
 import { OFFICE_LEVELS } from '../config/offices'
-import { ACHIEVEMENT_RARITIES, COMPETITOR_ACTIONS, COMPETITOR_STRATEGIES, DIFFICULTY_SETTINGS } from '../gameConfig'
+import { ACHIEVEMENT_RARITIES } from '../gameConfig'
 import { Chart, ensureRegistered } from '../charts'
-import { QUALIFICATIONS_30, TIER_EMOJIS, QUALIFICATION_TIERS } from '../qualifications'
+import { QUALIFICATIONS_30 } from '../qualifications'
 import { renderQualificationBadge, renderQualificationDetails } from '../qualificationGenerator'
 import { generateCandidateForDepartment, canPromote, canUnlockSkill } from '../managers/HRManager'
 
@@ -508,7 +510,6 @@ export function showPersonalityDetail(personalityKey: string, fromHiring: boolea
 export function showDepartmentChangeModal(employee: any): void {
     if (!requireCompanyActive()) return
 
-    const currentDept = DEPARTMENTS[employee.department]
     const departmentOptions = Object.keys(DEPARTMENTS).map(deptKey => {
         const dept = DEPARTMENTS[deptKey]
         const isCurrent = deptKey === employee.department
@@ -542,7 +543,6 @@ export function showDepartmentChangeModal(employee: any): void {
 // 従業員詳細モーダル
 // ============================================
 export function showEmployeeDetail(employee: any): void {
-    const game = getGame()
     const personality = PERSONALITIES[employee.personalityKey] || PERSONALITIES.logical
 
     // ヘッダー情報
@@ -777,7 +777,8 @@ export function showEmployeeDetail(employee: any): void {
 
     // モーダルを表示
     document.getElementById('modalTitle')!.textContent = '\u{1F464} 従業員詳細'
-    document.getElementById('modalBody')!.innerHTML = modalBody
+    const modalBodyEl = document.getElementById('modalBody')!
+    litRender(litHtml`${unsafeHTML(modalBody)}`, modalBodyEl)
     const modalEl = document.getElementById('modal')!
     modalEl.classList.add('active', 'employee-detail-modal')
 

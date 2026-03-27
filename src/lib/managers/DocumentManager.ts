@@ -1,6 +1,6 @@
 // 社長モード: 書類生成・判定・結果反映
 import type { ApprovalDocument, DocumentCategory, DocumentNature, DocumentVerdict, DocumentOutcome, DocumentClue } from '../types/index'
-import { DOCUMENT_TEMPLATES, SITUATION_MODIFIERS, CAUSAL_CHAINS, CATEGORY_NAMES, TRAP_NAMES } from '../config/documents'
+import { DOCUMENT_TEMPLATES, SITUATION_MODIFIERS, CAUSAL_CHAINS, TRAP_NAMES } from '../config/documents'
 import { CEO_BALANCE } from '../config/ceo'
 import { POLICY_FOCUSES } from '../config/ceo'
 

@@ -38,7 +38,6 @@ export interface RankingEntry {
 export function generateNews(forceCategory?: string): { emoji: string; text: string } | null {
     const game = getGame()
     const competitors = getCompetitors()
-    const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
     // 条件に合うニューステンプレートをフィルタリング
     const eligibleNews = NEWS_TEMPLATES.filter(news => {

@@ -4,45 +4,26 @@
 // ============================================
 // 外部ライブラリ・既存モジュール
 // ============================================
-import { characterManager, initCharacterRenderer, type JobType } from './cssCharacterManager'
+import { characterManager } from './cssCharacterManager'
 
 // ============================================
 // config/ からの定数
 // ============================================
-import { PERSONALITIES, HIDDEN_TRAITS, generateTemperament } from './config/personalities'
 import { DEPARTMENTS, POSITIONS } from './config/departments'
 import { SKILL_TREE, SKILL_EFFECTS } from './config/skills'
-import { OFFICE_LEVELS } from './config/offices'
 
 // ============================================
 // gameConfig からの設定
 // ============================================
 import {
     GAME_CONSTANTS,
-    BALANCE_CONFIG,
-    DIFFICULTY_SETTINGS,
-    DEFAULT_COMPETITORS,
-    COMPETITOR_STRATEGIES,
-    NEWS_TEMPLATES,
-    COMPETITOR_ACTIONS,
-    ACHIEVEMENTS,
-    ACHIEVEMENT_RARITIES,
-    TUTORIAL_STEPS,
-    legacyNewsTemplates,
-    type DifficultyLevel,
-    type CompetitorConfig,
-    type Achievement,
 } from './gameConfig'
 
 // ============================================
 // store/ からの状態管理
 // ============================================
 import {
-    getGame, getActivePanel, setActivePanel,
-    getCurrentSlotId, setCurrentSlotId,
-    getCompetitors, resetCompetitors as storeResetCompetitors,
-    cloneDefaults, overwriteGameState, ensureCollections,
-    normalizeGameState, resetGameState
+    getGame, setActivePanel,
 } from './store/gameStore'
 
 // ============================================
@@ -51,48 +32,29 @@ import {
 import {
     init, initWithSlot, saveGame, restartGame, nextTurn,
     initAnimationSystem, syncEmployeeAnimations,
-    determineOfficeLevel, checkOfficeUpgrade, determineJobType,
-    addInitialEmployee, loadGameFromStorage,
-    syncAllEmployeeSprites, updateEmployeeAnimation
+    determineJobType,
 } from './managers/GameManager'
 
 import {
     calculateTeamCompatibility, calculateGrowthMultiplier,
     generateCandidate, generateCandidateForDepartment,
-    hireEmployee as hrHireEmployee,
     canPromote, canUnlockSkill,
-    promoteEmployee as hrPromoteEmployee,
-    changeDepartment as hrChangeDepartment,
-    unlockSkill as hrUnlockSkill,
-    executeTraining as hrExecuteTraining
 } from './managers/HRManager'
 
 import {
-    checkAchievementCondition, checkAchievements,
-    getAchievementsList, getAchievementProgress
+    checkAchievements,
 } from './managers/AchievementManager'
 
 import {
-    generateNews, updateCompetitors, executeCompetitorAction,
-    calculateRanking
+    generateNews, updateCompetitors,
 } from './managers/MarketManager'
 
-import {
-    getLoan as financeGetLoan,
-    repayLoan as financeRepayLoan,
-    calculateMonthlyRevenue
-} from './managers/FinanceManager'
 
 import {
-    developProduct as pmDevelopProduct,
-    executeMarketing as pmExecuteMarketing
-} from './managers/ProductManager'
-
-import {
-    startTutorial, showTutorialStep,
+    startTutorial,
     advanceTutorial, advanceTutorialByAction,
-    completeTutorial, skipTutorial,
-    highlightElement, removeHighlight, toggleTutorial
+    skipTutorial,
+    toggleTutorial
 } from './managers/TutorialManager'
 
 // ============================================
@@ -100,11 +62,10 @@ import {
 // ============================================
 import {
     showPanel, showAllAchievements,
-    renderAchievements, renderOfficeDisplay,
+    renderAchievements,
     renderActivePanel, updateDisplay, updateControls,
-    renderEmployees, renderProducts, renderMarket,
-    renderFinance, renderDepartments,
-    showCompetitorAttackNotification, updateRanking
+    renderEmployees,
+    updateRanking
 } from './ui/renderers'
 
 import {
@@ -112,17 +73,15 @@ import {
     showAchievementUnlocked,
     showHiring, showDepartmentSelectionForHiring,
     showHiringForDepartment, hireSelectedCandidate,
-    hireCurrentCandidate, restoreHiringModal,
     showTraitDetail, showPersonalityDetail,
     showDepartmentChangeModal, showEmployeeDetail,
-    renderEmployeeRadarChart, showSkillTreeModal,
+    showSkillTreeModal,
     switchSkillCategory, trainEmployees, doMarketing,
     requireCompanyActive, escapeHtml
 } from './ui/modals'
 
 import {
     initCharts, updateCharts, updateMarketChart,
-    getRevenueChart, getMarketChart, destroyCharts
 } from './ui/charts.integration'
 
 // ======= 社長モード統合 =======
@@ -130,17 +89,16 @@ import * as DocumentManager from './managers/DocumentManager'
 import * as VisitorManager from './managers/VisitorManager'
 import * as CEOManager from './managers/CEOManager'
 import { createDefaultCEOStatus } from './config/ceo'
-import { renderDeskView, renderDocumentStack, renderStatusTab } from './ui/deskView'
+import { renderDocumentStack, renderStatusTab } from './ui/deskView'
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
-import { renderVisitorDialog, renderVisitorResult } from './ui/visitorDialog'
-import { renderCEOKPIBar, renderQuarterlyReview, renderPolicySelection, renderCEOTraitSelection, renderDirectivePanel } from './ui/ceoStatus'
+import { renderVisitorResult } from './ui/visitorDialog'
+import { renderDirectivePanel } from './ui/ceoStatus'
 import type { CEOTrait, PolicyFocus, DocumentVerdict } from './types/index'
 
 // ============================================
 // モジュールレベルエイリアス
 // ============================================
 const game = getGame()
-const competitors = getCompetitors()
 
 // ============================================
 // Category B: UI+ロジック混合関数

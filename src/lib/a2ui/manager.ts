@@ -54,8 +54,6 @@ export interface FinanceData {
 export class A2UIManager {
   private static instance: A2UIManager
   private notificationContainer: HTMLElement | null = null
-  private advisorContainer: HTMLElement | null = null
-  private newsContainer: HTMLElement | null = null
 
   private constructor() {
     // DOM Ready後に初期化（安全性向上）

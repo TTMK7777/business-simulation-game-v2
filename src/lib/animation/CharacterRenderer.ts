@@ -114,8 +114,6 @@ const JOB_VISUALS: Record<JobType, JobVisual> = {
   }
 }
 
-const LAYER_KEYS: CharacterLayerKey[] = ['base', 'clothing_bottom', 'clothing_top', 'accessory', 'badge']
-
 function getFramePose(frameIndex: number): FramePose {
   if (frameIndex < 4) {
     const idleConfig = [
@@ -302,7 +300,7 @@ export class CharacterScene extends Phaser.Scene {
     camera.centerOn(400, 300)
 
     // マウスホイールでズーム
-    this.input.on('wheel', (pointer: any, gameObjects: any, deltaX: number, deltaY: number, deltaZ: number) => {
+    this.input.on('wheel', (_pointer: any, _gameObjects: any, _deltaX: number, deltaY: number, _deltaZ: number) => {
       const zoomAmount = deltaY > 0 ? -0.1 : 0.1
       const newZoom = Phaser.Math.Clamp(camera.zoom + zoomAmount, 0.5, 2.0)
 
@@ -433,7 +431,7 @@ export class CharacterScene extends Phaser.Scene {
       const visuals = JOB_VISUALS[jobType]
 
       const clothingBottomKey = `character-${jobType}-bottom`
-      this.createLayerTexture(clothingBottomKey, (ctx, frame, pose, centerX, centerY) => {
+      this.createLayerTexture(clothingBottomKey, (ctx, _frame, pose, centerX, centerY) => {
         this.drawClothingBottom(ctx, pose, centerX, centerY, visuals)
       })
       this.layerTextureCache[jobType].clothing_bottom = clothingBottomKey
@@ -486,7 +484,6 @@ export class CharacterScene extends Phaser.Scene {
     for (let frame = 0; frame < FRAME_COUNT; frame++) {
       const pose = getFramePose(frame)
       const xOffset = frame * FRAME_WIDTH
-      const centerX = xOffset + FRAME_WIDTH / 2
       const centerY = FRAME_HEIGHT / 2
 
       ctx.clearRect(xOffset, 0, FRAME_WIDTH, FRAME_HEIGHT)
@@ -612,7 +609,7 @@ export class CharacterScene extends Phaser.Scene {
 
   private drawJobSpecificTopDetails(
     ctx: CanvasRenderingContext2D,
-    frame: number,
+    _frame: number,
     pose: FramePose,
     centerX: number,
     centerY: number,
@@ -813,7 +810,7 @@ export class CharacterScene extends Phaser.Scene {
 
   private drawBadge(
     ctx: CanvasRenderingContext2D,
-    frame: number,
+    _frame: number,
     pose: FramePose,
     centerX: number,
     centerY: number,
@@ -1021,7 +1018,7 @@ export class CharacterScene extends Phaser.Scene {
    * Clear all characters
    */
   clearAllCharacters(): void {
-    this.characterSprites.forEach((container, id) => {
+    this.characterSprites.forEach((_container, id) => {
       this.removeCharacter(id)
     })
   }

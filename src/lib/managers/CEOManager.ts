@@ -1,6 +1,6 @@
 // 社長モード: CEO支持率・株価・ゲームオーバー判定
-import type { CEOStatus, PolicyFocus, QuarterlyReview } from '../types/index'
-import { CEO_BALANCE, CEO_TRAITS, POLICY_FOCUSES } from '../config/ceo'
+import type { PolicyFocus, QuarterlyReview } from '../types/index'
+import { CEO_BALANCE, POLICY_FOCUSES } from '../config/ceo'
 
 export function updateApprovalRating(state: any): void {
   if (!state.ceo) return

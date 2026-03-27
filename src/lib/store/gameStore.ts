@@ -1,7 +1,7 @@
 // ビジネスエンパイア 2.0 - ゲーム状態管理
 // game.ts:705-763 のクロージャ変数を集約
 
-import type { GameState, Employee } from '../types'
+import type { GameState } from '../types'
 import type { DifficultyLevel, CompetitorConfig } from '../gameConfig'
 import { DEFAULT_COMPETITORS } from '../gameConfig'
 import { PERSONALITIES, HIDDEN_TRAITS, generateTemperament } from '../config/personalities'

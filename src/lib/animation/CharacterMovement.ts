@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import type { CharacterScene, AnimationState } from './CharacterRenderer'
+import type { CharacterScene } from './CharacterRenderer'
 
 /**
  * キャラクター移動管理システム
@@ -163,7 +163,7 @@ export class CharacterMovementManager {
       y: targetY,
       duration: duration,
       ease: 'Linear',
-      onUpdate: (tween: Phaser.Tweens.Tween) => {
+      onUpdate: (_tween: Phaser.Tweens.Tween) => {
         // T9: Y座標が変化した時のみsetDepthを呼び出す
         const currentY = Math.round(state.container.y)
         if (currentY !== state.lastY) {
@@ -217,7 +217,7 @@ export class CharacterMovementManager {
   /**
    * 毎フレーム更新（Phaser Sceneのupdateから呼び出す）
    */
-  update(time: number, delta: number): void {
+  update(time: number, _delta: number): void {
     this.movementStates.forEach((state) => {
       // パトロール中またはすでに移動中の場合はスキップ
       if (state.isMoving || state.currentPath.length > 0) return

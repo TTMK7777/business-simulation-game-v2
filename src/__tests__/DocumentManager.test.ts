@@ -7,7 +7,7 @@
  * - generateDocuments / processVerdict の基本動作
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { generateFromDirective, generateDocuments } from '../lib/managers/DocumentManager'
 
 // ============================================================

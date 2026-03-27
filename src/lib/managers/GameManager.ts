@@ -15,13 +15,11 @@ import {
     normalizeGameState,
     resetGameState
 } from '../store/gameStore'
-import { PERSONALITIES, HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
+import { HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
 import { OFFICE_LEVELS } from '../config/offices'
 import {
     DIFFICULTY_SETTINGS,
     BALANCE_CONFIG,
-    GAME_CONSTANTS,
-    DEBUG_CONFIG,
     debugLog,
     type DifficultyLevel
 } from '../gameConfig'

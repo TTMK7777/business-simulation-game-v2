@@ -486,7 +486,7 @@ export class CharacterEffectManager {
    * すべてのエフェクトをクリア
    */
   clearAll(): void {
-    this.activeEffects.forEach((effect, employeeId) => {
+    this.activeEffects.forEach((_effect, employeeId) => {
       this.removeEffect(employeeId)
     })
 

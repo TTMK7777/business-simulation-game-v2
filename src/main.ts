@@ -5,8 +5,8 @@ import './styles/main.css'
 import './styles/qualifications.css'
 import './styles/desk.css'
 import './lib/game.ts'
-import { getAllSlotsMetadata, slotHasData, type SaveMetadata } from './lib/storage'
-import { DIFFICULTY_SETTINGS, type DifficultyLevel } from './lib/gameConfig'
+import { getAllSlotsMetadata, slotHasData } from './lib/storage'
+import { type DifficultyLevel } from './lib/gameConfig'
 
 // A2UI Integration - Google A2UI inspired rich UI components
 import { getA2UIManager } from './lib/a2ui/index'
@@ -468,18 +468,6 @@ async function onSlotClick(slotNumber: number) {
     // 新規ゲームの場合は難易度選択モーダルを表示
     showDifficultyModal(slotNumber)
   }
-}
-
-/**
- * HTMLエスケープ（XSS対策）
- * @param text エスケープするテキスト
- * @returns エスケープされたテキスト
- */
-function escapeHtml(text: string | number): string {
-  const str = String(text)
-  const div = document.createElement('div')
-  div.textContent = str
-  return div.innerHTML
 }
 
 /**

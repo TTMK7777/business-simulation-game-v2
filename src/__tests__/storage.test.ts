@@ -13,7 +13,7 @@
  *       I5 の HTTP フォールバックロジックは同等の純粋関数として再現してテスト。
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { validateSaveMetadata, STORAGE_KEYS, SAVE_SLOT_KEYS } from '../lib/storage'
 
 // ============================================================

@@ -1,6 +1,6 @@
 // 社長モード: 訪問イベント生成・処理
 import type { VisitorEvent, VisitorResponse } from '../types/index'
-import { VISITOR_TEMPLATES, VERDICT_LINKED_VISITOR_TEMPLATES, MOOD_DISPLAY } from '../config/visitors'
+import { VISITOR_TEMPLATES, VERDICT_LINKED_VISITOR_TEMPLATES } from '../config/visitors'
 import { CEO_BALANCE } from '../config/ceo'
 
 let visitorIdCounter = 0
