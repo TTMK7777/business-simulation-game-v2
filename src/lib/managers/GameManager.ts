@@ -589,7 +589,11 @@ export async function saveGame(): Promise<void> {
     if (game.isBankrupt) return
 
     try {
-        const saveData = Object.assign({}, game, { activePanel: getActivePanel() })
+        // I-1: _pendingCausalEffects はランタイム専用フィールドのため、
+        // 永続化対象から除外する（ストレージ改ざん経由の triggerTurn / resultCategory
+        // 任意操作を防止）。再ロード時は normalizeGameState():208 が空配列で初期化する。
+        const saveData: any = Object.assign({}, game, { activePanel: getActivePanel() })
+        delete saveData._pendingCausalEffects
 
         const metadata: SaveMetadata = {
             slotId: getCurrentSlotId(),

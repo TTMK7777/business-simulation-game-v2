@@ -74,10 +74,11 @@ export function checkAchievementCondition(achievement: Achievement): boolean {
 
         case 'comeback':
             // 資金が100万円以下になった後、指定値以上に回復
+            // I-3: GameState.wasLowMoney は types/index.ts:106 で正式定義済みのため as any キャストを削除
             if (game.money <= 1000000) {
-                (game as any).wasLowMoney = true
+                game.wasLowMoney = true
             }
-            return (game as any).wasLowMoney && compare(game.money)
+            return game.wasLowMoney && compare(game.money)
 
         case 'speed_share':
             // 6ターン以内に指定シェア達成
