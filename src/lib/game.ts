@@ -306,9 +306,15 @@ function unlockSkill(employeeId: number, category: string, skillId: string) {
 }
 
 function executeTraining(focusType: string) {
-    closeModal()
+    if (!requireCompanyActive()) return
 
     const cost = 300000 * game.employees.length
+    if (game.money < cost) {
+        showModal('研修失敗', `資金不足です（${Math.floor(cost / 10000)}万円必要）`)
+        return
+    }
+
+    closeModal()
     game.money -= cost
 
     let bonusMessages: string[] = []
