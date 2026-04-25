@@ -1,5 +1,86 @@
 # HANDOVER
 
+## セッション: 2026-04-25 (v2.1.0 全面デバッグ Sprint A-D)
+
+### 作業サマリー
+| 項目 | 内容 |
+|------|------|
+| **作業内容** | ユーザー報告バグの根本原因解消 + FIRE 全件対応 (F=6, I=6, R=2/3) |
+| **変更ファイル** | 17コミット (Sprint A:5, B:5, C:3, D:3) / ~20ファイル / +400/-340行 |
+| **テスト** | vitest 57→**67全パス** (gameStore.test.ts 新設10件)、vite build 成功、npm audit **0 vulnerabilities** |
+| **ステータス** | コミット済み（最新 `3f2ea90`）、push未実施、v2.1.0タグ未付与 |
+
+### ユーザー報告バグの解消（5件）
+1. ✅ CEOモードでタブ切替→管理モードに退化（F-1, 二重防御: showPanel ガード + applyTabVisibilityForMode）
+2. ✅ チュートリアルが他UIに重畳（F-2, 排他制御 + tutorialOverlay.remove()）
+3. ✅ CEOモードでチュートリアル進行不能（CEO選択時 tutorialCompleted=true で抑制）
+4. ✅ 「🔍 調査結果報告」HTML文字列表示（GameManager.ts showModal isHtml=true 9箇所一括修正）
+5. ✅ CEOモードで通常モードのタブが機能しない（applyTabVisibilityForMode で desk以外を非表示）
+
+### Sprint 別コミット
+
+#### Sprint A (体感バグ即時解消) - tag: `v2.1.0-sprintA-bugfix`
+- `8022697` fix(ceo): モード状態保護とdesk描画整合性 (F-1, F-6)
+- `0694bad` fix(tutorial): 排他制御とDOM残留防止 (F-2)
+- `1f13fff` fix(training): executeTraining 資金チェック復活 (F-4)
+- `b1ae7e0` fix(tutorial): CEOモード選択時にチュートリアル抑制（追加）
+- `649e953` fix(ceo): タブ可視性のモード連動 + showModal isHtml漏れ9箇所（追加）
+
+#### Sprint B (構造整理 + XSS) - tag: `v2.1.0-sprintB-structure`
+- `953b00b` chore: windowBridge.ts 削除 (F-3 dead code整理)
+- `119c359` fix(xss): CEOモード文字列の入力側 escapeHtml (F-5縮小版)
+- `2d1635a` fix(xss/dedup): I-2 escape + I-4 calculateTeamCompatibility 一本化
+- `40a7bde` fix(xss): game.ts:540 outcome.description escape (取締役会指摘 I-CTO1)
+- `f4075a1` fix(xss): executeTraining bonusMessages escape (CISO MEDIUM)
+
+#### Sprint C (状態汚染防止) - tag: `v2.1.0-sprintC-state-safety`
+- `7506524` fix(storage): I-1 + I-3 セーブデータ汚染防止
+- `2b29002` refactor(finance): I-5 nextTurn 統一 + I-6 tutorialCompleted バリデーション
+- `646726c` test(gameStore): I-1/I-3/I-6 回帰テスト10件追加 (57→67)
+
+#### Sprint D (品質仕上げ) - tag 未
+- `bf5c227` fix(observability): R-1 critical な silent fail 警告化（invokeWindowCritical ヘルパー）
+- `a65d6ba` chore: ドキュメント更新 + R-3 tutorial step escape
+- `3f2ea90` chore(deps): npm audit fix で vite HIGH脆弱性3件解消（CVE-2025 系）
+
+### 品質ゲート結果
+- A0 Finding突合: 全 F-1〜F-6, I-1〜I-6, R-1〜R-3 の file:LINE 実在確認済（行ズレ2件は内容一致で許容）
+- Sprint B末 /取締役会: CONDITIONAL (game.ts:540 outcome.description 漏れ) → 修正後 Go
+- Sprint B末 /ciso Code Review: ⚠️ MEDIUM 1件 (executeTraining bonusMessages) → 修正後 ✅ Approved
+- Sprint C末 回帰テスト追加で 67/67
+- Sprint D末 /取締役会: ✅ **Go 判定**（無条件）
+
+### 主要アーキ変更
+- `src/lib/ui/escape.ts` 新設（escapeHtml 独立化、循環依存回避）
+- `src/lib/windowBridge.ts` 削除（dead code、main.ts は game.ts のみ import）
+- `applyTabVisibilityForMode(mode)` 新設（renderers.ts、CEO/管理モードのタブDOM切替）
+- `renderEmployeesForDesk(state)` 新設（deskView.ts、CEO社員タブ用）
+- `removeTutorialOverlay()` 新設（TutorialManager.ts、DOM残留防止）
+- `invokeWindowCritical(fnName, ...args)` 新設（GameManager.ts、silent fail警告化）
+- `FinanceManager.calculateMonthlyRevenue()` を nextTurn から呼び出し（二重実装解消）
+- showModal/closeModal にチュートリアル排他制御 (`_tutorialHiddenByModal`)
+
+### 次回やること / 残課題
+- [ ] **v2.1.0 タグ打ち + push origin main + push origin v2.1.0**（ユーザー判断、明示確認必須）
+- [ ] Sprint C/D 後のブラウザ最終目視（月次決算挙動・調査結果報告HTML表示確認）
+- [ ] **Phase 6 候補**:
+  - unsafeHTML 完全排除（Lit テンプレート全面化、B2-aで部分対応）
+  - tsc --noEmit 既存エラー ~120件対応
+  - Tauri 2.x マルチプラットフォーム化
+  - **Zod GameState スキーマ拡張**（CISO推奨、Defense in Depth完成）
+  - レガシー `js/business-game.js` / `js/game-ui.js` の最終削除判断
+  - 収益化戦略（広告/IAP/プレミアム）
+  - ポートフォリオ展開・ランディングページ
+
+### 学んだ知見（重要）
+- **escape sweep は semantic 単位で実施**（中間変数 push パターンも捕捉）— Sprint B末 CISO 指摘経由
+- **二重実装はManager 側で集約**（FinanceManager.calculateMonthlyRevenue 教訓）
+- **CEOモード等のモード分岐は描画層・遷移層・DOM層の三重防御**で堅牢化
+- **dead code は早期削除**（windowBridge 1年放置で関数定義差異の二重化リスク蓄積）
+- **CISO/取締役会フィードバックループ**が品質ゲートとして機能（漏れ2件捕捉）
+
+---
+
 ## セッション: 2026-03-27
 
 ### 作業サマリー
