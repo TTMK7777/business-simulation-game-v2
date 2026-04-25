@@ -43,7 +43,18 @@ export function requireCompanyActive(): boolean {
 // ============================================
 // モーダル基本操作
 // ============================================
+
+// チュートリアルがモーダルによって一時非表示にされたか追跡（排他制御）
+let _tutorialHiddenByModal = false
+
 export function showModal(title: string, body: string, isHtml: boolean = false): void {
+    // 排他制御: チュートリアル表示中ならモーダル開始時に隠す
+    const tutorialOverlay = document.getElementById('tutorialOverlay')
+    if (tutorialOverlay && tutorialOverlay.style.display !== 'none') {
+        tutorialOverlay.style.display = 'none'
+        _tutorialHiddenByModal = true
+    }
+
     document.getElementById('modalTitle')!.textContent = title
     // isHtml=false: テキストをエスケープしてから改行を<br>に変換
     // isHtml=true: 呼び出し元が安全なHTMLを構築済みと想定
@@ -65,6 +76,13 @@ export function closeModal(): void {
     if (employeeRadarChart) {
         employeeRadarChart.destroy()
         employeeRadarChart = null
+    }
+
+    // 排他制御: モーダルによって隠したチュートリアルを復元
+    if (_tutorialHiddenByModal) {
+        const tutorialOverlay = document.getElementById('tutorialOverlay')
+        if (tutorialOverlay) tutorialOverlay.style.display = 'flex'
+        _tutorialHiddenByModal = false
     }
 }
 

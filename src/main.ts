@@ -210,7 +210,7 @@ const gameHTML = `
                     <canvas id="revenueChart" height="180"></canvas>
                 </div>
 
-                <button class="btn" data-requires-active="true" onclick="nextTurn()">⏭️ 次のターンへ</button>
+                <button id="endTurnBtn" class="btn" data-requires-active="true" onclick="nextTurn()">⏭️ 次のターンへ</button>
                 <button class="btn" data-requires-active="true" onclick="saveGame()">💾 ゲーム保存</button>
                 <button class="btn" onclick="returnToMenu()" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333;">🏠 メニューに戻る</button>
                 <button class="btn" id="restartButton" onclick="restartGame()">🔄 ゲーム再スタート</button>
@@ -323,6 +323,10 @@ async function returnToMenu() {
     console.error('❌ #app要素が見つかりません')
     return
   }
+
+  // チュートリアルオーバーレイは body 直下に存在するため、明示的に削除
+  // （app.innerHTML 上書きでは body 直下要素は残留する）
+  document.getElementById('tutorialOverlay')?.remove()
 
   // メニュー画面に切り替え
   app.innerHTML = menuHTML

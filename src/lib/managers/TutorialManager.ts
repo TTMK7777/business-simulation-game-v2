@@ -130,11 +130,7 @@ export function completeTutorial(): void {
     const game = getGame()
     game.tutorialCompleted = true
     removeHighlight()
-
-    const overlay = document.getElementById('tutorialOverlay')
-    if (overlay) {
-        overlay.style.display = 'none'
-    }
+    removeTutorialOverlay()
 
     // TODO: UI接続 - showModal で完了メッセージを表示
     // 現状は呼び出し元で showModal を使用
@@ -145,10 +141,14 @@ export function skipTutorial(): void {
     const game = getGame()
     game.tutorialCompleted = true
     removeHighlight()
+    removeTutorialOverlay()
+}
 
+/** チュートリアルオーバーレイを DOM から完全削除（残留防止） */
+export function removeTutorialOverlay(): void {
     const overlay = document.getElementById('tutorialOverlay')
     if (overlay) {
-        overlay.style.display = 'none'
+        overlay.remove()
     }
 }
 

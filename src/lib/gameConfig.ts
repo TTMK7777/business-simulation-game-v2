@@ -774,7 +774,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         title: '従業員を採用しよう',
         description: '人事タブで従業員を採用しましょう。従業員がいないと製品を開発できません。',
         emoji: '👥',
-        targetElement: '.tab[data-panel="hr"]',
+        targetElement: '.tab[data-panel="employees"]',
         action: 'hire_employee',
         reward: { type: 'money', value: 100000 }
     },
