@@ -2,7 +2,7 @@
 // game.ts:3604-3780 から抽出（純粋ロジック、DOM操作なし）
 
 import { getGame } from '../store/gameStore'
-import { PERSONALITIES } from '../config/personalities'
+import { calculateTeamCompatibility } from './HRManager'
 
 // ============================================
 // 結果型
@@ -34,41 +34,6 @@ export interface ExecuteMarketingResult {
     brandChange: number
     newMarketShare: number
     newBrandPower: number
-}
-
-// ============================================
-// チーム相性計算（HRManager から再利用可能にするためここでも定義）
-// TODO: Phase 2 で HRManager.calculateTeamCompatibility を正式に import
-// ============================================
-export function calculateTeamCompatibility(employees: any[]): number {
-    if (!employees || employees.length < 2) return 1.0
-
-    let compatibilityScore = 1.0
-
-    for (let i = 0; i < employees.length; i++) {
-        for (let j = i + 1; j < employees.length; j++) {
-            const emp1 = employees[i]
-            const emp2 = employees[j]
-
-            if (!emp1.personalityKey || !emp2.personalityKey) continue
-
-            const personality1 = PERSONALITIES[emp1.personalityKey]
-            const personality2 = PERSONALITIES[emp2.personalityKey]
-
-            if (!personality1 || !personality2) continue
-
-            // 相性良い
-            if (personality1.compatible && personality1.compatible.includes(emp2.personalityKey)) {
-                compatibilityScore += 0.1
-            }
-            // 相性悪い
-            if (personality1.incompatible && personality1.incompatible.includes(emp2.personalityKey)) {
-                compatibilityScore -= 0.15
-            }
-        }
-    }
-
-    return Math.max(0.7, Math.min(1.3, compatibilityScore))
 }
 
 // ============================================

@@ -33,6 +33,7 @@ import * as CEOManager from './CEOManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { applyTabVisibilityForMode } from '../ui/renderers'
+import { escapeHtml } from '../ui/escape'
 
 // ============================================
 // 定数
@@ -516,9 +517,9 @@ export function nextTurn(): void {
         setTimeout(() => {
             const messages = hiddenTraitMessages.map(msg => {
                 return `<div style="margin: 12px 0; padding: 12px; background: linear-gradient(135deg, #ffd700, #ffed4e); border-radius: 12px;">
-                    <strong>${msg.name}</strong>の隠れた才能が開花！<br>
-                    <span style="font-size: 18px;">${msg.trait.emoji} ${msg.trait.name}</span><br>
-                    <span style="font-size: 13px; color: #666;">${msg.trait.effect}</span>
+                    <strong>${escapeHtml(msg.name)}</strong>の隠れた才能が開花！<br>
+                    <span style="font-size: 18px;">${msg.trait.emoji} ${escapeHtml(msg.trait.name)}</span><br>
+                    <span style="font-size: 13px; color: #666;">${escapeHtml(msg.trait.effect)}</span>
                 </div>`
             }).join('')
             ;(window as any).showModal?.('✨ 隠れた特性が判明！', messages, true)
@@ -561,7 +562,7 @@ export function nextTurn(): void {
             game.gameOverReason = gameOverReason
             setTimeout(() => {
                 const ceo = game.ceo!
-                ;(window as any).showModal?.('🏢 ゲームオーバー', `<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:16px;">😔</div><p style="font-size:16px;">${gameOverReason}</p><p style="margin-top:16px;color:#888;">決裁回数: ${ceo.decisionsCorrect + ceo.decisionsWrong}回 | 正答率: ${ceo.decisionsCorrect + ceo.decisionsWrong > 0 ? Math.floor(ceo.decisionsCorrect / (ceo.decisionsCorrect + ceo.decisionsWrong) * 100) : 0}%</p></div>`, true)
+                ;(window as any).showModal?.('🏢 ゲームオーバー', `<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:16px;">😔</div><p style="font-size:16px;">${escapeHtml(gameOverReason)}</p><p style="margin-top:16px;color:#888;">決裁回数: ${ceo.decisionsCorrect + ceo.decisionsWrong}回 | 正答率: ${ceo.decisionsCorrect + ceo.decisionsWrong > 0 ? Math.floor(ceo.decisionsCorrect / (ceo.decisionsCorrect + ceo.decisionsWrong) * 100) : 0}%</p></div>`, true)
             }, 1200)
         }
 

@@ -8,6 +8,7 @@ import { renderDeskView } from './deskView'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
+import { calculateTeamCompatibility } from '../managers/HRManager'
 import {
     ACHIEVEMENTS,
     ACHIEVEMENT_RARITIES,
@@ -15,36 +16,6 @@ import {
     COMPETITOR_STRATEGIES,
     COMPETITOR_ACTIONS,
 } from '../gameConfig'
-
-// チーム相性スコア計算（renderEmployeesで使用）
-function calculateTeamCompatibility(employees: any[]): number {
-    if (!employees || employees.length < 2) return 1.0
-
-    let compatibilityScore = 1.0
-
-    for (let i = 0; i < employees.length; i++) {
-        for (let j = i + 1; j < employees.length; j++) {
-            const emp1 = employees[i]
-            const emp2 = employees[j]
-
-            if (!emp1.personalityKey || !emp2.personalityKey) continue
-
-            const personality1 = PERSONALITIES[emp1.personalityKey]
-            const personality2 = PERSONALITIES[emp2.personalityKey]
-
-            if (!personality1 || !personality2) continue
-
-            if (personality1.compatible && personality1.compatible.includes(emp2.personalityKey)) {
-                compatibilityScore += 0.1
-            }
-            if (personality1.incompatible && personality1.incompatible.includes(emp2.personalityKey)) {
-                compatibilityScore -= 0.15
-            }
-        }
-    }
-
-    return Math.max(0.7, Math.min(1.3, compatibilityScore))
-}
 
 // ============================================
 // 実績パネル描画
