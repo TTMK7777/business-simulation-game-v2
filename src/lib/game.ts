@@ -537,7 +537,7 @@ function verdictDocument(docId: string, verdict: string) {
     if (doc && doc.outcome) {
         showModal('📋 決裁結果', renderVerdictResult(doc), true)
     } else {
-        showModal('📋 決裁結果', `<p>${outcome.description}</p>`, true)
+        showModal('📋 決裁結果', `<p>${escapeHtml(outcome.description)}</p>`, true)
     }
     updateDisplay()
     renderActivePanel()
