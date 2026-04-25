@@ -3,17 +3,8 @@ import { CATEGORY_NAMES, PRIORITY_DISPLAY } from '../config/documents'
 import { renderCEOKPIBar } from './ceoStatus'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { PERSONALITIES } from '../config/personalities'
+import { escapeHtml } from './escape'
 import type { ApprovalDocument } from '../types/index'
-
-// XSS防止用ローカルエスケープ（B2-aで全面Lit化予定）
-function escapeText(text: any): string {
-  return String(text ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-}
 
 export function renderDeskView(state: any): string {
   const kpiBar = renderCEOKPIBar(state)
@@ -98,12 +89,12 @@ function renderDocumentCard(doc: ApprovalDocument, state: any, isInvestigating =
   }
 
   return `
-    <div class="doc-card ${isInvestigating ? 'investigating' : ''}" onclick="openDocument('${doc.id}')">
+    <div class="doc-card ${isInvestigating ? 'investigating' : ''}" onclick="openDocument('${escapeHtml(doc.id)}')">
       <div class="doc-card-priority" style="background:${priority.color}">${priority.emoji}</div>
       <div class="doc-card-content">
-        <div class="doc-card-title">${doc.title}</div>
+        <div class="doc-card-title">${escapeHtml(doc.title)}</div>
         <div class="doc-card-meta">
-          ${doc.department}部 ${doc.submitter.name} | ${catName} | 💰${Math.floor(doc.details.amount / 10000)}万円
+          ${escapeHtml(doc.department)}部 ${escapeHtml(doc.submitter.name)} | ${escapeHtml(catName)} | 💰${Math.floor(doc.details.amount / 10000)}万円
         </div>
       </div>
       <div class="doc-card-right">
@@ -136,13 +127,13 @@ export function renderEmployeesForDesk(state: any): string {
         <div class="employee-header">
           <div class="employee-name">
             <span class="icon-badge">👤</span>
-            ${escapeText(emp.name)}
+            ${escapeHtml(emp.name)}
           </div>
-          <span class="personality">${personality.emoji} ${escapeText(personality.name)}</span>
+          <span class="personality">${personality.emoji} ${escapeHtml(personality.name)}</span>
         </div>
         <div style="margin: 8px 0; display: flex; gap: 6px; flex-wrap: wrap;">
-          <span class="department-badge">${dept.emoji} ${escapeText(dept.name)}</span>
-          <span class="position-badge">${pos.emoji} ${escapeText(pos.name)}</span>
+          <span class="department-badge">${dept.emoji} ${escapeHtml(dept.name)}</span>
+          <span class="position-badge">${pos.emoji} ${escapeHtml(pos.name)}</span>
         </div>
         <div class="abilities">
           <div class="ability"><span class="ability-name">⚙️ 技術: ${Number(abilities.technical) || 0}</span></div>

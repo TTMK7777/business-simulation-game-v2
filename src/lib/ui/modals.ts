@@ -18,17 +18,10 @@ import { generateCandidateForDepartment, canPromote, canUnlockSkill } from '../m
 let employeeRadarChart: any = null
 
 // ============================================
-// XSS対策用エスケープ関数
+// XSS対策用エスケープ関数（後方互換のため再export、実体は ./escape.ts）
 // ============================================
-export function escapeHtml(unsafe: any): string {
-    if (unsafe === null || unsafe === undefined) return ''
-    return String(unsafe)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-}
+export { escapeHtml } from './escape'
+import { escapeHtml } from './escape'
 
 // ============================================
 // 倒産チェック

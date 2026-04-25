@@ -1,5 +1,6 @@
 // 社長モード: 書類詳細モーダル
 import { CATEGORY_NAMES, PRIORITY_DISPLAY } from '../config/documents'
+import { escapeHtml } from './escape'
 import type { ApprovalDocument } from '../types/index'
 
 export function renderDocumentDetail(doc: ApprovalDocument, state: any): string {
@@ -16,8 +17,8 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
         <h4>📝 気になる点</h4>
         ${doc.clues.map(c => `
           <div class="doc-clue-item">
-            <span class="doc-clue-field">${c.field}</span>
-            <span class="doc-clue-obs">${c.observation}</span>
+            <span class="doc-clue-field">${escapeHtml(c.field)}</span>
+            <span class="doc-clue-obs">${escapeHtml(c.observation)}</span>
           </div>
         `).join('')}
       </div>
@@ -30,7 +31,7 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
     investigationHtml = `
       <div class="doc-investigation-result">
         <h4>🔍 調査報告</h4>
-        <p>${doc.investigationResult}</p>
+        <p>${escapeHtml(doc.investigationResult)}</p>
       </div>
     `
   }
@@ -56,15 +57,15 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
         ${deadlineHtml}
       </div>
 
-      <h3 class="doc-detail-title">${doc.title}</h3>
+      <h3 class="doc-detail-title">${escapeHtml(doc.title)}</h3>
 
       <div class="doc-submitter">
-        <span>提出者: ${doc.submitter.name}（${doc.department}部・${doc.submitter.position}）</span>
+        <span>提出者: ${escapeHtml(doc.submitter.name)}（${escapeHtml(doc.department)}部・${escapeHtml(doc.submitter.position)}）</span>
       </div>
 
       <div class="doc-summary">
         <h4>概要</h4>
-        <p>${doc.summary}</p>
+        <p>${escapeHtml(doc.summary)}</p>
       </div>
 
       <div class="doc-details-grid">
@@ -74,20 +75,20 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
         </div>
         <div class="doc-detail-item">
           <span class="doc-detail-label">📈 期待効果</span>
-          <span class="doc-detail-value">${doc.details.expectedBenefit}</span>
+          <span class="doc-detail-value">${escapeHtml(doc.details.expectedBenefit)}</span>
         </div>
         <div class="doc-detail-item">
           <span class="doc-detail-label">📅 タイムライン</span>
-          <span class="doc-detail-value">${doc.details.timeline}</span>
+          <span class="doc-detail-value">${escapeHtml(doc.details.timeline)}</span>
         </div>
         <div class="doc-detail-item">
           <span class="doc-detail-label">⚠️ リスク</span>
-          <span class="doc-detail-value">${doc.details.risks}</span>
+          <span class="doc-detail-value">${escapeHtml(doc.details.risks)}</span>
         </div>
         ${doc.details.attachments.length > 0 ? `
           <div class="doc-detail-item">
             <span class="doc-detail-label">📎 添付</span>
-            <span class="doc-detail-value">${doc.details.attachments.join(', ')}</span>
+            <span class="doc-detail-value">${doc.details.attachments.map(a => escapeHtml(a)).join(', ')}</span>
           </div>
         ` : ''}
       </div>
@@ -97,25 +98,25 @@ export function renderDocumentDetail(doc: ApprovalDocument, state: any): string 
 
       ${!isProcessed ? `
         <div class="doc-verdict-buttons">
-          <button class="btn desk-btn approve-btn" onclick="verdictDocument('${doc.id}','approve')" ${buttonsDisabled}>
+          <button class="btn desk-btn approve-btn" onclick="verdictDocument('${escapeHtml(doc.id)}','approve')" ${buttonsDisabled}>
             ✅ 承認
           </button>
-          <button class="btn desk-btn reject-btn" onclick="verdictDocument('${doc.id}','reject')" ${buttonsDisabled}>
+          <button class="btn desk-btn reject-btn" onclick="verdictDocument('${escapeHtml(doc.id)}','reject')" ${buttonsDisabled}>
             ❌ 却下
           </button>
-          <button class="btn desk-btn hold-btn" onclick="verdictDocument('${doc.id}','hold')" ${buttonsDisabled}>
+          <button class="btn desk-btn hold-btn" onclick="verdictDocument('${escapeHtml(doc.id)}','hold')" ${buttonsDisabled}>
             ⏸️ 保留
           </button>
-          <button class="btn desk-btn remand-btn" onclick="verdictDocument('${doc.id}','remand')" ${buttonsDisabled} ${remandsLeft <= 0 ? 'disabled title="今週の差し戻し上限に達しています"' : ''}>
+          <button class="btn desk-btn remand-btn" onclick="verdictDocument('${escapeHtml(doc.id)}','remand')" ${buttonsDisabled} ${remandsLeft <= 0 ? 'disabled title="今週の差し戻し上限に達しています"' : ''}>
             🔄 差し戻し(残${remandsLeft}回)
           </button>
-          <button class="btn desk-btn investigate-btn" onclick="verdictDocument('${doc.id}','investigate')" ${buttonsDisabled} ${!canAffordInvestigation ? 'disabled title="調査費用が不足しています"' : ''}>
+          <button class="btn desk-btn investigate-btn" onclick="verdictDocument('${escapeHtml(doc.id)}','investigate')" ${buttonsDisabled} ${!canAffordInvestigation ? 'disabled title="調査費用が不足しています"' : ''}>
             🔍 調査(5万円)
           </button>
         </div>
       ` : `
         <div class="doc-verdict-result">
-          <p>${doc.outcome?.description || '処理済み'}</p>
+          <p>${escapeHtml(doc.outcome?.description || '処理済み')}</p>
         </div>
       `}
     </div>
@@ -146,7 +147,7 @@ export function renderVerdictResult(doc: ApprovalDocument): string {
   return `
     <div class="verdict-result">
       <h4>📋 決裁結果</h4>
-      <p>${doc.outcome.description}</p>
+      <p>${escapeHtml(doc.outcome.description)}</p>
       <div class="verdict-changes">
         ${changes.join(' | ')}
       </div>

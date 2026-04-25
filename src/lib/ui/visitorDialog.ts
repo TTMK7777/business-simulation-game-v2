@@ -1,5 +1,6 @@
 // 社長モード: 訪問者会話UI
 import { MOOD_DISPLAY } from '../config/visitors'
+import { escapeHtml } from './escape'
 import type { VisitorEvent } from '../types/index'
 
 export function renderVisitorDialog(event: VisitorEvent): string {
@@ -10,18 +11,18 @@ export function renderVisitorDialog(event: VisitorEvent): string {
       <div class="visitor-header">
         <div class="visitor-icon">${mood.emoji}</div>
         <div class="visitor-info">
-          <div class="visitor-name">${event.visitor.name}</div>
-          <div class="visitor-meta">${event.visitor.department}部・${event.visitor.position} | ${mood.label}</div>
+          <div class="visitor-name">${escapeHtml(event.visitor.name)}</div>
+          <div class="visitor-meta">${escapeHtml(event.visitor.department)}部・${escapeHtml(event.visitor.position)} | ${mood.label}</div>
         </div>
       </div>
 
-      <div class="visitor-title">${event.title}</div>
+      <div class="visitor-title">${escapeHtml(event.title)}</div>
 
       <div class="visitor-dialog-lines">
         ${event.dialogLines.map(line => `
           <div class="visitor-dialog-line">
-            <span class="dialog-speaker">${event.visitor.name}:</span>
-            <span class="dialog-text">「${line}」</span>
+            <span class="dialog-speaker">${escapeHtml(event.visitor.name)}:</span>
+            <span class="dialog-text">「${escapeHtml(line)}」</span>
           </div>
         `).join('')}
       </div>
@@ -39,9 +40,9 @@ export function renderVisitorDialog(event: VisitorEvent): string {
           const toneEmoji = resp.tone === 'supportive' ? '😊' : resp.tone === 'harsh' ? '😤' : resp.tone === 'diplomatic' ? '🤔' : '😐'
           const toneLabel = resp.tone === 'supportive' ? '好意的' : resp.tone === 'harsh' ? '厳しい' : resp.tone === 'diplomatic' ? '外交的' : '中立'
           return `
-            <button class="visitor-response-btn" onclick="respondToVisitor('${event.id}','${resp.id}')">
+            <button class="visitor-response-btn" onclick="respondToVisitor('${escapeHtml(event.id)}','${escapeHtml(resp.id)}')">
               <span class="response-tone">${toneEmoji} ${toneLabel}</span>
-              <span class="response-text">${resp.text}</span>
+              <span class="response-text">${escapeHtml(resp.text)}</span>
             </button>
           `
         }).join('')}
@@ -73,7 +74,7 @@ export function renderVisitorResult(event: VisitorEvent, effects: any): string {
   return `
     <div class="visitor-result">
       <h4>訪問者対応完了</h4>
-      <p>${event.visitor.name}への対応が完了しました。</p>
+      <p>${escapeHtml(event.visitor.name)}への対応が完了しました。</p>
       <div class="visitor-result-changes">
         ${changes.join(' | ')}
       </div>
