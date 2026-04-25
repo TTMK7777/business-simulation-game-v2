@@ -325,12 +325,12 @@ function executeTraining(focusType: string) {
 
         if (emp.subTraits && emp.subTraits.includes('fast_learner')) {
             baseIncrease = Math.floor(baseIncrease * 1.5)
-            bonusMessages.push(`${emp.name}は早習得で効果アップ！`)
+            bonusMessages.push(`${escapeHtml(emp.name)}は早習得で効果アップ！`)
         }
 
         if (emp.personalityKey === 'researcher') {
             baseIncrease = Math.floor(baseIncrease * 1.3)
-            bonusMessages.push(`${emp.name}は研究者気質で効果アップ！`)
+            bonusMessages.push(`${escapeHtml(emp.name)}は研究者気質で効果アップ！`)
         }
 
         const focusMap: Record<string, Record<string, number>> = {
@@ -371,7 +371,7 @@ function executeTraining(focusType: string) {
         })
 
         if (earnedPoints > 0) {
-            bonusMessages.push(`${emp.name}はスキルポイント+${earnedPoints}を獲得！`)
+            bonusMessages.push(`${escapeHtml(emp.name)}はスキルポイント+${earnedPoints}を獲得！`)
         }
 
         growthDetails.push({ name: emp.name, growth: avgGrowth })
