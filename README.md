@@ -3,7 +3,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-57%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-67%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 > IT企業を経営し、従業員の採用・育成、製品開発、市場競争を通じて成功を目指す本格的な経営シミュレーションゲーム。
 
@@ -26,7 +26,7 @@ npm test           # テスト実行
 | ビルド | Vite 7, PWA対応 |
 | チャート | Chart.js 4 (遅延初期化) |
 | ストレージ | LocalForage + Zod バリデーション |
-| テスト | Vitest (57テスト) |
+| テスト | Vitest (67テスト) |
 
 ## アーキテクチャ
 
@@ -64,13 +64,28 @@ npm test           # 全テスト実行
 npm test -- --run  # CI用 (watchなし)
 ```
 
-4テストファイル / 57テストケース:
+5テストファイル / 67テストケース:
 - DocumentManager — F4演算子優先度バグ回帰テスト
 - HRManager — 昇進判定・成長倍率・チーム相性
 - qualificationGenerator — 資格割当・前提条件チェック
 - storage — チェックサム・メタデータバリデーション
+- gameStore — I-1/I-3/I-6 セーブデータ汚染防止回帰テスト (v2.1.0で追加)
 
 ## 変更履歴
+
+### v2.1.0 (2026-04)
+
+全面デバッグ実施 — FIRE: F=6, I=6, R=2/3 全件解消、17コミット
+
+- **CEOモード安定化**: タブ切替時のモード退化バグ修正、タブ可視性のモード連動 (`applyTabVisibilityForMode`)
+- **チュートリアル排他制御**: モーダル/Tutorial の DOM 競合解消、CEOモード時は自動抑制
+- **構造整理**: `windowBridge.ts` 削除 (dead code)、`escape.ts` 独立モジュール化
+- **XSS強化**: 入力側 escapeHtml 戦略、showModal isHtml=true 漏れ9箇所修正
+- **状態管理**: `_pendingCausalEffects` のセーブ汚染防止、tutorialCompleted/wasLowMoney 型バリデーション
+- **計算統一**: `nextTurn` 月次計算を FinanceManager.calculateMonthlyRevenue に集約
+- **観測性**: 初期化系の silent fail を `invokeWindowCritical` ヘルパーで警告化
+- **回帰テスト**: 57 → 67 tests (gameStore.test.ts 新設、I-1/I-3/I-6 カバー)
+- **依存更新**: vite HIGH脆弱性3件解消 (CVE-2025 Path Traversal/fs.deny bypass/WebSocket file read)、`npm audit` 0 vulnerabilities
 
 ### v2.0.2 (2026-03)
 
