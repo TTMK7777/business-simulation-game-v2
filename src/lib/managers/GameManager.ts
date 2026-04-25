@@ -32,6 +32,7 @@ import * as VisitorManager from './VisitorManager'
 import * as CEOManager from './CEOManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
+import { applyTabVisibilityForMode } from '../ui/renderers'
 
 // ============================================
 // 定数
@@ -175,9 +176,10 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
 
         // ======= 社長モード: ロード時のUI設定 =======
         if (game.gameMode === 'ceo') {
-            const deskTab = document.querySelector('.tab[data-panel="desk"]') as HTMLElement
-            if (deskTab) deskTab.style.display = ''
+            applyTabVisibilityForMode('ceo')
             if (getActivePanel() !== 'desk') setActivePanel('desk')
+        } else {
+            applyTabVisibilityForMode('management')
         }
     } else {
         console.log(`🆕 スロット ${slotId} で新規ゲーム開始`)
@@ -338,7 +340,7 @@ export function nextTurn(): void {
         const investigationResults = DocumentManager.processInvestigationResults(game)
         if (investigationResults.length > 0) {
             const msgs = investigationResults.map((d: any) => `<div style="margin:8px 0;padding:10px;background:rgba(52,152,219,0.08);border-radius:8px;"><strong>🔍 ${d.title}</strong><br>${d.investigationResult}</div>`).join('')
-            ;(window as any).showModal?.('🔍 調査結果報告', msgs)
+            ;(window as any).showModal?.('🔍 調査結果報告', msgs, true)
         }
 
         // 2. 長期投資の効果発現
@@ -346,7 +348,7 @@ export function nextTurn(): void {
         if (longTermOutcomes.length > 0) {
             setTimeout(() => {
                 const msgs = longTermOutcomes.map((o: any) => `<div style="margin:8px 0;padding:10px;background:rgba(46,204,113,0.1);border-radius:8px;">🌱 ${o.description}</div>`).join('')
-                ;(window as any).showModal?.('🌱 投資の成果', msgs)
+                ;(window as any).showModal?.('🌱 投資の成果', msgs, true)
             }, 300)
         }
 
@@ -372,7 +374,7 @@ export function nextTurn(): void {
         if (expired.length > 0) {
             setTimeout(() => {
                 const msgs = expired.map((o: any) => `<div style="margin:6px 0;color:#e74c3c;">⚠️ ${o.description}</div>`).join('')
-                ;(window as any).showModal?.('⚠️ 期限切れ書類', msgs)
+                ;(window as any).showModal?.('⚠️ 期限切れ書類', msgs, true)
             }, 600)
         }
 
@@ -489,7 +491,7 @@ export function nextTurn(): void {
             ;(window as any).updateDisplay?.()
             ;(window as any).renderActivePanel?.()
             ;(window as any).updateRanking?.()
-            ;(window as any).showModal?.('💔 ゲームオーバー', '資金不足で倒産しました...<br>再スタートしてください。')
+            ;(window as any).showModal?.('💔 ゲームオーバー', '資金不足で倒産しました...<br>再スタートしてください。', true)
             return
         }
 
@@ -504,7 +506,7 @@ export function nextTurn(): void {
         summaryLines.push(`<div style="margin-top: 8px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
             💰 最終利益: <strong style="color: ${profitColor}">${Math.floor(profit / 10000)}万円</strong>
         </div>`)
-        ;(window as any).showModal?.('📅 月次決算', summaryLines.join('<br>'))
+        ;(window as any).showModal?.('📅 月次決算', summaryLines.join('<br>'), true)
         ;(window as any).updateCompetitors?.()
         ;(window as any).generateNews?.()
     }
@@ -519,7 +521,7 @@ export function nextTurn(): void {
                     <span style="font-size: 13px; color: #666;">${msg.trait.effect}</span>
                 </div>`
             }).join('')
-            ;(window as any).showModal?.('✨ 隠れた特性が判明！', messages)
+            ;(window as any).showModal?.('✨ 隠れた特性が判明！', messages, true)
             ;(window as any).renderActivePanel?.()
         }, 500)
     }
@@ -543,10 +545,10 @@ export function nextTurn(): void {
             const review = CEOManager.generateQuarterlyReview(game)
             if (review) {
                 setTimeout(() => {
-                    ;(window as any).showModal?.('📊 四半期レビュー', renderQuarterlyReview(game))
+                    ;(window as any).showModal?.('📊 四半期レビュー', renderQuarterlyReview(game), true)
                     // レビュー後に方針選択を促す
                     setTimeout(() => {
-                        ;(window as any).showModal?.('🎯 経営方針', renderPolicySelection(game))
+                        ;(window as any).showModal?.('🎯 経営方針', renderPolicySelection(game), true)
                     }, 1000)
                 }, 800)
             }
@@ -559,14 +561,14 @@ export function nextTurn(): void {
             game.gameOverReason = gameOverReason
             setTimeout(() => {
                 const ceo = game.ceo!
-                ;(window as any).showModal?.('🏢 ゲームオーバー', `<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:16px;">😔</div><p style="font-size:16px;">${gameOverReason}</p><p style="margin-top:16px;color:#888;">決裁回数: ${ceo.decisionsCorrect + ceo.decisionsWrong}回 | 正答率: ${ceo.decisionsCorrect + ceo.decisionsWrong > 0 ? Math.floor(ceo.decisionsCorrect / (ceo.decisionsCorrect + ceo.decisionsWrong) * 100) : 0}%</p></div>`)
+                ;(window as any).showModal?.('🏢 ゲームオーバー', `<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:16px;">😔</div><p style="font-size:16px;">${gameOverReason}</p><p style="margin-top:16px;color:#888;">決裁回数: ${ceo.decisionsCorrect + ceo.decisionsWrong}回 | 正答率: ${ceo.decisionsCorrect + ceo.decisionsWrong > 0 ? Math.floor(ceo.decisionsCorrect / (ceo.decisionsCorrect + ceo.decisionsWrong) * 100) : 0}%</p></div>`, true)
             }, 1200)
         }
 
         // 訪問者ダイアログの表示
         if (game.currentVisitor) {
             setTimeout(() => {
-                ;(window as any).showModal?.('🚪 来客', renderVisitorDialog(game.currentVisitor!))
+                ;(window as any).showModal?.('🚪 来客', renderVisitorDialog(game.currentVisitor!), true)
             }, 400)
         }
     }
@@ -621,6 +623,9 @@ export async function restartGame(): Promise<void> {
     ;(window as any).closeModal?.()
     resetGameState()
     addInitialEmployee()
+
+    // 管理モードに戻ったタブ可視性を復元
+    applyTabVisibilityForMode('management')
 
     // TODO: 接続
     ;(window as any).updateDisplay?.()

@@ -234,6 +234,23 @@ export function updateRanking(): void {
 // タブ切り替え
 // ============================================
 
+const MANAGEMENT_TABS = ['overview', 'employees', 'departments', 'products', 'market', 'finance', 'certifications']
+
+/**
+ * ゲームモードに応じてタブの表示を切り替える。
+ * - 'ceo': 通常タブ非表示、deskタブのみ表示
+ * - 'management': 通常タブ表示、deskタブ非表示
+ */
+export function applyTabVisibilityForMode(mode: 'management' | 'ceo'): void {
+    const isCEO = mode === 'ceo'
+    MANAGEMENT_TABS.forEach(panel => {
+        const tab = document.querySelector(`.tab[data-panel="${panel}"]`) as HTMLElement | null
+        if (tab) tab.style.display = isCEO ? 'none' : ''
+    })
+    const deskTab = document.querySelector('.tab[data-panel="desk"]') as HTMLElement | null
+    if (deskTab) deskTab.style.display = isCEO ? '' : 'none'
+}
+
 export function showPanel(tabButton: any, panelId?: string): void {
     const game = getGame()
     let resolvedPanelId = panelId || 'overview'

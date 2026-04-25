@@ -64,7 +64,7 @@ import {
     showPanel, showAllAchievements,
     renderAchievements,
     renderActivePanel, updateDisplay, updateControls,
-    updateRanking
+    updateRanking, applyTabVisibilityForMode
 } from './ui/renderers'
 
 import {
@@ -620,8 +620,8 @@ function selectCEOTrait(trait: string) {
     game.gameMode = 'ceo'
     setActivePanel('desk')
 
-    const deskTab = document.querySelector('.tab[data-panel="desk"]') as HTMLElement
-    if (deskTab) deskTab.style.display = ''
+    // CEOモード: 通常タブを全て非表示にし、deskタブのみ表示
+    applyTabVisibilityForMode('ceo')
 
     const initialDocs = DocumentManager.generateDocuments(game, 3)
     game.documentQueue.push(...initialDocs)
