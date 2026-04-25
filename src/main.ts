@@ -409,7 +409,13 @@ function showDifficultySelection() {
           if (selectedGameMode === 'ceo') {
             if (typeof (window as any).game !== 'undefined') {
               (window as any).game.gameMode = 'ceo'
+              // 管理モード前提のチュートリアルを CEOモードでは抑制
+              // （未来の setTimeout 起動を tutorialCompleted で弾く）
+              ;(window as any).game.tutorialCompleted = true
             }
+            // 既に表示中のチュートリアル overlay があれば即削除
+            document.getElementById('tutorialOverlay')?.remove()
+
             const modalEl = document.getElementById('modal')
             if (modalEl) {
               const titleEl = document.getElementById('modalTitle')
