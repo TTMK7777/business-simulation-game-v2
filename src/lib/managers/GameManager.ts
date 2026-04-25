@@ -19,8 +19,6 @@ import { HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
 import { OFFICE_LEVELS } from '../config/offices'
 import {
     DIFFICULTY_SETTINGS,
-    BALANCE_CONFIG,
-    debugLog,
     type DifficultyLevel
 } from '../gameConfig'
 import { storageHelpers, loadSlotData, saveSlotData, type SaveMetadata } from '../storage'
@@ -30,6 +28,7 @@ import { characterManager, initCharacterRenderer, type AnimationState, type JobT
 import * as DocumentManager from './DocumentManager'
 import * as VisitorManager from './VisitorManager'
 import * as CEOManager from './CEOManager'
+import * as FinanceManager from './FinanceManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { applyTabVisibilityForMode } from '../ui/renderers'
@@ -38,7 +37,6 @@ import { escapeHtml } from '../ui/escape'
 // ============================================
 // 定数
 // ============================================
-const LOAN_INTEREST_RATE = 0.02
 const SAVE_KEY = 'businessEmpire'
 
 // ============================================
@@ -449,46 +447,14 @@ export function nextTurn(): void {
             }
         })
 
-        let revenue = 0
-        const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
+        // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一
+        // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
+        //   他方に反映されないリスクがあった）
+        const monthly = FinanceManager.calculateMonthlyRevenue()
+        const { revenue, salaryTotal, interest, profit, isBankrupt } = monthly
 
-        game.products.forEach((product: any) => {
-            let salesMultiplier = 1.0
-
-            const charismaticCount = game.employees.filter((emp: any) => emp.personalityKey === 'charismatic').length
-            if (charismaticCount > 0) {
-                salesMultiplier *= (1 + charismaticCount * 0.25)
-            }
-
-            salesMultiplier *= (1 + game.marketShare * BALANCE_CONFIG.economy.marketShareRevenueBonus)
-            salesMultiplier *= (1 + game.brandPower * BALANCE_CONFIG.economy.brandPowerRevenueBonus)
-            salesMultiplier *= difficultyMultiplier.revenueMultiplier
-
-            const baseRevenue = BALANCE_CONFIG.economy.productRevenueBase
-            const qualityRevenue = product.quality * BALANCE_CONFIG.economy.productRevenueMultiplier
-            const productRevenue = Math.floor((baseRevenue + qualityRevenue) * salesMultiplier)
-
-            product.sales += productRevenue
-            revenue += productRevenue
-
-            debugLog('balance', `製品売上計算: ${product.name}`, {
-                baseRevenue,
-                qualityRevenue,
-                salesMultiplier,
-                finalRevenue: productRevenue
-            })
-        })
-
-        const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
-        const interest = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
-        game.monthlyRevenue = revenue
-        game.revenueHistory.push(revenue)
-        const profit = revenue - salaryTotal - interest
-        game.money += profit
-
-        if (game.money < 0) {
-            game.isBankrupt = true
-            // TODO: 接続
+        if (isBankrupt) {
+            // game.isBankrupt は calculateMonthlyRevenue 内で設定済み
             ;(window as any).updateDisplay?.()
             ;(window as any).renderActivePanel?.()
             ;(window as any).updateRanking?.()

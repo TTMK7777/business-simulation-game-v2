@@ -195,6 +195,13 @@ export function normalizeGameState(): void {
         product.sales = Number(product.sales) || 0
         product.quality = Number(product.quality) || 0
     })
+    // I-6: tutorial / 実績フラグの型バリデーション
+    // 旧セーブ（フィールド未定義）からのロードでも boolean 型を保証し、
+    // チュートリアル不正発火・実績不正解除を防ぐ
+    if (typeof game.tutorialCompleted !== 'boolean') game.tutorialCompleted = false
+    if (typeof game.tutorialStep !== 'number' || game.tutorialStep < 0) game.tutorialStep = 0
+    if (typeof game.wasLowMoney !== 'boolean') game.wasLowMoney = false
+
     // ======= 社長モード フィールドの正規化 =======
     if (!game.gameMode) game.gameMode = 'management'
     if (!Array.isArray(game.documentQueue)) game.documentQueue = []
