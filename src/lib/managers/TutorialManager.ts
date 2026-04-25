@@ -4,6 +4,7 @@
 
 import { getGame } from '../store/gameStore'
 import { TUTORIAL_STEPS } from '../gameConfig'
+import { escapeHtml } from '../ui/escape'
 
 // TODO: UI接続 - showModal, updateDisplay は外部から注入予定
 // 現状は直接 document 操作のまま残す
@@ -48,6 +49,7 @@ export function showTutorialStep(): void {
     const buttonText = isLastStep ? '完了！' : (step.action ? 'この操作を実行して進む' : '次へ')
     const skipButton = !isLastStep ? `<button class="tutorial-skip-btn" onclick="skipTutorial()">スキップ</button>` : ''
 
+    // R-3: 将来 TUTORIAL_STEPS が外部入力経路を持った時の防御として escapeHtml 適用
     overlay.innerHTML = `
         <div class="tutorial-content">
             <div class="tutorial-step-indicator">
@@ -55,9 +57,9 @@ export function showTutorialStep(): void {
                     <div class="tutorial-dot ${i === game.tutorialStep ? 'active' : ''} ${i < game.tutorialStep ? 'completed' : ''}"></div>
                 `).join('')}
             </div>
-            <div class="tutorial-emoji">${step.emoji}</div>
-            <div class="tutorial-title">${step.title}</div>
-            <div class="tutorial-description">${step.description}</div>
+            <div class="tutorial-emoji">${escapeHtml(step.emoji)}</div>
+            <div class="tutorial-title">${escapeHtml(step.title)}</div>
+            <div class="tutorial-description">${escapeHtml(step.description)}</div>
             ${step.reward ? `
                 <div class="tutorial-reward">
                     🎁 報酬: ${step.reward.type === 'money' ? `${(step.reward.value / 10000).toFixed(0)}万円` : `ブランド力+${step.reward.value}`}
