@@ -13,7 +13,7 @@
 ## 知見
 - `||` vs `+` の演算子優先順位: `+` が先に評価されるため `(abilities.technical || 0) + (abilities.sales || 0)` と括弧必須
 - pruneHistory で統計を processVerdict とは別に再カウントすると長期プレイで統計2倍化
-- windowBridge.ts に46関数をバインドすることで HTML onclick 互換性を維持しつつモジュール分離を実現
+- game.ts (entry point) で HTML onclick 互換のため window バインディングを集約。windowBridge.ts は当初並列構想として作成されたが import されず dead code となっていたため v2.1.0 で削除し、game.ts 一本化に統一
 - CTO監査 FIRE分類: Fatal(即修正) > Important(次Sprint) > Recommended(推奨) > Enhancement(改善)
 - Vitest: 4テストファイル / 57テストケースで F4演算子優先度バグ回帰テスト、HRManager昇進判定等をカバー
 - コールバック未使用パラメータは `_` プレフィックス付与で TS6133 解消

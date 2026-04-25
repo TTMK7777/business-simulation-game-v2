@@ -38,7 +38,7 @@ src/lib/
 ├── managers/       ビジネスロジック (Game, HR, Finance, Product, Market, CEO, Document, Achievement, Tutorial, Visitor)
 ├── ui/             描画 (renderers, modals, charts, deskView)
 ├── animation/      キャラクターアニメーション (Phaser)
-└── windowBridge.ts HTML onclick互換ブリッジ (46関数)
+└── game.ts         エントリポイント (HTML onclick 互換の window バインディング担当)
 ```
 
 **依存方向**: `types/` → `config/` → `store/` → `managers/` → `ui/` → `game.ts`

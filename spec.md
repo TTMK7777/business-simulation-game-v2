@@ -60,7 +60,7 @@ src/lib/
   managers/       ビジネスロジック (Game, HR, Finance, Product, Market, CEO, Document, Achievement, Tutorial, Visitor)
   ui/             描画 (renderers, modals, charts, deskView)
   animation/      キャラクターアニメーション (Phaser)
-  windowBridge.ts HTML onclick互換ブリッジ (46関数)
+  game.ts         エントリポイント (HTML onclick 互換のため window バインディング担当)
 ```
 依存方向: `types/` → `config/` → `store/` → `managers/` → `ui/` → `game.ts`
 
@@ -74,7 +74,6 @@ src/lib/
 |------|------|
 | CEOモード | 社長決裁モード。書類→判定→因果チェーン→訪問者連動 |
 | Manager | 純粋ビジネスロジック（DOM非依存、結果オブジェクトを返す） |
-| windowBridge | HTML onclick互換ブリッジ（46関数） |
 | FIRE | Fatal/Important/Recommended/Enhancement の品質分類 |
 | escapeHtml | XSS防止のためのHTMLエスケープユーティリティ |
 | unsafeHTML | Lit の段階的移行に使う中間ステップのディレクティブ |
