@@ -40,6 +40,19 @@ import { escapeHtml } from '../ui/escape'
 const SAVE_KEY = 'businessEmpire'
 
 // ============================================
+// R-1: window 関数呼び出しヘルパー
+// 起動シーケンスなど critical な箇所で silent fail を防ぐ
+// ============================================
+function invokeWindowCritical(fnName: string, ...args: any[]): void {
+    const fn = (window as any)[fnName]
+    if (typeof fn === 'function') {
+        fn(...args)
+    } else {
+        console.warn(`[GameManager] critical: window.${fnName} is not bound. Initialization may be incomplete.`)
+    }
+}
+
+// ============================================
 // オフィスレベル判定
 // ============================================
 
@@ -206,12 +219,12 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
         }, 1000)
     }
 
-    // TODO: 接続 - これらは各モジュールから import して呼び出し予定
-    ;(window as any).generateNews?.()
-    ;(window as any).updateDisplay?.()
-    ;(window as any).updateRanking?.()
-    ;(window as any).initCharts?.()
-    ;(window as any).showPanel?.(null, getActivePanel())
+    // R-1: 初期化完了後の描画系は critical のため silent fail を警告化
+    invokeWindowCritical('generateNews')
+    invokeWindowCritical('updateDisplay')
+    invokeWindowCritical('updateRanking')
+    invokeWindowCritical('initCharts')
+    invokeWindowCritical('showPanel', null, getActivePanel())
 }
 
 // ============================================
@@ -229,12 +242,12 @@ export async function init(): Promise<void> {
         if (game.employees.length === 0) addInitialEmployee()
     }
 
-    // TODO: 接続
-    ;(window as any).generateNews?.()
-    ;(window as any).updateDisplay?.()
-    ;(window as any).updateRanking?.()
-    ;(window as any).initCharts?.()
-    ;(window as any).showPanel?.(null, getActivePanel())
+    // R-1: 初期化完了後の描画系は critical のため silent fail を警告化
+    invokeWindowCritical('generateNews')
+    invokeWindowCritical('updateDisplay')
+    invokeWindowCritical('updateRanking')
+    invokeWindowCritical('initCharts')
+    invokeWindowCritical('showPanel', null, getActivePanel())
 }
 
 // ============================================
