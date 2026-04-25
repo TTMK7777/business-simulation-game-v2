@@ -9,7 +9,6 @@
 - [ ] マルチプラットフォーム戦略（Tauri 2.x デスクトップ + モバイル）
 - [ ] 収益化戦略の策定（広告/IAP/プレミアム等）
 - [ ] ポートフォリオ展開・ランディングページ
-- [ ] git push（origin/main より1コミット先行中）
 - [ ] E1残り: innerHTML→Lit html移行（残9関数: renderMarket, renderFinance, showAllAchievements等）
 
 ## 完了

@@ -64,7 +64,6 @@ import {
     showPanel, showAllAchievements,
     renderAchievements,
     renderActivePanel, updateDisplay, updateControls,
-    renderEmployees,
     updateRanking
 } from './ui/renderers'
 
@@ -89,7 +88,7 @@ import * as DocumentManager from './managers/DocumentManager'
 import * as VisitorManager from './managers/VisitorManager'
 import * as CEOManager from './managers/CEOManager'
 import { createDefaultCEOStatus } from './config/ceo'
-import { renderDocumentStack, renderStatusTab } from './ui/deskView'
+import { renderDocumentStack, renderStatusTab, renderEmployeesForDesk } from './ui/deskView'
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
 import { renderVisitorResult } from './ui/visitorDialog'
 import { renderDirectivePanel } from './ui/ceoStatus'
@@ -565,7 +564,7 @@ function switchDeskTab(tabName: string) {
             content.innerHTML = renderStatusTab(game)
             break
         case 'employees':
-            renderEmployees()
+            content.innerHTML = renderEmployeesForDesk(game)
             break
         case 'directives':
             content.innerHTML = renderDirectivePanel(game)

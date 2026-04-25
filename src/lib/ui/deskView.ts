@@ -1,7 +1,19 @@
 // 社長モード: デスクビュー（メインUI）
 import { CATEGORY_NAMES, PRIORITY_DISPLAY } from '../config/documents'
 import { renderCEOKPIBar } from './ceoStatus'
+import { DEPARTMENTS, POSITIONS } from '../config/departments'
+import { PERSONALITIES } from '../config/personalities'
 import type { ApprovalDocument } from '../types/index'
+
+// XSS防止用ローカルエスケープ（B2-aで全面Lit化予定）
+function escapeText(text: any): string {
+  return String(text ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 export function renderDeskView(state: any): string {
   const kpiBar = renderCEOKPIBar(state)
@@ -100,6 +112,49 @@ function renderDocumentCard(doc: ApprovalDocument, state: any, isInvestigating =
       </div>
     </div>
   `
+}
+
+// 社員タブ（社長モード版・desk内描画用）
+export function renderEmployeesForDesk(state: any): string {
+  const employees = state.employees || []
+  if (employees.length === 0) {
+    return `
+      <div class="desk-empty">
+        <div class="desk-empty-icon">👥</div>
+        <p>従業員がいません</p>
+      </div>
+    `
+  }
+
+  const cards = employees.map((emp: any) => {
+    const personality = PERSONALITIES[emp.personalityKey] || PERSONALITIES.logical
+    const dept = DEPARTMENTS[emp.department] || { emoji: '💻', name: '開発部' }
+    const pos = POSITIONS[emp.position] || { emoji: '👤', name: 'スタッフ' }
+    const abilities = emp.abilities || { technical: 0, sales: 0, planning: 0, management: 0 }
+    return `
+      <div class="employee desk-employee-card">
+        <div class="employee-header">
+          <div class="employee-name">
+            <span class="icon-badge">👤</span>
+            ${escapeText(emp.name)}
+          </div>
+          <span class="personality">${personality.emoji} ${escapeText(personality.name)}</span>
+        </div>
+        <div style="margin: 8px 0; display: flex; gap: 6px; flex-wrap: wrap;">
+          <span class="department-badge">${dept.emoji} ${escapeText(dept.name)}</span>
+          <span class="position-badge">${pos.emoji} ${escapeText(pos.name)}</span>
+        </div>
+        <div class="abilities">
+          <div class="ability"><span class="ability-name">⚙️ 技術: ${Number(abilities.technical) || 0}</span></div>
+          <div class="ability"><span class="ability-name">💼 営業: ${Number(abilities.sales) || 0}</span></div>
+          <div class="ability"><span class="ability-name">📋 企画: ${Number(abilities.planning) || 0}</span></div>
+          <div class="ability"><span class="ability-name">👔 管理: ${Number(abilities.management) || 0}</span></div>
+        </div>
+      </div>
+    `
+  }).join('')
+
+  return `<div class="desk-employee-list">${cards}</div>`
 }
 
 // 経営状況タブ

@@ -235,18 +235,28 @@ export function updateRanking(): void {
 // ============================================
 
 export function showPanel(tabButton: any, panelId?: string): void {
-    const targetPanelId = panelId || 'overview'
-    const targetTab = tabButton || document.querySelector(`.tab[data-panel="${targetPanelId}"]`)
+    const game = getGame()
+    let resolvedPanelId = panelId || 'overview'
+    let resolvedTab = tabButton
+
+    // CEOモード中は desk 以外の通常タブをブロックして desk にリダイレクト
+    if (game.gameMode === 'ceo' && resolvedPanelId !== 'desk') {
+        resolvedPanelId = 'desk'
+        resolvedTab = document.querySelector(`.tab[data-panel="desk"]`)
+    } else if (!resolvedTab) {
+        resolvedTab = document.querySelector(`.tab[data-panel="${resolvedPanelId}"]`)
+    }
+
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'))
-    if (targetTab) {
-        targetTab.classList.add('active')
+    if (resolvedTab) {
+        resolvedTab.classList.add('active')
     }
     document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'))
-    const panelElement = document.getElementById(targetPanelId)
+    const panelElement = document.getElementById(resolvedPanelId)
     if (panelElement) {
         panelElement.classList.add('active')
     }
-    setActivePanel(targetPanelId)
+    setActivePanel(resolvedPanelId)
     renderActivePanel()
 }
 
@@ -391,7 +401,15 @@ export function renderOfficeDisplay(): void {
 // ============================================
 
 export function renderActivePanel(): void {
-    const activePanel = getActivePanel()
+    const game = getGame()
+    let activePanel = getActivePanel()
+
+    // CEOモード中に desk 以外がアクティブになった場合のフォールバック保護
+    if (game.gameMode === 'ceo' && activePanel !== 'desk') {
+        setActivePanel('desk')
+        activePanel = 'desk'
+    }
+
     if (activePanel === 'overview') {
         renderOfficeDisplay()
         renderAchievements()
