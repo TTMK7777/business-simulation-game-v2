@@ -1,6 +1,8 @@
 # Business Simulation Game v2 — 教訓・フィードバック
 
 ## 失敗と教訓
+- **v2.1.0 Sprint A-D 後のバグハント精度**: Explore エージェント報告 Fatal 5/Important 5 のうち、実 verify で **Fatal 5件全件が誤検知 or 修正済の再報告**。本物は dead 機能化 2件 (employee.stress, leaveProbability) のみ。教訓: バグハント agent の summary は鵜呑みにせず、実コードで verify する。「Math.max(0,...) で負数化」のような数学的に誤った推論が混入するリスクあり
+- **チュートリアル詰まりの根因 (B-3)**: hireEmployee 後に `closeModal()` → `showModal('🎉 採用成功')` → `advanceTutorialByAction('hire_employee')` の順で、「採用成功モーダルが overlay の上に被る + 次ステップ targetElement が現在見えていない別タブ + step.action 待ちで詰まる」の三重苦。教訓: 順序進行型チュートリアルはモーダル多用ゲームと相性が悪く、コンテキスト型ポップアップ (Coachmark) に転換すべき。step.action で行動強制すると詰まる原因となる
 - F4 演算子優先順位バグ: `abilities.technical || 0 + abilities.sales || 0` で `+` が `||` より優先。能力値平均が57.5→20に誤算。教訓: 複数の `||` と算術演算子を混在させる場合は必ず `()` で明示
 - pruneHistory 二重カウント: processVerdict と pruneHistory で同じ統計を二重にカウント。長期プレイで統計2倍化。教訓: 統計処理は一元化
 - prototype pollution: `Object.assign(this, data)` でLocalStorage由来の任意データを復元していた。教訓: 外部入力の復元は許可リスト方式に限定

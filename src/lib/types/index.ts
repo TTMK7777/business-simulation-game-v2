@@ -69,6 +69,20 @@ export interface Employee {
 }
 
 // ============================================
+// チュートリアル v2 (Coachmark 方式)
+// 旧 tutorialStep / tutorialCompleted は互換のため維持。
+// completed=true セーブから新方式へ持ち込む際は enabled=false に同期される。
+// ============================================
+export interface TutorialV2State {
+    enabled: boolean
+    disabled: boolean      // ロールバックフラグ。true で旧 startTutorial 経路を使用
+    shownIds: string[]     // 既出 coachmark ID
+    pendingId: string | null  // モーダル退避中の復帰用
+    queue: string[]        // 同時発火時の FIFO キュー
+    version: 1
+}
+
+// ============================================
 // 製品
 // ============================================
 export interface Product {
@@ -103,6 +117,7 @@ export interface GameState {
     unlockedAchievements: string[]
     tutorialStep: number
     tutorialCompleted: boolean
+    tutorialV2: TutorialV2State
     wasLowMoney: boolean
     totalProductSales: Record<string, number>
     companyName?: string

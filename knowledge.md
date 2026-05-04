@@ -1,6 +1,16 @@
 # Business Simulation Game v2 — 知見・技術判断
 
 ## 技術判断
+- **Sprint E (v2.2.0): チュートリアル刷新 = Coachmark 方式** (2026-05-04 取締役会 🟡条件付きGo / 内部F0I4R5E1 + 外部F0I4R4E2)
+  - 旧画面下部固定オーバーレイ → コンテキスト型ポップアップ吹き出し
+  - トリガー3種: visit_tab:* / action:* / cond:*
+  - state: `tutorialV2 = { enabled, disabled, shownIds[], pendingId, queue[], version: 1 }`
+  - 旧 `tutorialStep` / `tutorialCompleted` は互換維持、`tutorialCompleted=true` → `enabled=false` 同期
+  - 必須条件: MutationObserver + IntersectionObserver target 待機 / ResizeObserver 追従 / トリガー優先度・キュー / Zod 検証 / Vitest 12-15ケース
+  - 推奨: ロールバックフラグ / 位置計算独立 / z-index CSS変数 / pointer-events 集中モード
+  - 11 Coachmarks (welcome / 5タブ / 4アクション / cond_first_profit / complete)
+  - layer z-index 8000 / modal z-index 9000 で固定
+  - 工数 4人日 (チュート 3.5 + 軽微バグ 0.5)
 - アーキテクチャ: `types/` → `config/` → `store/` → `managers/` → `ui/` → `game.ts` の依存方向
 - Manager = 純粋ビジネスロジック（DOM非依存）でテスタビリティ確保
 - TypeScript `strict: true` + `noUnusedLocals` + `noUnusedParameters` + `noImplicitAny` + `noFallthroughCasesInSwitch` を全て有効化

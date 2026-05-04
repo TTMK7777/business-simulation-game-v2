@@ -113,6 +113,21 @@ export const storageHelpers = {
  */
 
 /**
+ * Sprint E: Zodスキーマ - チュートリアル v2 (Coachmark) state
+ * loadGame 時に safeParse → invalid なら既定値に初期化される
+ */
+export const TutorialV2Schema = z.object({
+  enabled: z.boolean(),
+  disabled: z.boolean(),
+  shownIds: z.array(z.string()),
+  pendingId: z.string().nullable(),
+  queue: z.array(z.string()),
+  version: z.literal(1)
+})
+
+export type TutorialV2 = z.infer<typeof TutorialV2Schema>
+
+/**
  * Zodスキーマ: ゲーム内日付
  */
 const GameDateSchema = z.object({

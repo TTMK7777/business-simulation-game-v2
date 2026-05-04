@@ -1,7 +1,27 @@
 # Business Simulation Game v2 — タスク管理
 
 ## 進行中
-- [ ] v2.1.0 最終取締役会レビュー + push 承認
+- [ ] **Sprint E: チュートリアル刷新 + 軽微バグ修正 (v2.2.0)** — 取締役会 🟡 条件付き Go (2026-05-04)
+  - 目標: コンテキスト型 Coachmark 化 + Android (Capacitor) 移植準備
+  - 工数: 4 人日 (チュートリアル 3.5 + 軽微バグ 0.5)
+  - 必須条件 (CEO 判定):
+    - [ ] target 待機戦略強化 (MutationObserver + IntersectionObserver + 複数フレーム + skip)
+    - [ ] ResizeObserver で位置追従 (window resize / orientationchange)
+    - [ ] トリガー優先度・キューイング定義 (priority フィールド or FIFO)
+    - [ ] Zod SaveDataSchema 拡張で tutorialV2 検証
+    - [ ] Vitest 12-15 ケース (順序・保存復元・競合・互換・リサイズ)
+  - 推奨条件:
+    - [ ] ロールバックフラグ (tutorialV2.disabled で旧方式へ)
+    - [ ] 位置計算を独立ユーティリティ化 (`calculatePosition(rect, viewport)`)
+    - [ ] z-index を CSS 変数化
+    - [ ] pointer-events 設計 (重要ステップは集中モード)
+  - 11 コーチマーク全実装 (welcome/5タブ/4アクション/cond_first_profit/complete)
+  - 軽微バグ:
+    - [ ] B-1 [I] employee.stress 書き込み追加 (HRManager 月次更新)
+    - [ ] B-2 [R] leaveProbability dead write 除去
+    - [ ] B-4 [R] game.ts:130 二重 escape 除去
+    - [ ] game.ts.backup 削除
+- [ ] v2.1.0 最終取締役会レビュー + push 承認 (Sprint E と統合してリリース)
 
 ## 未着手 (Phase 6 候補)
 - [ ] unsafeHTML → Lit html テンプレート完全移行（B2-a で部分対応済、根本対応は将来）

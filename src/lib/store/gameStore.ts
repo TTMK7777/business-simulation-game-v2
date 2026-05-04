@@ -6,6 +6,7 @@ import type { DifficultyLevel, CompetitorConfig } from '../gameConfig'
 import { DEFAULT_COMPETITORS } from '../gameConfig'
 import { PERSONALITIES, HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
+import { TutorialV2Schema } from '../storage'
 
 // ============================================
 // デフォルトゲーム状態
@@ -31,6 +32,14 @@ const defaultGameState: GameState = {
     unlockedAchievements: [] as string[],
     tutorialStep: 0,
     tutorialCompleted: false,
+    tutorialV2: {
+        enabled: true,
+        disabled: false,
+        shownIds: [],
+        pendingId: null,
+        queue: [],
+        version: 1
+    },
     wasLowMoney: false,
     totalProductSales: {} as Record<string, number>,
     // ======= 社長モード =======
@@ -201,6 +210,20 @@ export function normalizeGameState(): void {
     if (typeof game.tutorialCompleted !== 'boolean') game.tutorialCompleted = false
     if (typeof game.tutorialStep !== 'number' || game.tutorialStep < 0) game.tutorialStep = 0
     if (typeof game.wasLowMoney !== 'boolean') game.wasLowMoney = false
+
+    // Sprint E: tutorialV2 (Coachmark) の Zod 検証 + 正規化
+    // tutorialCompleted=true の旧セーブは Coachmark を発火させない (enabled=false 同期)
+    const tv2Parsed = TutorialV2Schema.safeParse(game.tutorialV2)
+    if (!tv2Parsed.success) {
+        game.tutorialV2 = {
+            enabled: !game.tutorialCompleted,
+            disabled: false,
+            shownIds: [],
+            pendingId: null,
+            queue: [],
+            version: 1
+        }
+    }
 
     // ======= 社長モード フィールドの正規化 =======
     if (!game.gameMode) game.gameMode = 'management'
