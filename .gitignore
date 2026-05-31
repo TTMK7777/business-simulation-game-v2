@@ -56,3 +56,13 @@ credentials.json
 # Security - credentials & keys
 *.p12
 .credentials.json
+
+# Internal development notes / reports (not for public repo)
+memory.md
+knowledge.md
+todo.md
+HANDOVER.md
+HANDOFF_SESSION_2025-11-13_ANIMATION_COMPLETION.md
+CLAUDE_CODE_REFACTOR_PLAN.md
+CODE_REVIEW_REFACTORING_REPORT.md
+CTO-AUDIT-REPORT.md
