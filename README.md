@@ -114,4 +114,4 @@ npm test -- --run  # CI用 (watchなし)
 
 ## License
 
-ISC
+MIT
