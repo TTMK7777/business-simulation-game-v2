@@ -1,5 +1,7 @@
 # ビジネスエンパイア 2.0 - IT業界経営シミュレーション
 
+**日本語** | [English](./README.en.md)
+
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat&logo=vite&logoColor=white)
@@ -37,7 +39,7 @@ src/lib/
 ├── store/          状態管理シングルトン (gameStore)
 ├── managers/       ビジネスロジック (Game, HR, Finance, Product, Market, CEO, Document, Achievement, Tutorial, Visitor)
 ├── ui/             描画 (renderers, modals, charts, deskView)
-├── animation/      キャラクターアニメーション (Phaser)
+├── animation/      キャラクターアニメーション (Phaser ベースの旧実装。現行は軽量な cssCharacterManager)
 └── game.ts         エントリポイント (HTML onclick 互換の window バインディング担当)
 ```
 
