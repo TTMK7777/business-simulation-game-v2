@@ -17,8 +17,8 @@ Installation and how to play Business Empire 2.0 — IT Industry Management Simu
 ### インストール
 
 ```bash
-git clone https://github.com/TTMK7777/business-simulation-game.git
-cd business-simulation-game
+git clone https://github.com/TTMK7777/business-simulation-game-v2.git
+cd business-simulation-game-v2
 npm install
 ```
 
@@ -82,7 +82,7 @@ npm test -- --run  # CI 用（watch なし、1 回だけ実行）
 
 - ポート競合: `5173` が使用中でも自動で別ポートに切り替わります。表示された URL を確認してください。
 - 画面が真っ白: ブラウザのコンソールを確認し、`npm install` が成功しているか、Node.js のバージョンが新しいかを確認してください。
-- 不具合報告は [GitHub Issues](https://github.com/TTMK7777/business-simulation-game/issues) へお願いします。
+- 不具合報告は [GitHub Issues](https://github.com/TTMK7777/business-simulation-game-v2/issues) へお願いします。
 
 ---
 
@@ -98,8 +98,8 @@ npm test -- --run  # CI 用（watch なし、1 回だけ実行）
 ### Installation
 
 ```bash
-git clone https://github.com/TTMK7777/business-simulation-game.git
-cd business-simulation-game
+git clone https://github.com/TTMK7777/business-simulation-game-v2.git
+cd business-simulation-game-v2
 npm install
 ```
 
@@ -163,4 +163,4 @@ npm test -- --run  # For CI (no watch; runs once)
 
 - Port conflict: if `5173` is busy, Vite automatically switches to another port. Check the printed URL.
 - Blank screen: check the browser console, confirm `npm install` succeeded, and ensure your Node.js is recent enough.
-- For bug reports, please use [GitHub Issues](https://github.com/TTMK7777/business-simulation-game/issues).
+- For bug reports, please use [GitHub Issues](https://github.com/TTMK7777/business-simulation-game-v2/issues).

@@ -72,5 +72,5 @@ Pick an entry point based on your role.
 
 ---
 
-質問・不具合報告は [GitHub Issues](https://github.com/TTMK7777/business-simulation-game/issues) へお願いします。
-For questions or bug reports, please use [GitHub Issues](https://github.com/TTMK7777/business-simulation-game/issues).
+質問・不具合報告は [GitHub Issues](https://github.com/TTMK7777/business-simulation-game-v2/issues) へお願いします。
+For questions or bug reports, please use [GitHub Issues](https://github.com/TTMK7777/business-simulation-game-v2/issues).
