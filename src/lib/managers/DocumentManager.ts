@@ -1,5 +1,5 @@
 // 社長モード: 書類生成・判定・結果反映
-import type { ApprovalDocument, DocumentCategory, DocumentNature, DocumentVerdict, DocumentOutcome, DocumentClue } from '../types/index'
+import type { ApprovalDocument, DocumentCategory, DocumentNature, DocumentVerdict, DocumentOutcome, DocumentClue, Employee } from '../types/index'
 import { DOCUMENT_TEMPLATES, SITUATION_MODIFIERS, CAUSAL_CHAINS, TRAP_NAMES } from '../config/documents'
 import { CEO_BALANCE } from '../config/ceo'
 import { POLICY_FOCUSES } from '../config/ceo'
@@ -101,7 +101,7 @@ function selectNature(state: any): DocumentNature {
 function generateSubmitter(state: any, department: string): { employeeId: number | null; name: string; position: string } {
   const deptEmployees = state.employees.filter((e: any) => e.department === department)
   if (deptEmployees.length > 0 && Math.random() < 0.7) {
-    const emp = pickRandom(deptEmployees)
+    const emp = pickRandom<Employee>(deptEmployees)
     const positionNames: Record<string, string> = {
       staff: '社員', senior: '主任', manager: '課長', director: '部長'
     }

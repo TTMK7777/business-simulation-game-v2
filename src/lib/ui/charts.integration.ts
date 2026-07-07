@@ -19,7 +19,7 @@ export function initCharts(): void {
     const game = getGame()
 
     // 売上チャート
-    const revenueCtx = document.getElementById('revenueChart')
+    const revenueCtx = document.getElementById('revenueChart') as HTMLCanvasElement | null
     if (revenueCtx) {
         revenueChart = new Chart(revenueCtx, {
             type: 'line',
@@ -80,7 +80,7 @@ export function updateCharts(): void {
 export function updateMarketChart(): void {
     const game = getGame()
     const competitors = getCompetitors()
-    const marketCtx = document.getElementById('marketChart')
+    const marketCtx = document.getElementById('marketChart') as HTMLCanvasElement | null
     if (!marketCtx) return
 
     if (marketChart) {

@@ -132,6 +132,8 @@ export function addInitialEmployee(): void {
         department: 'development',
         position: 'staff',
         qualification: null as string | null,
+        skillPoints: 0,
+        unlockedSkills: [],
         growthHistory: [
             { turn: 1, event: '入社', description: '会社に参加しました' }
         ]

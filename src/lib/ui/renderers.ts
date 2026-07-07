@@ -149,7 +149,7 @@ export function showAllAchievements(): void {
                 </div>
             </div>
         `
-    })
+    });
 
     // TODO: 接続 - showModal は game.ts から直接呼び出し中
     // Phase 2 で modals.ts の showModal を import して使用
