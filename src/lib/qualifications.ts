@@ -5,7 +5,7 @@
  * S級（超難関）から D級（入門）まで5段階
  */
 
-import type { Qualification } from './types.d';
+import type { Qualification } from './types/qualification';
 
 export const QUALIFICATIONS_30: Record<string, Qualification> = {
     // ============================================

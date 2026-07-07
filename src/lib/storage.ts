@@ -310,7 +310,7 @@ export async function saveSlotData(
     console.log(`✅ スロット ${slotId} に保存完了（チェックサム: ${checksum.substring(0, 8)}...）`)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error(`スロット ${slotId} のメタデータバリデーションエラー:`, error.errors)
+      console.error(`スロット ${slotId} のメタデータバリデーションエラー:`, error.issues)
     } else {
       console.error(`スロット ${slotId} の保存エラー:`, error)
     }

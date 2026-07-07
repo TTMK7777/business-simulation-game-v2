@@ -98,7 +98,7 @@ import { renderDocumentStack, renderStatusTab, renderEmployeesForDesk } from './
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
 import { renderVisitorResult } from './ui/visitorDialog'
 import { renderDirectivePanel } from './ui/ceoStatus'
-import type { CEOTrait, PolicyFocus, DocumentVerdict } from './types/index'
+import type { CEOTrait, PolicyFocus, DocumentVerdict, Abilities } from './types/index'
 
 // ============================================
 // モジュールレベルエイリアス
@@ -262,7 +262,8 @@ function unlockSkill(employeeId: number, category: string, skillId: string) {
     employee.unlockedSkills.push(skillId)
 
     if (skill.effect) {
-        Object.keys(skill.effect).forEach(abilityKey => {
+        Object.keys(skill.effect).forEach(key => {
+            const abilityKey = key as keyof Abilities
             if (employee.abilities[abilityKey] !== undefined) {
                 employee.abilities[abilityKey] = Math.min(100, employee.abilities[abilityKey] + skill.effect[abilityKey])
             }

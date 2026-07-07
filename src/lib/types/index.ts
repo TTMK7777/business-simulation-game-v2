@@ -7,7 +7,7 @@ import type { DifficultyLevel, Achievement, AchievementRarity, CompetitorConfig,
 export type { DifficultyLevel, Achievement, AchievementRarity, CompetitorConfig, TutorialStep }
 
 // Re-export qualification types
-export type { Qualification } from '../types.d'
+export type { Qualification } from './qualification'
 
 // ============================================
 // 能力値

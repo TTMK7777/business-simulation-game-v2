@@ -11,7 +11,7 @@
  * 実ブラウザ E2E で検証する (jsdom 依存を持ち込まない方針)。
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { CoachmarkManager, type CoachmarkHost } from '../lib/managers/CoachmarkManager'
 import { COACHMARKS, COACHMARK_ENTRY_ID, type CoachmarkDef, type CoachmarkReward } from '../lib/config/coachmarks'
 import { calculatePosition } from '../lib/ui/coachmarkPosition'

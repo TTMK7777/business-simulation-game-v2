@@ -1,5 +1,5 @@
 // 社長モード: 訪問イベント生成・処理
-import type { VisitorEvent, VisitorResponse } from '../types/index'
+import type { VisitorEvent, VisitorResponse, VisitorMood, Employee, ApprovalDocument } from '../types/index'
 import { VISITOR_TEMPLATES, VERDICT_LINKED_VISITOR_TEMPLATES } from '../config/visitors'
 import { CEO_BALANCE } from '../config/ceo'
 
@@ -45,7 +45,7 @@ function selectVisitor(state: any, template: any): {
 
   // ランダム社員
   if (employees.length > 0 && Math.random() < 0.6) {
-    const emp = pickRandom(employees)
+    const emp = pickRandom<Employee>(employees)
     const posNames: Record<string, string> = { staff: '社員', senior: '主任', manager: '課長', director: '部長' }
     const deptNames: Record<string, string> = { development: '開発', sales: '営業', planning: '企画', management: '管理' }
     return {
@@ -109,7 +109,7 @@ export function checkForVisitor(state: any, forcedType?: string): VisitorEvent |
 
   // 訪問者を選択
   const visitor = selectVisitor(state, selectedTemplate)
-  const mood = pickRandom(selectedTemplate.moods)
+  const mood = pickRandom<VisitorMood>(selectedTemplate.moods)
 
   const vars: Record<string, string | number> = {
     name: visitor.name,
@@ -144,7 +144,7 @@ export function checkForVisitor(state: any, forcedType?: string): VisitorEvent |
   let documentClueToAdd: { field: string; observation: string } | undefined
   let relatedDocumentId: string | undefined
   if (state.documentQueue && state.documentQueue.length > 0 && Math.random() < 0.3) {
-    const relatedDoc = pickRandom(state.documentQueue)
+    const relatedDoc = pickRandom<ApprovalDocument>(state.documentQueue)
     relatedDocumentId = relatedDoc.id
     if (relatedDoc.nature === 'clear_bad') {
       documentClueToAdd = {

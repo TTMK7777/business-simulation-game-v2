@@ -19,7 +19,9 @@ export default defineConfig({
         // 本番ビルドで console.log/debugger を除去 (旧 esbuild.drop 相当)
         minify: {
           mangle: true,
-          removeWhitespace: true,
+          codegen: {
+            removeWhitespace: true,
+          },
           compress: {
             target: 'es2020',
             dropConsole: true,

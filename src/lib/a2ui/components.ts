@@ -51,7 +51,7 @@ const baseStyles = css`
 export class A2UICard extends LitElement {
   @property({ type: String }) cardType: 'info' | 'success' | 'warning' | 'danger' | 'primary' = 'info'
   @property({ type: String }) elevation: 'low' | 'medium' | 'high' = 'medium'
-  @property({ type: Boolean }) animate = false
+  @property({ type: Boolean }) animated = false
 
   static styles = [
     baseStyles,
@@ -124,7 +124,7 @@ export class A2UICard extends LitElement {
 
   render() {
     return html`
-      <div class="card elevation-${this.elevation} type-${this.cardType} ${this.animate ? 'animate' : ''}">
+      <div class="card elevation-${this.elevation} type-${this.cardType} ${this.animated ? 'animate' : ''}">
         <slot></slot>
       </div>
     `
