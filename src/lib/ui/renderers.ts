@@ -5,6 +5,7 @@ import { html as litHtml, render as litRender, nothing } from 'lit'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import { getGame, getActivePanel, setActivePanel, getCompetitors } from '../store/gameStore'
 import { renderDeskView } from './deskView'
+import { notifyCoachmarkAction } from './coachmark'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
@@ -246,6 +247,9 @@ export function showPanel(tabButton: any, panelId?: string): void {
     }
     setActivePanel(resolvedPanelId)
     renderActivePanel()
+
+    // Sprint E: タブ切替を coachmark に通知 (panel:employees 等が完了条件)
+    notifyCoachmarkAction(`panel:${resolvedPanelId}`)
 }
 
 // ============================================

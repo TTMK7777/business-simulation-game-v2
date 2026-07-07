@@ -12,7 +12,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { canPromote, calculateTeamCompatibility, calculateGrowthMultiplier } from '../lib/managers/HRManager'
+import { canPromote, calculateTeamCompatibility, calculateGrowthMultiplier, updateMonthlyStress } from '../lib/managers/HRManager'
+import { getGame } from '../lib/store/gameStore'
 import type { Employee } from '../lib/types/index'
 
 // ============================================================
@@ -223,5 +224,56 @@ describe('calculateTeamCompatibility: チーム相性計算', () => {
     const result = calculateTeamCompatibility([emp1, emp2, emp3])
     expect(result).toBeGreaterThanOrEqual(0.7)
     expect(result).toBeLessThanOrEqual(1.3)
+  })
+})
+
+// ============================================================
+// B-1: updateMonthlyStress — employee.stress の月次書き込み
+//
+// 従来 stress は GameManager.updateEmployeeAnimation (stress>70 で
+// 'stressed' アニメ) で読まれるだけで、どこからも書き込まれず常に 0 だった
+// (stressed アニメが到達不能 = dead read)。月次更新で蓄積/回復させる
+// ============================================================
+describe('B-1: updateMonthlyStress', () => {
+  function gameWith(employees: Employee[], products: any[] = []) {
+    return { employees, products } as any
+  }
+
+  it('製品にアサイン中の従業員はストレスが蓄積する', () => {
+    const emp = makeEmployee({ id: 10 })
+    ;(emp as any).stress = 20
+    vi.mocked(getGame).mockReturnValue(gameWith([emp], [{ id: 1, assignedEmployees: [10] }]))
+    updateMonthlyStress()
+    expect((emp as any).stress).toBeGreaterThan(20)
+  })
+
+  it('待機中 (アサインなし) の従業員はストレスが回復する', () => {
+    const emp = makeEmployee({ id: 11 })
+    ;(emp as any).stress = 50
+    vi.mocked(getGame).mockReturnValue(gameWith([emp]))
+    updateMonthlyStress()
+    expect((emp as any).stress).toBeLessThan(50)
+  })
+
+  it('stress は 0〜100 に clamp される (未初期化 undefined も 0 起点で扱う)', () => {
+    const working = makeEmployee({ id: 12 })
+    ;(working as any).stress = 98
+    const idle = makeEmployee({ id: 13 }) // stress undefined
+    vi.mocked(getGame).mockReturnValue(
+      gameWith([working, idle], [{ id: 1, assignedEmployees: [12] }])
+    )
+    updateMonthlyStress()
+    expect((working as any).stress).toBeLessThanOrEqual(100)
+    expect((idle as any).stress).toBe(0) // 0 未満に下がらない
+  })
+
+  it('assignedEmployees がオブジェクト配列 (Employee 埋込) でも稼働扱いになる', () => {
+    const emp = makeEmployee({ id: 14 })
+    ;(emp as any).stress = 0
+    vi.mocked(getGame).mockReturnValue(
+      gameWith([emp], [{ id: 1, assignedEmployees: [{ id: 14 }] }])
+    )
+    updateMonthlyStress()
+    expect((emp as any).stress).toBeGreaterThan(0)
   })
 })

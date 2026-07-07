@@ -5,6 +5,7 @@
 import { getGame } from '../store/gameStore'
 import { TUTORIAL_STEPS } from '../gameConfig'
 import { escapeHtml } from '../ui/escape'
+import { notifyCoachmarkAction } from '../ui/coachmark'
 
 // TODO: UI接続 - showModal, updateDisplay は外部から注入予定
 // 現状は直接 document 操作のまま残す
@@ -115,6 +116,14 @@ export function advanceTutorial(): void {
 /** アクションでチュートリアルを進める (game.ts:1246-1253) */
 export function advanceTutorialByAction(actionType: string): void {
     const game = getGame()
+
+    // Sprint E: 新方式 (Coachmark) 有効時は委譲。既存の呼出箇所
+    // (hire/develop/end_turn) を変更せず両方式を切替できるようにする
+    if (game.tutorialV2?.enabled && !game.tutorialV2.disabled) {
+        notifyCoachmarkAction(actionType)
+        return
+    }
+
     if (game.tutorialCompleted) return
 
     const currentStep = TUTORIAL_STEPS[game.tutorialStep]
