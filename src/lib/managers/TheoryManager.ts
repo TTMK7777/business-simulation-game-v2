@@ -94,11 +94,15 @@ export function getTheoryTagForDocument(doc: {
     if (doc.investigationResult) {
         return INVESTIGATED_THEORY_RULE
     }
-    if (doc.nature && DOCUMENT_NATURE_THEORY_RULES[doc.nature]) {
-        return DOCUMENT_NATURE_THEORY_RULES[doc.nature]
+    // ルール表は DocumentNature/DocumentCategory キーで型固定 (タイポはコンパイル時検出)。
+    // 引数は旧セーブの未知値も受けるため string のまま、アクセス時にキャストする
+    if (doc.nature) {
+        const rule = DOCUMENT_NATURE_THEORY_RULES[doc.nature as import('../types/document').DocumentNature]
+        if (rule) return rule
     }
-    if (doc.category && DOCUMENT_CATEGORY_THEORY_RULES[doc.category]) {
-        return DOCUMENT_CATEGORY_THEORY_RULES[doc.category]
+    if (doc.category) {
+        const rule = DOCUMENT_CATEGORY_THEORY_RULES[doc.category as import('../types/document').DocumentCategory] as DocumentTheoryRule | undefined
+        if (rule) return rule
     }
     return null
 }

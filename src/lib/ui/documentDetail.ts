@@ -149,7 +149,7 @@ export function renderVerdictResult(doc: ApprovalDocument): string {
   const theoryHtml = tag ? `
     <div class="verdict-theory-tag" onclick="showTheoryDetail('${escapeHtml(tag.theoryId)}')">
       <div class="verdict-theory-head">
-        💡 今の判断は… ${tag.emoji} <strong>${escapeHtml(tag.theoryName)}</strong>
+        💡 今の判断は… ${escapeHtml(tag.emoji)} <strong>${escapeHtml(tag.theoryName)}</strong>
         ${tag.newlyUnlocked ? '<span class="verdict-theory-new">📖 図鑑に追加！</span>' : ''}
       </div>
       <div class="verdict-theory-lesson">${escapeHtml(tag.lesson)}</div>

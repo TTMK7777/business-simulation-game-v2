@@ -225,7 +225,7 @@ describe('getTheoryTagForDocument (Phase B タグ解決)', () => {
     })
 
     it('全 12 書類カテゴリにルールがあり、参照先理論が実在する', () => {
-        const categories = [
+        const categories: Array<keyof typeof DOCUMENT_CATEGORY_THEORY_RULES> = [
             'hiring', 'budget', 'product_plan', 'marketing', 'equipment',
             'personnel_change', 'promotion', 'training', 'salary_raise',
             'new_business', 'cost_cut', 'partnership',
@@ -301,6 +301,16 @@ describe('processVerdict の理論タグ付与と図鑑解禁 (Phase B 統合)',
         const outcome = processVerdict(state, 'doc_test_1', 'hold')
         expect(outcome?.theoryTag).toBeUndefined()
         expect(state.unlockedTheories.length).toBe(0)
+    })
+
+    it('状態条件が未達でも決裁で即解禁される (二重解禁経路は意図的仕様)', () => {
+        // brand_equity の状態条件は brandPower>=30 だが、marketing 書類の決裁は
+        // 「ブランド投資の判断」という体験そのものなので条件未達でも解禁する
+        const state = makeCeoState({ brandPower: 1 })
+        state.documentQueue.push(makeDoc({ category: 'marketing' }))
+        const outcome = processVerdict(state, 'doc_test_1', 'approve')
+        expect(outcome?.theoryTag?.theoryId).toBe('brand_equity')
+        expect(state.unlockedTheories).toContain('brand_equity')
     })
 
     it('unlockedTheories 未定義の旧セーブでも自己修復する', () => {

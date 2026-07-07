@@ -4,6 +4,8 @@
 // 説明は summary 3行以内 + 実例1社 + ゲーム内ヒント1行を上限とする (読ませすぎ禁止)。
 // 実例は教科書レベルの公知の事実のみ記載する。
 
+import type { DocumentCategory, DocumentNature } from '../types/document'
+
 export interface TheoryCondition {
     /** 解禁条件の評価軸 (TheoryManager.checkTheoryCondition が解釈)。
      *  'event' は状態評価では解禁されず、CEO モードの決裁など
@@ -236,7 +238,9 @@ export const THEORIES: Record<string, TheoryDef> = Object.fromEntries(
 // ============================================
 // Phase B: CEO モード決裁 → 理論タグのルール
 // 「今あなたが下した判断」に理論の名前を付ける (行動→命名)。
-// 優先順は特殊な文脈ほど上 (調査済み > nature > カテゴリ)
+// 優先順は特殊な文脈ほど上 (調査済み > nature > カテゴリ)。
+// 注: この経路の解禁は theory 側の condition (状態条件) とは独立 —
+// 決裁という行動そのものが理論の体験なので、状態未達でも即解禁する (意図的仕様)
 // ============================================
 
 export interface DocumentTheoryRule {
@@ -246,7 +250,7 @@ export interface DocumentTheoryRule {
 }
 
 /** nature (書類の性質) ベースのルール — カテゴリより優先 */
-export const DOCUMENT_NATURE_THEORY_RULES: Record<string, DocumentTheoryRule> = {
+export const DOCUMENT_NATURE_THEORY_RULES: Partial<Record<DocumentNature, DocumentTheoryRule>> = {
     tradeoff: {
         theoryId: 'opportunity_cost',
         lesson: '承認しても却下しても何かを失う判断でした。選ばなかった側の利益 = 機会費用まで見比べるのが定石です。',
@@ -268,7 +272,7 @@ export const INVESTIGATED_THEORY_RULE: DocumentTheoryRule = {
 }
 
 /** カテゴリベースのルール — nature ルールに該当しない書類のフォールバック */
-export const DOCUMENT_CATEGORY_THEORY_RULES: Record<string, DocumentTheoryRule> = {
+export const DOCUMENT_CATEGORY_THEORY_RULES: Record<DocumentCategory, DocumentTheoryRule> = {
     hiring: { theoryId: 'herzberg', lesson: '採用・処遇の判断です。給与 (衛生要因) と成長機会 (動機づけ要因) の両輪で人は動きます。' },
     personnel_change: { theoryId: 'herzberg', lesson: '配置転換は動機づけ要因 (裁量・成長) に直結する人事判断です。' },
     promotion: { theoryId: 'herzberg', lesson: '昇進は代表的な動機づけ要因。承認欲求に応える判断でした。' },
