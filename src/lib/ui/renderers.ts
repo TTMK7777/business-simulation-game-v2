@@ -18,6 +18,8 @@ import {
     COMPETITOR_STRATEGIES,
     COMPETITOR_ACTIONS,
 } from '../gameConfig'
+import { QUALIFICATIONS_30 } from '../qualifications'
+import { renderQualificationBadge } from '../qualificationGenerator'
 
 // ============================================
 // 実績パネル描画
@@ -222,6 +224,10 @@ export function applyTabVisibilityForMode(mode: 'management' | 'ceo'): void {
     })
     const deskTab = document.querySelector('.tab[data-panel="desk"]') as HTMLElement | null
     if (deskTab) deskTab.style.display = isCEO ? '' : 'none'
+
+    // ターン送りFAB: CEOモードでは desk 内の「次の週へ」と重複するため非表示
+    const turnFab = document.getElementById('turnFab') as HTMLElement | null
+    if (turnFab) turnFab.style.display = isCEO ? 'none' : ''
 }
 
 export function showPanel(tabButton: any, panelId?: string): void {
@@ -240,6 +246,11 @@ export function showPanel(tabButton: any, panelId?: string): void {
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'))
     if (resolvedTab) {
         resolvedTab.classList.add('active')
+        // 横スクロールするタブバーでアクティブタブが見切れないよう中央へ寄せる
+        // (block: 'nearest' で縦スクロールへの副作用を防ぐ。テスト環境では未実装のためガード)
+        if (typeof (resolvedTab as HTMLElement).scrollIntoView === 'function') {
+            (resolvedTab as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+        }
     }
     document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'))
     const panelElement = document.getElementById(resolvedPanelId)
@@ -421,6 +432,8 @@ export function renderActivePanel(): void {
         }
     } else if (activePanel === 'finance') {
         renderFinance()
+    } else if (activePanel === 'certifications') {
+        renderCertifications()
     } else if (activePanel === 'desk') {
         // ======= 社長モード: デスクビュー =======
         const deskPanel = document.getElementById('desk')
@@ -431,20 +444,97 @@ export function renderActivePanel(): void {
 }
 
 // ============================================
+// 資金カウントアップ + 増減フラッシュ (表示のみのジュース)
+// 数値が「いつの間にか変わっている」フィードバック欠如を解消する
+// ============================================
+
+let _lastMoneyShown: number | null = null
+let _moneyAnimFrame: number | null = null
+
+function animateMoneyTo(target: number): void {
+    const moneyEl = document.getElementById('money')
+    if (!moneyEl) return
+    const statEl = moneyEl.closest('.stat') as HTMLElement | null
+    const from = _lastMoneyShown
+    _lastMoneyShown = target
+
+    // 初回表示・同値・非ブラウザ環境は即時反映
+    if (from === null || from === target || typeof requestAnimationFrame === 'undefined') {
+        moneyEl.textContent = `${Math.floor(target / 10000)}万`
+        return
+    }
+
+    // 増減フラッシュ (再発火のため一旦クラスを外して reflow)
+    if (statEl) {
+        statEl.classList.remove('stat-flash-up', 'stat-flash-down')
+        void statEl.offsetWidth
+        statEl.classList.add(target > from ? 'stat-flash-up' : 'stat-flash-down')
+    }
+
+    if (_moneyAnimFrame !== null) cancelAnimationFrame(_moneyAnimFrame)
+    const duration = 500
+    const start = performance.now()
+    const step = (now: number) => {
+        const t = Math.min(1, (now - start) / duration)
+        const eased = 1 - Math.pow(1 - t, 3) // easeOutCubic
+        moneyEl.textContent = `${Math.floor((from + (target - from) * eased) / 10000)}万`
+        _moneyAnimFrame = t < 1 ? requestAnimationFrame(step) : null
+    }
+    _moneyAnimFrame = requestAnimationFrame(step)
+}
+
+// ============================================
 // 全画面更新
 // ============================================
+
+const LOAN_INTEREST_RATE_DISPLAY = 0.02 // renderFinance と同じ表示専用定数
 
 export function updateDisplay(): void {
     const game = getGame()
 
-    const moneyEl = document.getElementById('money')
-    if (moneyEl) moneyEl.textContent = `${Math.floor(game.money / 10000)}万`
+    // 資金: カウントアップ + 増減フラッシュ
+    animateMoneyTo(game.money)
+
+    // 資金危険水域の警告 (表示のみ): 月間コスト (人件費+利息見込) を基準に
+    //   2ヶ月分未満 → warning / 1ヶ月分未満 → danger
+    const salaryTotalForWarn = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
+    const interestForWarn = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE_DISPLAY) : 0
+    const monthlyCost = salaryTotalForWarn + interestForWarn
+    const moneyStatEl = document.getElementById('money')?.closest('.stat') as HTMLElement | null
+    if (moneyStatEl && monthlyCost > 0) {
+        const isDanger = game.money < monthlyCost
+        const isWarning = !isDanger && game.money < monthlyCost * 2
+        moneyStatEl.classList.toggle('stat-danger', isDanger)
+        moneyStatEl.classList.toggle('stat-warning', isWarning)
+        if (isDanger) {
+            moneyStatEl.title = '資金が月間コスト(人件費+利息)を下回っています。倒産注意！'
+        } else if (isWarning) {
+            moneyStatEl.title = '資金が月間コスト2ヶ月分を下回っています'
+        } else {
+            moneyStatEl.removeAttribute('title')
+        }
+    }
 
     const empCountEl = document.getElementById('employeeCount')
     if (empCountEl) empCountEl.textContent = String(game.employees.length)
 
     const revenueEl = document.getElementById('revenue')
     if (revenueEl) revenueEl.textContent = `${Math.floor(game.monthlyRevenue / 10000)}万`
+
+    // 概要タブ: 今月の収支見込み (前月売上実績 − 人件費 − 利息見込。財務タブの純利益と同じ表示式)
+    const forecastEl = document.getElementById('profitForecast') as HTMLElement | null
+    if (forecastEl) {
+        const forecast = game.monthlyRevenue - salaryTotalForWarn - interestForWarn
+        forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
+        forecastEl.style.color = forecast >= 0 ? '#4caf50' : '#f44336'
+        forecastEl.style.fontWeight = '700'
+    }
+
+    // ターン送りFAB: 週表示 + 決算週 (第4週) の強調
+    const fabWeekEl = document.getElementById('turnFabWeek')
+    if (fabWeekEl) fabWeekEl.textContent = game.week === 4 ? '📊 決算週' : `第${game.week}週`
+    const fabEl = document.getElementById('turnFab')
+    if (fabEl) fabEl.classList.toggle('turn-fab-settlement', game.week === 4)
 
     const dateEl = document.getElementById('gameDate')
     if (dateEl) dateEl.textContent = `${game.year}年${game.month}月 第${game.week}週`
@@ -829,5 +919,69 @@ export function renderDepartments(): void {
         </div>
     `
     litRender(template, grid)
+}
+
+// ============================================
+// 資格パネル (表示専用)
+// 従来は静的プレースホルダのまま何も描画されず「死にタブ」だった。
+// 保有資格の一覧と、資格保有者の入手経路 (採用) への導線を表示する
+// ============================================
+
+export function renderCertifications(): void {
+    const game = getGame()
+    const panel = document.getElementById('certificationPanel')
+    if (!panel) return
+
+    const holders = game.employees.filter((emp: any) => emp.qualification && QUALIFICATIONS_30[emp.qualification])
+
+    const goHiring = () => {
+        showPanel(null, 'employees')
+        ;(window as any).showHiring?.()
+    }
+
+    const template = litHtml`
+        <h3 style="margin-bottom: 12px;">🎓 資格保有状況</h3>
+        <div class="info-box">
+            <div>
+                <span>資格保有者</span>
+                <strong style="color: ${holders.length > 0 ? '#667eea' : '#999'};">${holders.length}名 / ${game.employees.length}名</strong>
+            </div>
+        </div>
+        ${holders.length === 0 ? litHtml`
+            <div class="certification-empty-state">
+                <div class="empty-icon">🎓</div>
+                <h3>まだ資格保有者がいません</h3>
+                <p style="color: #666; font-size: 13px; line-height: 1.7; margin: 12px 0 4px;">
+                    採用活動では約5%の確率で資格を持つ候補者が現れます。<br>
+                    資格保有者は能力が高く、会社の成長を加速させます。
+                </p>
+                <button class="btn-primary" style="max-width: 280px;" @click=${goHiring}>
+                    ➕ 採用活動で資格保有者を探す
+                </button>
+            </div>
+        ` : litHtml`
+            <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+                ${holders.map((emp: any) => litHtml`
+                    <div class="employee" style="margin: 0;" @click=${() => (window as any).showEmployeeDetail?.(emp)}>
+                        <div class="employee-header" style="margin-bottom: 8px;">
+                            <div class="employee-name">
+                                <span class="icon-badge">👤</span>
+                                ${emp.name}
+                            </div>
+                            <span style="font-size: 11px; color: #999;">タップで詳細</span>
+                        </div>
+                        ${unsafeHTML(renderQualificationBadge(emp.qualification))}
+                        <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                            ${QUALIFICATIONS_30[emp.qualification]?.description || ''}
+                        </div>
+                    </div>
+                `)}
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 12px; font-size: 12px; color: #666;">
+                💡 資格は採用時に保有している場合があります。高能力の候補者ほど上位資格を持ちやすくなります。
+            </div>
+        `}
+    `
+    litRender(template, panel)
 }
 

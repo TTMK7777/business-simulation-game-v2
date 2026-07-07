@@ -2872,6 +2872,202 @@
 }
 
 /* ============================================
+   UI/UX ジュース強化 (feat/uiux-polish)
+   ============================================ */
+
+/* --- ターン送りFAB: 全タブ共通のコアループ導線 --- */
+.turn-fab {
+    position: fixed;
+    bottom: 18px;
+    right: 16px;
+    /* コーチマーク backdrop (--z-coachmark-backdrop: 900) より下 = 集中モードを妨げない */
+    z-index: 850;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 18px;
+    min-height: 52px;
+    border: none;
+    border-radius: 28px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.turn-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(102, 126, 234, 0.55);
+}
+
+.turn-fab:active:not(:disabled) {
+    transform: scale(0.94);
+}
+
+.turn-fab:disabled {
+    background: linear-gradient(135deg, #b0b0b0, #888);
+    box-shadow: none;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.turn-fab-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.turn-fab-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+}
+
+.turn-fab-sub {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.85;
+}
+
+/* 決算週 (第4週): 次のターンで月次決算が来ることを予告 */
+.turn-fab-settlement {
+    background: linear-gradient(135deg, #f5a623 0%, #f76b1c 100%);
+    box-shadow: 0 6px 20px rgba(247, 107, 28, 0.5);
+    animation: fabSettlementPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes fabSettlementPulse {
+    0%, 100% { box-shadow: 0 6px 20px rgba(247, 107, 28, 0.5); }
+    50% { box-shadow: 0 6px 28px rgba(247, 107, 28, 0.8); }
+}
+
+/* FAB が最下部のボタンを覆わないよう余白を確保 */
+.content {
+    padding-bottom: 88px;
+}
+
+/* デスクトップ: コンテナ右端に寄せる */
+@media (min-width: 1024px) {
+    .turn-fab {
+        right: calc(50% - 280px + 12px);
+    }
+}
+
+@media (min-width: 1600px) {
+    .turn-fab {
+        right: calc(50% - 320px + 12px);
+    }
+}
+
+/* --- 資金増減フラッシュ + 危険水域警告 (ヘッダー統計カード) --- */
+@keyframes statFlashUp {
+    0% { background: rgba(76, 175, 80, 0.75); transform: scale(1.06); }
+    100% { background: rgba(255, 255, 255, 0.2); transform: scale(1); }
+}
+
+@keyframes statFlashDown {
+    0% { background: rgba(244, 67, 54, 0.75); transform: scale(1.06); }
+    100% { background: rgba(255, 255, 255, 0.2); transform: scale(1); }
+}
+
+.stat-flash-up {
+    animation: statFlashUp 0.7s ease-out;
+}
+
+.stat-flash-down {
+    animation: statFlashDown 0.7s ease-out;
+}
+
+/* 資金 < 月間コスト2ヶ月分: 注意 (琥珀) */
+.stat.stat-warning {
+    background: rgba(255, 152, 0, 0.35);
+    box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.7);
+}
+
+.stat.stat-warning .stat-label::after {
+    content: '⚠️';
+    font-size: 10px;
+}
+
+/* 資金 < 月間コスト1ヶ月分: 危険 (赤 + パルス) */
+.stat.stat-danger {
+    background: rgba(244, 67, 54, 0.45);
+    box-shadow: inset 0 0 0 2px rgba(244, 67, 54, 0.9);
+    animation: statDangerPulse 1.2s ease-in-out infinite;
+}
+
+.stat.stat-danger .stat-label::after {
+    content: '🚨';
+    font-size: 10px;
+}
+
+@keyframes statDangerPulse {
+    0%, 100% { box-shadow: inset 0 0 0 2px rgba(244, 67, 54, 0.9), 0 0 0 0 rgba(244, 67, 54, 0.5); }
+    50% { box-shadow: inset 0 0 0 2px rgba(244, 67, 54, 0.9), 0 0 12px 2px rgba(244, 67, 54, 0.7); }
+}
+
+/* --- 実績解除演出の強化 --- */
+.achievement-unlock-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-unlock-emoji {
+    display: inline-block;
+    animation: achievementEmojiPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes achievementEmojiPop {
+    0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+    60% { transform: scale(1.25) rotate(6deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.achievement-unlock-title {
+    animation: achievementSlideUp 0.45s ease 0.15s both;
+}
+
+.achievement-unlock-rarity,
+.achievement-unlock-desc {
+    animation: achievementSlideUp 0.45s ease 0.3s both;
+}
+
+@keyframes achievementSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* きらめき (疑似要素なので DOM を汚さない) */
+.achievement-unlock-card::before,
+.achievement-unlock-card::after {
+    content: '✨';
+    position: absolute;
+    font-size: 20px;
+    animation: sparkleTwinkle 1.4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+.achievement-unlock-card::before {
+    top: 12px;
+    left: 16px;
+}
+
+.achievement-unlock-card::after {
+    top: 28px;
+    right: 18px;
+    animation-delay: 0.5s;
+}
+
+@keyframes sparkleTwinkle {
+    0%, 100% { opacity: 0.25; transform: scale(0.8) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
+}
+
+/* ============================================
    経営理論図鑑 (Theory Codex) Phase A
    toast は z-index 1100 = モーダル (1000) より上。
    月次決算モーダルの直後に解禁されることが多く、
@@ -3016,4 +3212,36 @@
     color: #b8860b;
     margin-top: 4px;
     font-weight: bold;
+}
+
+/* ============================================
+   アクセシビリティ: 動きの抑制設定を尊重
+   (取締役会 2026-07-07 GPT ED [R] 指摘対応)
+   無限アニメーションを停止し、状態は色・アイコンで伝達を維持
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .turn-fab-settlement,
+    .stat.stat-danger,
+    .achievement-unlock-card::before,
+    .achievement-unlock-card::after,
+    .stat-flash-up,
+    .stat-flash-down,
+    .achievement-unlock-emoji,
+    .achievement-unlock-title,
+    .achievement-unlock-rarity,
+    .achievement-unlock-desc {
+        animation: none !important;
+    }
+
+    .theory-toast,
+    .theory-row,
+    .turn-fab {
+        transition: none !important;
+    }
+
+    /* transition 無効化で toast が透明のまま残らないよう即時表示 */
+    .theory-toast {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
