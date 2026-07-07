@@ -21,7 +21,7 @@ import {
     DIFFICULTY_SETTINGS,
     type DifficultyLevel
 } from '../gameConfig'
-import { storageHelpers, loadSlotData, saveSlotData, type SaveMetadata } from '../storage'
+import { loadSlotData, saveSlotData, type SaveMetadata } from '../storage'
 import { characterManager, initCharacterRenderer, type AnimationState, type JobType } from '../cssCharacterManager'
 
 // ======= 社長モード =======
@@ -38,7 +38,6 @@ import { escapeHtml } from '../ui/escape'
 // ============================================
 // 定数
 // ============================================
-const SAVE_KEY = 'businessEmpire'
 
 // ============================================
 // R-1: window 関数呼び出しヘルパー
@@ -141,28 +140,8 @@ export function addInitialEmployee(): void {
     game.employees.push(initialEmployee)
 }
 
-// ============================================
-// ゲームロード
-// ============================================
-
-export async function loadGameFromStorage(): Promise<boolean> {
-    const game = getGame()
-    try {
-        const saved = await storageHelpers.getItem(SAVE_KEY)
-        if (!saved) return false
-        const parsed = JSON.parse(saved)
-        const merged = Object.assign(cloneDefaults(), parsed)
-        overwriteGameState(merged)
-        normalizeGameState()
-        const panel = typeof parsed.activePanel === 'string' ? parsed.activePanel : 'overview'
-        setActivePanel(panel)
-        delete (game as any).activePanel
-        return true
-    } catch (error) {
-        console.error('Failed to load save data', error)
-        return false
-    }
-}
+// レガシー SAVE_KEY ('businessEmpire') 経路の loadGameFromStorage / init は削除済み。
+// 起動は main.ts → initWithSlot のみで、旧キーへの書き込み箇所は存在しなかった (到達不能パス)
 
 // ============================================
 // スロット指定初期化
@@ -242,25 +221,6 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
 // ============================================
 // 初期化
 // ============================================
-
-export async function init(): Promise<void> {
-    const game = getGame()
-    const loaded = await loadGameFromStorage()
-    if (!loaded) {
-        resetGameState()
-        addInitialEmployee()
-    } else {
-        normalizeGameState()
-        if (game.employees.length === 0) addInitialEmployee()
-    }
-
-    // R-1: 初期化完了後の描画系は critical のため silent fail を警告化
-    invokeWindowCritical('generateNews')
-    invokeWindowCritical('updateDisplay')
-    invokeWindowCritical('updateRanking')
-    invokeWindowCritical('initCharts')
-    invokeWindowCritical('showPanel', null, getActivePanel())
-}
 
 // ============================================
 // アニメーションシステム
@@ -652,6 +612,5 @@ export async function restartGame(): Promise<void> {
     ;(window as any).initCharts?.()
     ;(window as any).showPanel?.(null, 'overview')
     ;(window as any).generateNews?.()
-    await storageHelpers.removeItem(SAVE_KEY)
     ;(window as any).showModal?.('🔄 再スタート', '新しいゲームを開始しました')
 }

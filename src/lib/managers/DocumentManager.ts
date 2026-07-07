@@ -556,7 +556,19 @@ export function processExpiredDocuments(state: any): DocumentOutcome[] {
     state.documentHistory.push(doc)
     state.documentStats.totalProcessed++
 
-    state.ceo.approvalRating = Math.max(0, state.ceo.approvalRating + outcome.ceoApprovalChange)
+    // outcome を宣言どおり全項目適用する (旧実装は approvalRating のみ適用し、
+    // marketShareChange / employeeMoraleChange が黙って捨てられていた。
+    // processVerdict の適用ブロックと同一パターン)
+    state.money += outcome.moneyChange
+    state.marketShare = Math.max(0, Math.min(60, state.marketShare + outcome.marketShareChange))
+    state.brandPower = Math.max(0, Math.min(100, state.brandPower + outcome.brandPowerChange))
+    state.ceo.approvalRating = Math.max(0, Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange))
+    if (doc.submitter.employeeId) {
+      const emp = state.employees.find((e: any) => e.id === doc.submitter.employeeId)
+      if (emp) {
+        emp.motivation = Math.max(10, Math.min(100, emp.motivation + outcome.employeeMoraleChange))
+      }
+    }
     outcomes.push(outcome)
   }
   return outcomes

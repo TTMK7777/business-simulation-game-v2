@@ -154,6 +154,9 @@ export function normalizeGameState(): void {
     game.officeLevel = Math.max(1, Math.min(5, Number(game.officeLevel) || 1))
     game.employees.forEach((emp: any) => {
         emp.salary = Number(emp.salary) || 0
+        // motivation 欠落セーブは加算時に NaN 化して固定される (visitor/document 効果が
+        // Math.min(100, NaN + n) = NaN になる) ため既定値 50 で正規化
+        emp.motivation = Number(emp.motivation) || 50
         if (typeof emp.abilities !== 'object' || emp.abilities === null) {
             emp.abilities = { technical: 0, sales: 0, planning: 0, management: 0 }
         }
