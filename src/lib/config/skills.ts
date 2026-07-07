@@ -230,3 +230,17 @@ export const SKILL_EFFECTS: Record<string, SkillEffectDef> = {
     cost_reduction: { description: '運営コスト-10%', value: 0.1 },
     company_bonus: { description: '全従業員の能力+3', value: 3 }
 }
+
+/**
+ * skillId → 特殊効果キー のルックアップ (SKILL_TREE から自動構築)。
+ * Tier3 特殊効果を売上/コスト/品質計算に接続するために使う
+ * (従来 SKILL_EFFECTS は説明文表示専用で、ゲーム計算には未接続だった)
+ */
+export const SKILL_SPECIAL_LOOKUP: Record<string, string> = {}
+for (const category of Object.values(SKILL_TREE)) {
+    for (const [skillId, skill] of Object.entries(category.skills)) {
+        if ((skill as any).special) {
+            SKILL_SPECIAL_LOOKUP[skillId] = (skill as any).special
+        }
+    }
+}

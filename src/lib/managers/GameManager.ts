@@ -475,6 +475,13 @@ export function nextTurn(): void {
         // B-1: 月次ストレス更新 (稼働中は蓄積、待機中は回復。>70 で stressed アニメ)
         updateMonthlyStress()
 
+        // 製品駆動のシェア成長: 製品1本につき月+0.2% (上限60)。
+        // 従来はマーケ (上限15) 以外にシェア加算源がなく、オフィスLv5 (22%) や
+        // 上位実績 (30/50%) が構造的に到達不能だった
+        if (game.products.length > 0) {
+            game.marketShare = Math.min(60, game.marketShare + game.products.length * 0.2)
+        }
+
         // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一
         // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
         //   他方に反映されないリスクがあった）
