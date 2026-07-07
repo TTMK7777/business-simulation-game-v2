@@ -2698,3 +2698,158 @@
     font-weight: 600;
     color: #333;
 }
+
+/* ============================================
+   Sprint E: チュートリアル v2 (Coachmark)
+   z-index は CSS 変数で一元管理 (取締役会推奨条件)。
+   モーダル (.modal z-index:1000) より下 = モーダル優先を構造的に保証
+   ============================================ */
+:root {
+    --z-coachmark-backdrop: 900;
+    --z-coachmark: 950;
+}
+
+.coachmark-tip {
+    position: fixed;
+    z-index: var(--z-coachmark);
+    max-width: 320px;
+    width: calc(100vw - 32px);
+    background: white;
+    border-radius: 16px;
+    padding: 16px 18px;
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    animation: coachmarkIn 0.25s ease;
+}
+
+@keyframes coachmarkIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 中央カード型 (welcome / complete 等の集中モード) */
+.coachmark-tip-center {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    animation: coachmarkCenterIn 0.25s ease;
+}
+
+@keyframes coachmarkCenterIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.coachmark-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: var(--z-coachmark-backdrop);
+    animation: fadeIn 0.25s ease;
+}
+
+/* 吹き出し矢印: placement に応じて上下反転 */
+.coachmark-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    margin-left: -8px;
+}
+
+.coachmark-tip[data-placement="bottom"] .coachmark-arrow {
+    top: -8px;
+    border-bottom: 8px solid white;
+}
+
+.coachmark-tip[data-placement="top"] .coachmark-arrow {
+    bottom: -8px;
+    border-top: 8px solid white;
+}
+
+.coachmark-emoji {
+    font-size: 34px;
+    margin-bottom: 6px;
+}
+
+.coachmark-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 6px;
+}
+
+.coachmark-description {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.coachmark-reward {
+    background: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+}
+
+.coachmark-hint {
+    background: rgba(255, 152, 0, 0.12);
+    color: #e65100;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.coachmark-next-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.coachmark-next-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.coachmark-skip-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 4px;
+    border: none;
+    background: none;
+    color: #999;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.coachmark-skip-btn:hover {
+    color: #666;
+    text-decoration: underline;
+}
+
+/* ターゲット強調: クリックを一切妨げない発光アウトライン */
+.coachmark-highlight {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+    border-radius: 8px;
+    animation: coachmarkPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes coachmarkPulse {
+    0%, 100% { outline-color: rgba(102, 126, 234, 1); box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.35); }
+    50% { outline-color: rgba(118, 75, 162, 1); box-shadow: 0 0 0 8px rgba(102, 126, 234, 0); }
+}

@@ -22,6 +22,7 @@ let employeeRadarChart: any = null
 // ============================================
 export { escapeHtml } from './escape'
 import { escapeHtml } from './escape'
+import { coachmarkModalOpened, coachmarkModalClosed } from './coachmark'
 
 // ============================================
 // 倒産チェック
@@ -47,6 +48,9 @@ export function showModal(title: string, body: string, isHtml: boolean = false):
         tutorialOverlay.style.display = 'none'
         _tutorialHiddenByModal = true
     }
+
+    // Sprint E: coachmark も同様に退避 (pendingId へ保存され closeModal で復帰)
+    coachmarkModalOpened()
 
     document.getElementById('modalTitle')!.textContent = title
     // isHtml=false: テキストをエスケープしてから改行を<br>に変換
@@ -77,6 +81,9 @@ export function closeModal(): void {
         if (tutorialOverlay) tutorialOverlay.style.display = 'flex'
         _tutorialHiddenByModal = false
     }
+
+    // Sprint E: 退避していた coachmark を復帰
+    coachmarkModalClosed()
 }
 
 // ============================================

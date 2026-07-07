@@ -57,6 +57,12 @@ import {
     toggleTutorial
 } from './managers/TutorialManager'
 
+// Sprint E: チュートリアル v2 (Coachmark)
+import {
+    initCoachmarks, startCoachmarks, resumeCoachmarks,
+    enqueueCoachmark,
+} from './ui/coachmark'
+
 // ============================================
 // ui/ からのUI関数
 // ============================================
@@ -127,7 +133,9 @@ function hireEmployee(candidate: any) {
     updateDisplay()
     renderActivePanel()
     closeModal()
-    showModal('🎉 採用成功', `${escapeHtml(candidate.name)}さんを採用しました！`)
+    // B-4: showModal は isHtml=false (既定) で本文をエスケープするため、
+    // ここで escapeHtml すると二重エスケープになる (& が &amp; 表示される)
+    showModal('🎉 採用成功', `${candidate.name}さんを採用しました！`)
 
     advanceTutorialByAction('hire_employee')
 }
@@ -694,6 +702,12 @@ function selectCEOTrait(trait: string) {
 ;(window as any).skipTutorial = skipTutorial
 ;(window as any).toggleTutorial = toggleTutorial
 ;(window as any).advanceTutorialByAction = advanceTutorialByAction
+
+// チュートリアル v2 (Coachmark) — Sprint E
+;(window as any).initCoachmarks = initCoachmarks
+;(window as any).startCoachmarks = startCoachmarks
+;(window as any).resumeCoachmarks = resumeCoachmarks
+;(window as any).enqueueCoachmark = enqueueCoachmark
 
 // 内部関数（他モジュールが (window as any) 経由で使用）
 ;(window as any).updateDisplay = updateDisplay

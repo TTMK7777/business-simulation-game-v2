@@ -550,3 +550,27 @@ export function executeTraining(focusType: string): TrainingResult {
         focusType
     }
 }
+
+// ============================================
+// B-1: 月次ストレス更新
+// ============================================
+
+/**
+ * 全従業員の stress を月次更新する (GameManager の月次処理から呼ばれる)。
+ * stress は updateEmployeeAnimation が読む (>70 で 'stressed' アニメ) が、
+ * 従来どこからも書き込まれず常に 0 だった (B-1)。
+ * - 製品にアサイン中: +8 (働きすぎで蓄積)
+ * - 待機中: -12 (回復)
+ * - 0〜100 に clamp
+ */
+export function updateMonthlyStress(): void {
+    const game = getGame()
+    game.employees.forEach((emp: any) => {
+        const isWorking = game.products?.some((p: any) =>
+            p.assignedEmployees?.includes(emp.id) ||
+            p.assignedEmployees?.some((e: any) => e?.id === emp.id)
+        )
+        const delta = isWorking ? 8 : -12
+        emp.stress = Math.min(100, Math.max(0, (emp.stress || 0) + delta))
+    })
+}

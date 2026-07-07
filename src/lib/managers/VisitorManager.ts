@@ -252,7 +252,9 @@ function handleSpecialEffect(state: any, effect: string, event: VisitorEvent) {
     case 'increase_leave_risk':
       if (event.visitor.employeeId) {
         const emp = state.employees.find((e: any) => e.id === event.visitor.employeeId)
-        if (emp) emp.leaveProbability = (emp.leaveProbability || 0) + 0.3
+        // B-2: leaveProbability はどこからも読まれない dead write だった。
+        // prevent_resignation (motivation を 50 に底上げ) と対称の実効果に置換
+        if (emp) emp.motivation = Math.max(0, (emp.motivation ?? 70) - 20)
       }
       break
     case 'trigger_scandal':

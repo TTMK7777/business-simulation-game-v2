@@ -29,6 +29,7 @@ import * as DocumentManager from './DocumentManager'
 import * as VisitorManager from './VisitorManager'
 import * as CEOManager from './CEOManager'
 import * as FinanceManager from './FinanceManager'
+import { updateMonthlyStress } from './HRManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { applyTabVisibilityForMode } from '../ui/renderers'
@@ -211,10 +212,14 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
 
         addInitialEmployee()
 
-        // TODO: 接続 - startTutorial は game.ts から直接呼び出し中
+        // Sprint E: 新方式 (Coachmark) が既定。disabled=true はロールバックで旧方式
         setTimeout(() => {
             if (!game.tutorialCompleted) {
-                (window as any).startTutorial?.()
+                if (game.tutorialV2?.disabled) {
+                    (window as any).startTutorial?.()
+                } else if (game.tutorialV2?.enabled) {
+                    (window as any).startCoachmarks?.()
+                }
             }
         }, 1000)
     }
@@ -225,6 +230,11 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
     invokeWindowCritical('updateRanking')
     invokeWindowCritical('initCharts')
     invokeWindowCritical('showPanel', null, getActivePanel())
+
+    // Sprint E: ロード時は coachmark の queue/pendingId を続きから再開
+    if (slotData && game.tutorialV2?.enabled && !game.tutorialV2.disabled) {
+        setTimeout(() => (window as any).resumeCoachmarks?.(), 1000)
+    }
 }
 
 // ============================================
@@ -460,6 +470,9 @@ export function nextTurn(): void {
             }
         })
 
+        // B-1: 月次ストレス更新 (稼働中は蓄積、待機中は回復。>70 で stressed アニメ)
+        updateMonthlyStress()
+
         // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一
         // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
         //   他方に反映されないリスクがあった）
@@ -489,6 +502,11 @@ export function nextTurn(): void {
         ;(window as any).showModal?.('📅 月次決算', summaryLines.join('<br>'), true)
         ;(window as any).updateCompetitors?.()
         ;(window as any).generateNews?.()
+
+        // Sprint E: 初黒字で条件発火型 coachmark を投入 (shownIds が重複を防ぐ)
+        if (profit > 0) {
+            ;(window as any).enqueueCoachmark?.('cond_first_profit')
+        }
     }
 
     // Phase 2: 隠れ特性が判明した場合、通知を表示
