@@ -6,6 +6,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import { getGame, getActivePanel, setActivePanel, getCompetitors } from '../store/gameStore'
 import { renderDeskView } from './deskView'
 import { notifyCoachmarkAction } from './coachmark'
+import { renderTheories } from './theoryCodex'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
@@ -416,6 +417,7 @@ export function renderActivePanel(): void {
     if (activePanel === 'overview') {
         renderOfficeDisplay()
         renderAchievements()
+        renderTheories()
     } else if (activePanel === 'employees') {
         renderEmployees()
     } else if (activePanel === 'departments') {

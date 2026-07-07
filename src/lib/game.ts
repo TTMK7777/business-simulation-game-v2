@@ -45,6 +45,14 @@ import {
     checkAchievements,
 } from './managers/AchievementManager'
 
+// 経営理論図鑑 (Phase A)
+import {
+    checkTheories,
+} from './managers/TheoryManager'
+import {
+    renderTheories, showAllTheories, showTheoryDetail, showTheoryUnlocked,
+} from './ui/theoryCodex'
+
 import {
     generateNews, updateCompetitors,
 } from './managers/MarketManager'
@@ -742,6 +750,13 @@ function selectCEOTrait(trait: string) {
 ;(window as any).showAllAchievements = showAllAchievements
 ;(window as any).showAchievementUnlocked = showAchievementUnlocked
 ;(window as any).checkAchievements = checkAchievements
+
+// 経営理論図鑑 (Phase A)
+;(window as any).checkTheories = checkTheories
+;(window as any).renderTheories = renderTheories
+;(window as any).showAllTheories = showAllTheories
+;(window as any).showTheoryDetail = showTheoryDetail
+;(window as any).showTheoryUnlocked = showTheoryUnlocked
 
 // チュートリアルシステム
 ;(window as any).startTutorial = startTutorial

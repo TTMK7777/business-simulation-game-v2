@@ -115,6 +115,8 @@ export interface GameState {
     competitorAttacks: string[]
     lastNewsCategory: string
     unlockedAchievements: string[]
+    /** 経営理論図鑑: 解禁済み理論 id (config/theories.ts) */
+    unlockedTheories: string[]
     tutorialStep: number
     tutorialCompleted: boolean
     tutorialV2: TutorialV2State

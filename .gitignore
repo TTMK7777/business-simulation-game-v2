@@ -68,3 +68,6 @@ CODE_REVIEW_REFACTORING_REPORT.md
 CTO-AUDIT-REPORT.md
 
 __pycache__/
+
+# Claude Code エージェント並行作業用 worktree
+.claude/worktrees/

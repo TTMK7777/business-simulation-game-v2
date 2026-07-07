@@ -3066,3 +3066,150 @@
     0%, 100% { opacity: 0.25; transform: scale(0.8) rotate(0deg); }
     50% { opacity: 1; transform: scale(1.2) rotate(20deg); }
 }
+
+/* ============================================
+   経営理論図鑑 (Theory Codex) Phase A
+   toast は z-index 1100 = モーダル (1000) より上。
+   月次決算モーダルの直後に解禁されることが多く、
+   モーダル越しでもタップで解説へ飛べるようにする
+   ============================================ */
+.theory-badge {
+    cursor: pointer;
+    background: linear-gradient(135deg, #e8f0fe, #d6e4ff);
+    border: 2px solid #667eea;
+}
+
+.theory-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #f8f9ff;
+    border: 1px solid #e0e4f4;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theory-row:active {
+    transform: scale(0.98);
+}
+
+.theory-row-locked {
+    background: #f2f2f2;
+    border-color: #e5e5e5;
+    cursor: default;
+    opacity: 0.75;
+}
+
+.theory-row-emoji {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.theory-row-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.theory-row-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+.theory-row-category {
+    font-size: 10px;
+    font-weight: normal;
+    color: #888;
+    margin-left: 6px;
+}
+
+.theory-row-tagline {
+    font-size: 12px;
+    color: #777;
+    margin-top: 2px;
+}
+
+.theory-row-arrow {
+    font-size: 20px;
+    color: #aab;
+    flex-shrink: 0;
+}
+
+.theory-detail-section {
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8f9ff;
+    border-radius: 12px;
+    text-align: left;
+}
+
+.theory-detail-gamehint {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+    border: 1px solid rgba(102, 126, 234, 0.25);
+}
+
+.theory-detail-label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #667eea;
+    margin-bottom: 6px;
+}
+
+.theory-detail-text {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.6;
+}
+
+.theory-toast {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translate(-50%, -120%);
+    width: min(360px, calc(100vw - 32px));
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #fffefb, #fff8e8);
+    border: 2px solid #f0c040;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    z-index: 1100;
+    cursor: pointer;
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.theory-toast-visible {
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+.theory-toast-emoji {
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.theory-toast-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: #333;
+}
+
+.theory-toast-message {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+    line-height: 1.5;
+}
+
+.theory-toast-cta {
+    font-size: 11px;
+    color: #b8860b;
+    margin-top: 4px;
+    font-weight: bold;
+}

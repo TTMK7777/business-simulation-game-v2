@@ -501,7 +501,19 @@ export function nextTurn(): void {
     checkOfficeUpgrade()
 
     // フェーズ2: 実績チェック
-    ;(window as any).checkAchievements?.()
+    // checkAchievements は新規解除分を返すが v2.2.0 まで返り値が捨てられており、
+    // 解除演出も報酬付与 (showAchievementUnlocked 内) も一度も発火していなかった。
+    // 複数同時解除はモーダルが上書きし合うため階段状に遅延させる
+    const newAchievements: any[] = (window as any).checkAchievements?.() || []
+    newAchievements.forEach((ach: any, i: number) => {
+        setTimeout(() => (window as any).showAchievementUnlocked?.(ach), i * 1000)
+    })
+
+    // 経営理論図鑑: プレイヤーの体験に対応する理論を解禁 (toast 通知、手を止めない)
+    const newTheories: any[] = (window as any).checkTheories?.() || []
+    newTheories.forEach((theory: any, i: number) => {
+        setTimeout(() => (window as any).showTheoryUnlocked?.(theory), 900 + i * 1500)
+    })
 
     // フェーズ2: チュートリアル進行
     ;(window as any).advanceTutorialByAction?.('end_turn')
