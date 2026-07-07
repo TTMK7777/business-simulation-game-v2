@@ -7,19 +7,27 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
-    minify: 'esbuild',
     target: 'es2020',
     rollupOptions: {
       output: {
-        manualChunks: {
-          chart: ['chart.js'],
+        // vite 8 (rolldown) はオブジェクト形式非対応のため関数形式
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules/chart.js') || id.includes('node_modules/@kurkle')) {
+            return 'chart'
+          }
+        },
+        // 本番ビルドで console.log/debugger を除去 (旧 esbuild.drop 相当)
+        minify: {
+          mangle: true,
+          removeWhitespace: true,
+          compress: {
+            target: 'es2020',
+            dropConsole: true,
+            dropDebugger: true,
+          },
         },
       },
     },
-  },
-  esbuild: {
-    // 本番ビルドでconsole.log/debugを除去
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
   server: {
     port: 5173,
