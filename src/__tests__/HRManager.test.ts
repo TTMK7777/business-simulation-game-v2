@@ -256,9 +256,9 @@ describe('B-1: updateMonthlyStress', () => {
   })
 
   it('stress は 0〜100 に clamp される (未初期化 undefined も 0 起点で扱う)', () => {
-    const working = makeEmployee({ id: 12 })
+    const working = makeEmployee({ id: 12 }) // development (デフォルト)
     ;(working as any).stress = 98
-    const idle = makeEmployee({ id: 13 }) // stress undefined
+    const idle = makeEmployee({ id: 13, department: 'sales' }) // stress undefined、非開発部=待機
     vi.mocked(getGame).mockReturnValue(
       gameWith([working, idle], [{ id: 1, assignedEmployees: [12] }])
     )
@@ -268,12 +268,24 @@ describe('B-1: updateMonthlyStress', () => {
   })
 
   it('assignedEmployees がオブジェクト配列 (Employee 埋込) でも稼働扱いになる', () => {
-    const emp = makeEmployee({ id: 14 })
+    const emp = makeEmployee({ id: 14, department: 'sales' }) // 非開発部でも明示アサインで稼働
     ;(emp as any).stress = 0
     vi.mocked(getGame).mockReturnValue(
       gameWith([emp], [{ id: 1, assignedEmployees: [{ id: 14 }] }])
     )
     updateMonthlyStress()
     expect((emp as any).stress).toBeGreaterThan(0)
+  })
+
+  it('開発部所属は製品が1本以上あれば (明示アサインなしでも) 稼働扱いになる', () => {
+    // assignedEmployees はどこからも書き込まれない死にフィールドのため、
+    // 「製品あり×開発部」を稼働とみなす実運用ルールの検証
+    const dev = makeEmployee({ id: 15, department: 'development' })
+    ;(dev as any).stress = 10
+    vi.mocked(getGame).mockReturnValue(
+      gameWith([dev], [{ id: 1 }]) // assignedEmployees なしの製品
+    )
+    updateMonthlyStress()
+    expect((dev as any).stress).toBeGreaterThan(10)
   })
 })

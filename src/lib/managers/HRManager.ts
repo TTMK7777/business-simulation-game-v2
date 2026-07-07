@@ -576,10 +576,15 @@ export function executeTraining(focusType: string): TrainingResult {
 export function updateMonthlyStress(): void {
     const game = getGame()
     game.employees.forEach((emp: any) => {
-        const isWorking = game.products?.some((p: any) =>
-            p.assignedEmployees?.includes(emp.id) ||
-            p.assignedEmployees?.some((e: any) => e?.id === emp.id)
-        )
+        // 稼働判定: assignedEmployees はどこからも書き込まれない死にフィールドのため
+        // 「製品が1本以上あり開発部に所属」を稼働とみなす (製品保守の負荷を表現)。
+        // 明示アサイン (assignedEmployees) が将来実装されたらそちらも稼働扱い
+        const isWorking =
+            (game.products.length > 0 && emp.department === 'development') ||
+            game.products?.some((p: any) =>
+                p.assignedEmployees?.includes(emp.id) ||
+                p.assignedEmployees?.some((e: any) => e?.id === emp.id)
+            )
         const delta = isWorking ? 8 : -12
         emp.stress = Math.min(100, Math.max(0, (emp.stress || 0) + delta))
     })
