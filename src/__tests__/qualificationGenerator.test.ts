@@ -16,7 +16,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest'
-import { selectQualificationForCandidate } from '../lib/qualificationGenerator'
+import { selectQualificationForCandidate, calculateCandidateSalaryWithQualification } from '../lib/qualificationGenerator'
 import { QUALIFICATIONS_30 } from '../lib/qualifications'
 
 // ============================================================
@@ -302,5 +302,64 @@ describe('selectQualificationForCandidate: 全体確率制御', () => {
     } finally {
       spy.mockRestore()
     }
+  })
+})
+
+// ============================================================
+// 候補者給与の月給スケール検証
+//
+// ゲーム全体の salary セマンティクスは「月給」:
+// - 初期従業員 salary: 400000 (GameManager.ts:130, 月給40万円と表示)
+// - FinanceManager.ts:130 は毎月 Σ employee.salary を控除
+// - HRManager.ts:224 は採用時に salary * 3 (給与3ヶ月分) を要求
+//
+// 年収スケール (基本300万〜) のまま返すとノーマル難易度 (初期資金1000万)
+// で全候補者が採用不能 → 製品開発も不能 (2名必要) → ゲームが詰む
+// (2026-07-07 実プレイで確認: 最安候補335万/月 × 3 > 残資金990万)
+// ============================================================
+
+describe('calculateCandidateSalaryWithQualification: 月給スケール', () => {
+  it('平均的な候補者 (能力50/22歳/資格なし) は月給25万円 (年収300万/12)', () => {
+    const candidate = makeCandidate({
+      age: 22,
+      abilities: { technical: 50, sales: 50, planning: 50, management: 50 },
+    })
+    const salary = calculateCandidateSalaryWithQualification(candidate, null)
+    expect(salary).toBe(250000)
+  })
+
+  it('高能力・高齢・野心家でも給与3ヶ月分が初期資金1000万円未満 (採用可能性の保証)', () => {
+    const elite = makeCandidate({
+      age: 45,
+      personality: 'ambitious',
+      abilities: { technical: 95, sales: 95, planning: 95, management: 95 },
+    })
+    const salary = calculateCandidateSalaryWithQualification(elite, null)
+    expect(salary * 3).toBeLessThan(10000000)
+  })
+
+  it('最上位資格 (minSalary 800万) 保有者も月給換算で返る', () => {
+    const topQualId = Object.keys(QUALIFICATIONS_30).find(
+      id => QUALIFICATIONS_30[id].minSalary === 8000000
+    )
+    expect(topQualId).toBeDefined()
+    const holder = makeCandidate({
+      abilities: { technical: 80, sales: 80, planning: 80, management: 80 },
+    })
+    const salary = calculateCandidateSalaryWithQualification(holder, topQualId!)
+    // 年収スケール (>= 800万) のまま返る回帰を検出
+    expect(salary).toBeLessThan(1500000)
+    // 資格プレミアムは維持 (無資格の平均25万より高い)
+    expect(salary).toBeGreaterThan(400000)
+  })
+
+  it('典型候補者は初期従業員 (月給40万) と同オーダーのレンジに収まる', () => {
+    const typical = makeCandidate({
+      age: 30,
+      abilities: { technical: 70, sales: 55, planning: 60, management: 55 },
+    })
+    const salary = calculateCandidateSalaryWithQualification(typical, null)
+    expect(salary).toBeGreaterThanOrEqual(200000)
+    expect(salary).toBeLessThanOrEqual(800000)
   })
 })

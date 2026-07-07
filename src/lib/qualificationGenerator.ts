@@ -118,7 +118,10 @@ export function calculateCandidateSalaryWithQualification(
         baseSalary *= 0.95;
     }
 
-    return Math.floor(baseSalary);
+    // ここまでの計算は年収スケール。ゲームの salary セマンティクスは月給
+    // (初期従業員 400000=40万/月、FinanceManager が毎月控除、採用時 salary*3 前払い)
+    // のため月給に換算して返す。年収のまま返すと初期資金1000万で誰も採用できず詰む
+    return Math.floor(baseSalary / 12);
 }
 
 /**
