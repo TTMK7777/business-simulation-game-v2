@@ -4,10 +4,14 @@
 // 説明は summary 3行以内 + 実例1社 + ゲーム内ヒント1行を上限とする (読ませすぎ禁止)。
 // 実例は教科書レベルの公知の事実のみ記載する。
 
+import type { DocumentCategory, DocumentNature } from '../types/document'
+
 export interface TheoryCondition {
-    /** 解禁条件の評価軸 (TheoryManager.checkTheoryCondition が解釈) */
+    /** 解禁条件の評価軸 (TheoryManager.checkTheoryCondition が解釈)。
+     *  'event' は状態評価では解禁されず、CEO モードの決裁など
+     *  イベント経路 (DocumentManager) からのみ解禁される */
     type: 'products' | 'employees' | 'marketShare' | 'brandPower' | 'turn'
-        | 'money_low' | 'monthly_profit' | 'total_sales'
+        | 'money_low' | 'monthly_profit' | 'total_sales' | 'event'
     value: number
 }
 
@@ -185,9 +189,100 @@ export const THEORY_LIST: TheoryDef[] = [
         hintText: '製品を4つ開発すると解禁',
         condition: { type: 'products', value: 4 },
     },
+    {
+        id: 'opportunity_cost',
+        emoji: '🔀',
+        name: '機会費用',
+        category: 'strategy',
+        tagline: '選ばなかった道の利益も「費用」である',
+        summary: 'ある選択をしたとき、選ばなかった選択肢から得られたはずの利益も失っている。見えない費用まで含めて比較するのが経営判断。',
+        example: '「工場を建てる1億円」の本当のコストは、その1億円を別事業に投じた場合のリターンまで含めて評価される。',
+        gameHint: 'トレードオフ型の稟議は承認しても却下しても何かを失う。両方の損失を見比べて決めること。',
+        unlockMessage: 'どちらを選んでも何かを失う判断でした — それが機会費用です。',
+        hintText: '社長室でトレードオフ型の稟議を決裁すると解禁',
+        condition: { type: 'event', value: 1 },
+    },
+    {
+        id: 'expected_value',
+        emoji: '🎲',
+        name: '期待値思考',
+        category: 'strategy',
+        tagline: '成功確率 × リターンの掛け算で決める',
+        summary: '不確実な案件は「当たるか外れるか」ではなく、確率とリターンの掛け算 (期待値) で比較する。単発の結果より判断の質を問う考え方。',
+        example: 'ベンチャー投資は10件中9件失敗しても、1件の大当たりで全体がプラスになるよう期待値で設計されている。',
+        gameHint: 'ギャンブル型の稟議は成功確率を見てから。調査指示で確率を確かめるのも一手。',
+        unlockMessage: '不確実な案件の決裁 — 確率×リターンで考える期待値思考の出番でした。',
+        hintText: '社長室でギャンブル型の稟議を決裁すると解禁',
+        condition: { type: 'event', value: 1 },
+    },
+    {
+        id: 'sunk_cost',
+        emoji: '🕳️',
+        name: 'サンクコスト',
+        category: 'finance',
+        tagline: '払ってしまった金は判断材料にしない',
+        summary: 'すでに支払って取り戻せない費用 (埋没費用) は、これからの意思決定に含めてはいけない。「もったいない」が判断を歪める。',
+        example: '超音速機コンコルドは採算割れが判明した後も「ここまで投じたから」と開発が続き、巨額の損失を出した。',
+        gameHint: '調査費を払った書類でも、却下が正しいなら却下する。調査費は戻らないが、それはもう判断材料ではない。',
+        unlockMessage: '調査費を払った上での決裁 — 払った費用に引きずられないのがサンクコストの教訓です。',
+        hintText: '社長室で調査済みの稟議を決裁すると解禁',
+        condition: { type: 'event', value: 1 },
+    },
 ]
 
 /** id 引き用マップ */
 export const THEORIES: Record<string, TheoryDef> = Object.fromEntries(
     THEORY_LIST.map(t => [t.id, t])
 )
+
+// ============================================
+// Phase B: CEO モード決裁 → 理論タグのルール
+// 「今あなたが下した判断」に理論の名前を付ける (行動→命名)。
+// 優先順は特殊な文脈ほど上 (調査済み > nature > カテゴリ)。
+// 注: この経路の解禁は theory 側の condition (状態条件) とは独立 —
+// 決裁という行動そのものが理論の体験なので、状態未達でも即解禁する (意図的仕様)
+// ============================================
+
+export interface DocumentTheoryRule {
+    theoryId: string
+    /** 決裁結果に添える 1 行 (この判断が理論とどう繋がるか) */
+    lesson: string
+}
+
+/** nature (書類の性質) ベースのルール — カテゴリより優先 */
+export const DOCUMENT_NATURE_THEORY_RULES: Partial<Record<DocumentNature, DocumentTheoryRule>> = {
+    tradeoff: {
+        theoryId: 'opportunity_cost',
+        lesson: '承認しても却下しても何かを失う判断でした。選ばなかった側の利益 = 機会費用まで見比べるのが定石です。',
+    },
+    gamble: {
+        theoryId: 'expected_value',
+        lesson: '不確実な案件は「成功確率 × リターン」の期待値で比較します。確率が見えないなら調査指示も一手。',
+    },
+    long_term: {
+        theoryId: 'ambidexterity',
+        lesson: '短期のコストと引き換えに将来の柱を仕込む「探索」への投資判断でした。深化とのバランスが両利きの経営です。',
+    },
+}
+
+/** 調査済み書類の決裁 — 最優先 (nature より文脈が強い) */
+export const INVESTIGATED_THEORY_RULE: DocumentTheoryRule = {
+    theoryId: 'sunk_cost',
+    lesson: '支払った調査費はもう戻りません。それを取り返そうとせず「これからの損得」だけで決めるのがサンクコストの教訓です。',
+}
+
+/** カテゴリベースのルール — nature ルールに該当しない書類のフォールバック */
+export const DOCUMENT_CATEGORY_THEORY_RULES: Record<DocumentCategory, DocumentTheoryRule> = {
+    hiring: { theoryId: 'herzberg', lesson: '採用・処遇の判断です。給与 (衛生要因) と成長機会 (動機づけ要因) の両輪で人は動きます。' },
+    personnel_change: { theoryId: 'herzberg', lesson: '配置転換は動機づけ要因 (裁量・成長) に直結する人事判断です。' },
+    promotion: { theoryId: 'herzberg', lesson: '昇進は代表的な動機づけ要因。承認欲求に応える判断でした。' },
+    training: { theoryId: 'herzberg', lesson: '研修は成長機会 = 動機づけ要因への投資です。' },
+    salary_raise: { theoryId: 'herzberg', lesson: '昇給は不満を防ぐ衛生要因。これだけではやる気は生まれない点に注意。' },
+    marketing: { theoryId: 'brand_equity', lesson: '広告宣伝は消える費用ではなくブランド資産の積み上げ — ブランド・エクイティの視点です。' },
+    budget: { theoryId: 'break_even', lesson: '予算判断は固定費を動かします。固定費が増えるほど損益分岐点は高くなります。' },
+    cost_cut: { theoryId: 'break_even', lesson: 'コスト削減は損益分岐点そのものを引き下げる打ち手です。' },
+    product_plan: { theoryId: 'ansoff', lesson: '新製品への投資はアンゾフの言う「新製品開発」戦略の一手です。' },
+    new_business: { theoryId: 'ansoff', lesson: '新規事業は 4 象限で最もリスクの高い「多角化」。富士フイルムとコダックを分けた判断です。' },
+    equipment: { theoryId: 'economies_of_scale', lesson: '設備投資は固定費を増やす代わりに 1 単位あたりコストを下げる、規模の経済への布石です。' },
+    partnership: { theoryId: 'lanchester', lesson: '提携は単独で戦わない選択。弱者の戦略では他社の力を借りて局地戦を制します。' },
+}

@@ -33,6 +33,15 @@ export interface DocumentOutcome {
   ceoApprovalChange: number
   employeeMoraleChange: number
   description: string
+  /** Phase B: この決裁に対応する経営理論のタグ (承認/却下のみ、該当理論がある場合) */
+  theoryTag?: {
+    theoryId: string
+    theoryName: string
+    emoji: string
+    lesson: string
+    /** この決裁で初めて図鑑に解禁されたか (演出出し分け用) */
+    newlyUnlocked: boolean
+  }
 }
 
 export interface ApprovalDocument {

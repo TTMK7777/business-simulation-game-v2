@@ -2,7 +2,11 @@
 // AchievementManager と同型のパターン: check → 新規解禁分を返し、UI 通知は呼び出し元が行う
 
 import { getGame } from '../store/gameStore'
-import { THEORY_LIST, THEORIES, type TheoryDef, type TheoryCondition } from '../config/theories'
+import {
+    THEORY_LIST, THEORIES,
+    DOCUMENT_NATURE_THEORY_RULES, DOCUMENT_CATEGORY_THEORY_RULES, INVESTIGATED_THEORY_RULE,
+    type TheoryDef, type TheoryCondition, type DocumentTheoryRule,
+} from '../config/theories'
 import { debugLog } from '../gameConfig'
 
 // ============================================
@@ -36,6 +40,10 @@ export function checkTheoryCondition(condition: TheoryCondition): boolean {
                 (sum: number, p: any) => sum + (Number(p.sales) || 0), 0)
             return total >= condition.value
         }
+        case 'event':
+            // イベント経路 (CEO 決裁の理論タグ等) からのみ解禁される。
+            // 状態評価の checkTheories では常に false
+            return false
         default:
             return false
     }
@@ -67,6 +75,36 @@ export function checkTheories(): TheoryDef[] {
     })
 
     return newlyUnlocked
+}
+
+// ============================================
+// Phase B: CEO 決裁 → 理論タグ解決 (純関数)
+// ============================================
+
+/**
+ * 書類の文脈から対応する経営理論を引く。
+ * 優先順: 調査済み (サンクコスト) > nature (tradeoff/gamble/long_term) > カテゴリ。
+ * 該当なしは null (無理にタグ付けしない)
+ */
+export function getTheoryTagForDocument(doc: {
+    nature?: string
+    category?: string
+    investigationResult?: string | null
+}): DocumentTheoryRule | null {
+    if (doc.investigationResult) {
+        return INVESTIGATED_THEORY_RULE
+    }
+    // ルール表は DocumentNature/DocumentCategory キーで型固定 (タイポはコンパイル時検出)。
+    // 引数は旧セーブの未知値も受けるため string のまま、アクセス時にキャストする
+    if (doc.nature) {
+        const rule = DOCUMENT_NATURE_THEORY_RULES[doc.nature as import('../types/document').DocumentNature]
+        if (rule) return rule
+    }
+    if (doc.category) {
+        const rule = DOCUMENT_CATEGORY_THEORY_RULES[doc.category as import('../types/document').DocumentCategory] as DocumentTheoryRule | undefined
+        if (rule) return rule
+    }
+    return null
 }
 
 // ============================================

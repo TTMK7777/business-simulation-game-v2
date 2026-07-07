@@ -144,6 +144,18 @@ export function renderVerdictResult(doc: ApprovalDocument): string {
     changes.push(`<span style="color:${color}">😊 士気 ${doc.outcome.employeeMoraleChange >= 0 ? '+' : ''}${doc.outcome.employeeMoraleChange}</span>`)
   }
 
+  // Phase B: 経営理論タグ —「今の判断」の理論名 + 1行レッスン。タップで図鑑の解説へ
+  const tag = doc.outcome.theoryTag
+  const theoryHtml = tag ? `
+    <div class="verdict-theory-tag" onclick="showTheoryDetail('${escapeHtml(tag.theoryId)}')">
+      <div class="verdict-theory-head">
+        💡 今の判断は… ${escapeHtml(tag.emoji)} <strong>${escapeHtml(tag.theoryName)}</strong>
+        ${tag.newlyUnlocked ? '<span class="verdict-theory-new">📖 図鑑に追加！</span>' : ''}
+      </div>
+      <div class="verdict-theory-lesson">${escapeHtml(tag.lesson)}</div>
+      <div class="verdict-theory-cta">タップで解説を見る</div>
+    </div>` : ''
+
   return `
     <div class="verdict-result">
       <h4>📋 決裁結果</h4>
@@ -151,6 +163,7 @@ export function renderVerdictResult(doc: ApprovalDocument): string {
       <div class="verdict-changes">
         ${changes.join(' | ')}
       </div>
+      ${theoryHtml}
     </div>
   `
 }
