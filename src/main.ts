@@ -152,25 +152,9 @@ const gameHTML = `
             <span id="newsText">📰 ゲーム開始！IT業界で成功を目指そう！</span>
         </div>
 
-        <!-- ランキング表示 -->
-        <div class="ranking-bar" id="rankingBar">
-            <div class="rank-item">
-                <span class="rank-medal">🥇</span>
-                テックコープ<br>(35%)
-            </div>
-            <div class="rank-item">
-                <span class="rank-medal">🥈</span>
-                デジタルワークス<br>(29%)
-            </div>
-            <div class="rank-item">
-                <span class="rank-medal">🥉</span>
-                サイバーソフト<br>(22%)
-            </div>
-            <div class="rank-item player">
-                <span class="rank-medal">4</span>
-                あなた<br>(0.1%)
-            </div>
-        </div>
+        <!-- ランキング表示 (updateRanking が lit で描画。静的プレースホルダを置くと
+             lit は既存 DOM を残したまま後ろに追記するため二重表示になる) -->
+        <div class="ranking-bar" id="rankingBar"></div>
 
         <div class="tabs">
             <button class="tab active" data-panel="overview" onclick="showPanel(this, 'overview')">📊 概要</button>
@@ -198,6 +182,10 @@ const gameHTML = `
                     <div>
                         <span>ブランド力</span>
                         <span id="brand">⭐</span>
+                    </div>
+                    <div>
+                        <span>💹 月次収支見込</span>
+                        <span id="profitForecast">―</span>
                     </div>
                 </div>
 
@@ -259,16 +247,20 @@ const gameHTML = `
             <div id="desk" class="panel"></div>
 
             <div id="certifications" class="panel">
-                <div id="certificationPanel">
-                    <div class="certification-empty-state">
-                        <div class="empty-icon">🎓</div>
-                        <h3>資格取得システム</h3>
-                        <p>従業員のスキルアップのために資格取得を支援しましょう。</p>
-                    </div>
-                </div>
+                <!-- renderCertifications (renderers.ts) が lit で描画。
+                     静的プレースホルダを置くと lit は既存 DOM の後ろに追記して二重表示になる -->
+                <div id="certificationPanel"></div>
             </div>
         </div>
     </div>
+
+    <!-- ターン送りFAB: どのタブからも1タップでターンを進める (コアループの操作コスト削減)。
+         CEOモードでは desk 内の「次の週へ」があるため applyTabVisibilityForMode が非表示化。
+         z-index はコーチマーク backdrop (900) より下に置き、チュートリアルの集中モードを妨げない -->
+    <button id="turnFab" class="turn-fab" data-requires-active="true" onclick="nextTurn()" aria-label="次のターンへ">
+        <span class="turn-fab-icon">⏭️</span>
+        <span class="turn-fab-text">次のターン<span class="turn-fab-sub" id="turnFabWeek">第1週</span></span>
+    </button>
 
     <div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
         <div class="modal-content">

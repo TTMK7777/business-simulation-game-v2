@@ -116,15 +116,15 @@ export function showAchievementUnlocked(achievement: any): void {
     setTimeout(() => {
         showModal(
             '\u{1F3C6} 実績解除！',
-            `<div style="text-align: center; padding: 20px; background: ${rarity.bgColor}; border-radius: 16px;">
-                <div style="font-size: 64px; margin-bottom: 16px;">${achievement.emoji}</div>
-                <div style="font-size: 18px; font-weight: bold; color: ${rarity.color}; margin-bottom: 8px;">
+            `<div class="achievement-unlock-card" style="text-align: center; padding: 20px; background: ${rarity.bgColor}; border-radius: 16px; --rarity-color: ${rarity.color};">
+                <div class="achievement-unlock-emoji" style="font-size: 64px; margin-bottom: 16px;">${achievement.emoji}</div>
+                <div class="achievement-unlock-title" style="font-size: 18px; font-weight: bold; color: ${rarity.color}; margin-bottom: 8px;">
                     ${achievement.name}
                 </div>
-                <div style="font-size: 12px; color: ${rarity.color}; text-transform: uppercase; margin-bottom: 12px;">
+                <div class="achievement-unlock-rarity" style="font-size: 12px; color: ${rarity.color}; text-transform: uppercase; margin-bottom: 12px;">
                     ${rarity.name}
                 </div>
-                <div style="color: #666; font-size: 14px;">
+                <div class="achievement-unlock-desc" style="color: #666; font-size: 14px;">
                     ${achievement.description}
                 </div>
                 ${rewardText}
