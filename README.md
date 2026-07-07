@@ -4,8 +4,8 @@
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-67%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-98%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 > IT企業を経営し、従業員の採用・育成、製品開発、市場競争を通じて成功を目指す本格的な経営シミュレーションゲーム。
 
@@ -25,10 +25,10 @@ npm test           # テスト実行
 |---------|------|
 | 言語 | TypeScript 5.9 (`strict: true`, `noUnusedLocals`) |
 | UI | Lit 3 (段階移行中) + テンプレートリテラル |
-| ビルド | Vite 7, PWA対応 |
+| ビルド | Vite 8 (rolldown), PWA対応 |
 | チャート | Chart.js 4 (遅延初期化) |
 | ストレージ | LocalForage + Zod バリデーション |
-| テスト | Vitest (67テスト) |
+| テスト | Vitest (98テスト) |
 
 ## アーキテクチャ
 
@@ -66,14 +66,26 @@ npm test           # 全テスト実行
 npm test -- --run  # CI用 (watchなし)
 ```
 
-5テストファイル / 67テストケース:
+6テストファイル / 98テストケース:
 - DocumentManager — F4演算子優先度バグ回帰テスト
-- HRManager — 昇進判定・成長倍率・チーム相性
-- qualificationGenerator — 資格割当・前提条件チェック
+- HRManager — 昇進判定・成長倍率・チーム相性・月次ストレス (v2.2.0で追加)
+- qualificationGenerator — 資格割当・前提条件チェック・給与月給スケール (v2.2.0で追加)
 - storage — チェックサム・メタデータバリデーション
 - gameStore — I-1/I-3/I-6 セーブデータ汚染防止回帰テスト (v2.1.0で追加)
+- coachmark — チュートリアル v2 状態機械・位置計算 (v2.2.0で新設)
 
 ## 変更履歴
+
+### v2.2.0 (2026-07)
+
+チュートリアル刷新 + ゲームバランス根本修正 — PR #18-#25
+
+- **Coachmark チュートリアル**: 全画面オーバーレイ (アクション型ステップが完了不能だった) を、ページ操作をブロックしないコンテキスト型 Coachmark に全面刷新。11定義、priority キュー、モーダル退避/復帰、セーブ復元対応
+- **ノーマル詰みバグ根治**: 候補者給与が年収スケールで生成され月給として扱われていた (採用不能→開発不能→合法手なし)。月給化により経済ループが成立
+- **バランス構造修正**: 競合シェアの正バイアス除去 / カリスマ売上の無限スタック抑制 / シェア・ブランド上限と実績要求の矛盾解消 / 品質成長曲線化 / Tier3 スキル特殊効果の実接続
+- **UX**: デスクトップレスポンシブ (400px固定→560/640px) / 採用ボタンの資金不足ガード / 製品名自動生成
+- **品質**: tsc --noEmit 89件→0 (types.d.ts 同名衝突解消 + Phaser 残骸約1,900行削除)、実行時クラッシュ2件修正、レガシー20ファイル一掃
+- **テスト**: 67 → 98 tests (coachmark 状態機械/位置計算、給与スケール、月次ストレス)
 
 ### v2.1.0 (2026-04)
 
