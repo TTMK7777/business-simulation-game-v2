@@ -124,8 +124,9 @@ export function updateCompetitors(): CompetitorAttackResult[] {
             share: comp.share ?? comp.initialShare
         })
 
-        // シェア変動（戦略に応じて）
-        const shareChange = (Math.random() * 2 - 0.5) * strategyConfig.shareGrowthRate * aggressiveness
+        // シェア変動（戦略に応じて）。旧式 (rand*2-0.5) は平均+0.5 の正バイアスで
+        // 競合だけが構造的に伸び続けプレイヤーが常に不利だったため、平均0に修正
+        const shareChange = (Math.random() * 1.5 - 0.75) * strategyConfig.shareGrowthRate * aggressiveness
         const currentShare = comp.share ?? comp.initialShare
         comp.share = Math.max(5, Math.min(60, currentShare + shareChange))
 

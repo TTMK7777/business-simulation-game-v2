@@ -678,20 +678,22 @@ export const ACHIEVEMENTS: Achievement[] = [
     {
         id: 'survivor',
         name: 'サバイバー',
-        description: '12ヶ月（12ターン）生き残った',
+        description: '12ヶ月（48週）生き残った',
         emoji: '🎖️',
         category: 'special',
         rarity: 'uncommon',
-        condition: { type: 'turns', value: 12, comparison: 'gte' }
+        // 1ターン=1週、1ヶ月=4ターンのため 12ヶ月=48ターン (旧値12は実質3ヶ月で表記と乖離)
+        condition: { type: 'turns', value: 48, comparison: 'gte' }
     },
     {
         id: 'veteran',
         name: 'ベテラン経営者',
-        description: '36ヶ月（36ターン）経営を続けた',
+        description: '36ヶ月（144週）経営を続けた',
         emoji: '🎗️',
         category: 'special',
         rarity: 'rare',
-        condition: { type: 'turns', value: 36, comparison: 'gte' },
+        // 1ターン=1週のため 36ヶ月=144ターン (旧値36は実質9ヶ月で表記と乖離)
+        condition: { type: 'turns', value: 144, comparison: 'gte' },
         reward: { type: 'brandPower', value: 5 }
     },
     {

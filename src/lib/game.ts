@@ -10,7 +10,7 @@ import { characterManager } from './cssCharacterManager'
 // config/ からの定数
 // ============================================
 import { DEPARTMENTS, POSITIONS } from './config/departments'
-import { SKILL_TREE, SKILL_EFFECTS } from './config/skills'
+import { SKILL_TREE, SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from './config/skills'
 
 // ============================================
 // gameConfig からの設定
@@ -409,17 +409,37 @@ function executeTraining(focusType: string) {
     showModal('📚 研修完了', message, true)
 }
 
+// 製品名の自動生成 (「製品1」の無機質さ解消。重複時は連番フォールバック)
+const PRODUCT_NAME_PREFIXES = ['ネオ', 'スマート', 'クラウド', 'サイバー', 'クイック', 'ハイパー', 'ライト', 'コア', 'フレックス', 'アルファ']
+const PRODUCT_NAME_SUFFIXES = ['フロー', 'コネクト', 'ボード', 'レンズ', 'ドライブ', 'ワークス', 'パルス', 'ベース', 'リンク', 'ナビ']
+
+function generateProductName(): string {
+    for (let attempt = 0; attempt < 20; attempt++) {
+        const prefix = PRODUCT_NAME_PREFIXES[Math.floor(Math.random() * PRODUCT_NAME_PREFIXES.length)]
+        const suffix = PRODUCT_NAME_SUFFIXES[Math.floor(Math.random() * PRODUCT_NAME_SUFFIXES.length)]
+        const name = `${prefix}${suffix}`
+        if (!game.products.some((p: any) => p.name === name)) return name
+    }
+    return `製品${game.products.length + 1}`
+}
+
 function developProduct() {
     if (!requireCompanyActive()) return
     if (game.employees.length < 2) {
         showModal('開発失敗', '最低2名の従業員が必要です')
         return
     }
-    if (game.money < 2000000) {
-        showModal('開発失敗', '資金不足です（200万円必要）')
+
+    // Tier3 スキル: product_innovation_bonus (開発コスト-20%/保有者、上限-50%)
+    const innovationHolders = game.employees.filter((emp: any) =>
+        emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'product_innovation_bonus')).length
+    const devCost = Math.floor(2000000 * (1 - Math.min(0.5, SKILL_EFFECTS.product_innovation_bonus.value * innovationHolders)))
+
+    if (game.money < devCost) {
+        showModal('開発失敗', `資金不足です（${Math.floor(devCost / 10000)}万円必要）`)
         return
     }
-    game.money -= 2000000
+    game.money -= devCost
 
     const teamCompatibility = calculateTeamCompatibility(game.employees)
     const avgTech = game.employees.reduce((sum: number, emp: any) => sum + emp.abilities.technical, 0) / game.employees.length
@@ -445,14 +465,30 @@ function developProduct() {
         bonusMessages.push(`アーキテクトの設計力で品質向上！`)
     }
 
+    // Tier3 スキル: product_quality_bonus (+10%/保有者) / team_productivity_bonus (+15%/保有者)
+    const qualityBonusHolders = game.employees.filter((emp: any) =>
+        emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'product_quality_bonus')).length
+    const productivityHolders = game.employees.filter((emp: any) =>
+        emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'team_productivity_bonus')).length
+    if (qualityBonusHolders > 0) {
+        qualityMultiplier *= (1 + SKILL_EFFECTS.product_quality_bonus.value * qualityBonusHolders)
+        bonusMessages.push(`品質管理スキルで品質アップ！`)
+    }
+    if (productivityHolders > 0) {
+        qualityMultiplier *= (1 + SKILL_EFFECTS.team_productivity_bonus.value * productivityHolders)
+        bonusMessages.push(`チーム生産性スキルで品質アップ！`)
+    }
+
     qualityMultiplier *= teamCompatibility
 
-    const baseQuality = Math.floor(50 + (avgTech / 2) + Math.random() * 20)
+    // 品質成長曲線: 旧式 (50 + avgTech/2 + rand20) は初手から品質90-100に張り付き
+    // 育成の意味が無かった。低めから始まり技術育成・スキル・特性で100を目指す曲線へ
+    const baseQuality = Math.floor(25 + avgTech * 0.55 + Math.random() * 15)
     const quality = Math.min(100, Math.floor(baseQuality * qualityMultiplier))
 
     const product = {
         id: Date.now(),
-        name: `製品${game.products.length + 1}`,
+        name: generateProductName(),
         quality: quality,
         sales: 0
     }
@@ -488,8 +524,10 @@ function executeMarketing(strategy: string) {
 
     const selected = strategies[strategy] || strategies['balanced']
 
-    game.marketShare = Math.min(15, game.marketShare + selected.share)
-    game.brandPower = Math.max(0, Math.min(5, game.brandPower + selected.brand))
+    // 上限緩和: 旧上限 (シェア15/ブランド5) ではオフィスLv5 (シェア22) や
+    // 実績 market_dominator (シェア50)・brand_master (ブランド50) が到達不能だった
+    game.marketShare = Math.min(60, game.marketShare + selected.share)
+    game.brandPower = Math.max(0, Math.min(60, game.brandPower + selected.brand))
 
     updateDisplay()
     renderActivePanel()

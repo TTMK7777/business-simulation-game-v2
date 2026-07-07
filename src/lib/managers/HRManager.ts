@@ -418,6 +418,16 @@ export function unlockSkill(employeeId: number, category: string, skillId: strin
     // スキル獲得
     employee.unlockedSkills.push(skillId)
 
+    // Tier3 company_bonus: 全従業員の能力+3 を獲得時に一回適用
+    // (従来 special 効果は説明文表示のみで未接続だった)
+    if ((skill as any).special === 'company_bonus') {
+        game.employees.forEach((emp: any) => {
+            ;(['technical', 'sales', 'planning', 'management'] as const).forEach(k => {
+                emp.abilities[k] = Math.min(100, emp.abilities[k] + SKILL_EFFECTS.company_bonus.value)
+            })
+        })
+    }
+
     // 能力値ボーナス適用
     if (skill.effect) {
         Object.keys(skill.effect).forEach(abilityKey => {

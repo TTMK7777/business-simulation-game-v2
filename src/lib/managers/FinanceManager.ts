@@ -3,6 +3,7 @@
 
 import { getGame } from '../store/gameStore'
 import { GAME_CONSTANTS, BALANCE_CONFIG, debugLog } from '../gameConfig'
+import { SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from '../config/skills'
 
 const LOAN_AMOUNT = GAME_CONSTANTS.LOAN_AMOUNT
 const LOAN_INTEREST_RATE = GAME_CONSTANTS.LOAN_INTEREST_RATE
@@ -91,13 +92,24 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
     const productRevenues: { name: string; revenue: number }[] = []
 
+    // Tier3 スキル特殊効果の保有数 (従来は表示専用で計算未接続だった)
+    const revenueBonusHolders = game.employees.filter((emp: any) =>
+        emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'revenue_bonus')).length
+    const costReductionHolders = game.employees.filter((emp: any) =>
+        emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'cost_reduction')).length
+
     game.products.forEach((product: any) => {
         let salesMultiplier = 1.0
 
-        // カリスマ性格で売上+25%
+        // カリスマ性格の売上ボーナス (逓減: 1人+15%、上限+50% — 無限スタック防止)
         const charismaticCount = game.employees.filter((emp: any) => emp.personalityKey === 'charismatic').length
         if (charismaticCount > 0) {
-            salesMultiplier *= (1 + charismaticCount * 0.25)
+            salesMultiplier *= (1 + Math.min(0.5, charismaticCount * 0.15))
+        }
+
+        // Tier3 スキル: revenue_bonus (売上+5%/保有者)
+        if (revenueBonusHolders > 0) {
+            salesMultiplier *= (1 + SKILL_EFFECTS.revenue_bonus.value * revenueBonusHolders)
         }
 
         // 市場シェアボーナス
@@ -127,7 +139,10 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         })
     })
 
-    const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
+    // Tier3 スキル: cost_reduction (運営コスト-10%/保有者、上限-30%)
+    const rawSalaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
+    const costCut = Math.min(0.3, SKILL_EFFECTS.cost_reduction.value * costReductionHolders)
+    const salaryTotal = Math.floor(rawSalaryTotal * (1 - costCut))
     const interest = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
     game.monthlyRevenue = revenue
     game.revenueHistory.push(revenue)

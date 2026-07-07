@@ -405,12 +405,18 @@ function _buildCandidateCardsHtml(candidates: any[]): string {
 
                 <div class="candidate-salary" style="margin: 8px 0;">
                     \u{1F4B0} ${Math.floor(candidate.salary / 10000)}万円/月
+                    <span style="font-size: 11px; color: #999;">(採用時 ${Math.floor(candidate.salary * 3 / 10000)}万円)</span>
                 </div>
 
+                ${getGame().money >= candidate.salary * 3 ? `
                 <button class="btn-primary candidate-hire-btn" onclick="hireSelectedCandidate(${index})"
                         style="width: 100%; margin-top: 8px;">
                     \u2705 採用する
-                </button>
+                </button>` : `
+                <button class="btn-primary candidate-hire-btn" disabled
+                        style="width: 100%; margin-top: 8px; opacity: 0.5; cursor: not-allowed;">
+                    \u{1F6AB} 資金不足（給与3ヶ月分が必要）
+                </button>`}
             </div>
         `
     }).join('')
