@@ -30,6 +30,7 @@ const defaultGameState: GameState = {
     competitorAttacks: [] as string[],
     lastNewsCategory: '' as string,
     unlockedAchievements: [] as string[],
+    unlockedTheories: [] as string[],
     tutorialStep: 0,
     tutorialCompleted: false,
     tutorialV2: {
@@ -211,6 +212,8 @@ export function normalizeGameState(): void {
     // 旧セーブ（フィールド未定義）からのロードでも boolean 型を保証し、
     // チュートリアル不正発火・実績不正解除を防ぐ
     if (typeof game.tutorialCompleted !== 'boolean') game.tutorialCompleted = false
+    // 経営理論図鑑 (旧セーブは未定義 → 空配列で開始)
+    if (!Array.isArray(game.unlockedTheories)) game.unlockedTheories = []
     if (typeof game.tutorialStep !== 'number' || game.tutorialStep < 0) game.tutorialStep = 0
     if (typeof game.wasLowMoney !== 'boolean') game.wasLowMoney = false
 

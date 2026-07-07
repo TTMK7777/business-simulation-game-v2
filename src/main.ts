@@ -205,6 +205,8 @@ const gameHTML = `
 
                 <div id="achievementDisplay" class="achievement-panel"></div>
 
+                <div id="theoryDisplay" class="achievement-panel"></div>
+
                 <div class="chart-container">
                     <div class="chart-title">📈 売上推移</div>
                     <canvas id="revenueChart" height="180"></canvas>
