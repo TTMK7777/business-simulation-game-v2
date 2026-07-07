@@ -3213,3 +3213,35 @@
     margin-top: 4px;
     font-weight: bold;
 }
+
+/* ============================================
+   アクセシビリティ: 動きの抑制設定を尊重
+   (取締役会 2026-07-07 GPT ED [R] 指摘対応)
+   無限アニメーションを停止し、状態は色・アイコンで伝達を維持
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .turn-fab-settlement,
+    .stat.stat-danger,
+    .achievement-unlock-card::before,
+    .achievement-unlock-card::after,
+    .stat-flash-up,
+    .stat-flash-down,
+    .achievement-unlock-emoji,
+    .achievement-unlock-title,
+    .achievement-unlock-rarity,
+    .achievement-unlock-desc {
+        animation: none !important;
+    }
+
+    .theory-toast,
+    .theory-row,
+    .turn-fab {
+        transition: none !important;
+    }
+
+    /* transition 無効化で toast が透明のまま残らないよう即時表示 */
+    .theory-toast {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
