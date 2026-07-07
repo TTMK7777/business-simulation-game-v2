@@ -30,7 +30,7 @@ import {
 // managers/ からのビジネスロジック
 // ============================================
 import {
-    init, initWithSlot, saveGame, restartGame, nextTurn,
+    initWithSlot, saveGame, restartGame, nextTurn,
     initAnimationSystem, syncEmployeeAnimations,
     determineJobType,
 } from './managers/GameManager'
@@ -511,7 +511,14 @@ function developProduct() {
 function executeMarketing(strategy: string) {
     closeModal()
 
+    // window 公開関数のため直接呼び出しにも耐えるガード
+    // (通常経路の doMarketing 側ゲートに依存しない)
+    if (!requireCompanyActive()) return
     const cost = 1000000
+    if (game.money < cost) {
+        showModal('マーケティング失敗', '資金不足です（100万円必要）')
+        return
+    }
     game.money -= cost
 
     const strategies: Record<string, { share: number; brand: number; name: string }> = {
@@ -525,9 +532,11 @@ function executeMarketing(strategy: string) {
     const selected = strategies[strategy] || strategies['balanced']
 
     // 上限緩和: 旧上限 (シェア15/ブランド5) ではオフィスLv5 (シェア22) や
-    // 実績 market_dominator (シェア50)・brand_master (ブランド50) が到達不能だった
+    // 実績 market_dominator (シェア50)・brand_master (ブランド50) が到達不能だった。
+    // 上限は社長モード (DocumentManager: シェア60/ブランド100) および
+    // saveGame の brandLevel = brandPower/20 (0-100 前提) と統一
     game.marketShare = Math.min(60, game.marketShare + selected.share)
-    game.brandPower = Math.max(0, Math.min(60, game.brandPower + selected.brand))
+    game.brandPower = Math.max(0, Math.min(100, game.brandPower + selected.brand))
 
     updateDisplay()
     renderActivePanel()
@@ -687,7 +696,6 @@ function selectCEOTrait(trait: string) {
 ;(window as any).game = game
 
 // メインゲーム制御 (GameManager)
-;(window as any).init = init
 ;(window as any).initWithSlot = initWithSlot
 ;(window as any).saveGame = saveGame
 ;(window as any).restartGame = restartGame
