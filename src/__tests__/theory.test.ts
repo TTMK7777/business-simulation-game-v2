@@ -16,8 +16,13 @@ import {
     checkTheories,
     getTheoriesList,
     getTheoryProgress,
+    getTheoryTagForDocument,
 } from '../lib/managers/TheoryManager'
-import { THEORY_LIST, THEORIES, THEORY_CATEGORIES } from '../lib/config/theories'
+import { processVerdict } from '../lib/managers/DocumentManager'
+import {
+    THEORY_LIST, THEORIES, THEORY_CATEGORIES,
+    DOCUMENT_CATEGORY_THEORY_RULES, DOCUMENT_NATURE_THEORY_RULES, INVESTIGATED_THEORY_RULE,
+} from '../lib/config/theories'
 
 function makeEmployee(salary = 400000): any {
     return {
@@ -187,5 +192,142 @@ describe('getTheoriesList / getTheoryProgress', () => {
         expect(progress.unlocked).toBe(2)
         expect(progress.total).toBe(THEORY_LIST.length)
         expect(progress.percentage).toBe(Math.round((2 / THEORY_LIST.length) * 100))
+    })
+})
+
+// ============================================
+// Phase B: CEO 決裁 → 理論タグ
+// ============================================
+
+describe('getTheoryTagForDocument (Phase B タグ解決)', () => {
+    it('調査済み書類は nature/カテゴリより優先してサンクコスト', () => {
+        const tag = getTheoryTagForDocument({
+            nature: 'gamble', category: 'marketing',
+            investigationResult: '調査の結果、成功確率は約40%と推定されます。',
+        })
+        expect(tag?.theoryId).toBe('sunk_cost')
+    })
+
+    it('nature ルール: gamble→期待値 / tradeoff→機会費用 / long_term→両利き', () => {
+        expect(getTheoryTagForDocument({ nature: 'gamble', category: 'budget' })?.theoryId).toBe('expected_value')
+        expect(getTheoryTagForDocument({ nature: 'tradeoff', category: 'budget' })?.theoryId).toBe('opportunity_cost')
+        expect(getTheoryTagForDocument({ nature: 'long_term', category: 'budget' })?.theoryId).toBe('ambidexterity')
+    })
+
+    it('nature が clear_good/clear_bad ならカテゴリルールにフォールバック', () => {
+        expect(getTheoryTagForDocument({ nature: 'clear_good', category: 'hiring' })?.theoryId).toBe('herzberg')
+        expect(getTheoryTagForDocument({ nature: 'clear_bad', category: 'marketing' })?.theoryId).toBe('brand_equity')
+    })
+
+    it('該当ルールなしは null (無理にタグ付けしない)', () => {
+        expect(getTheoryTagForDocument({ nature: 'clear_good', category: 'unknown_cat' })).toBeNull()
+        expect(getTheoryTagForDocument({})).toBeNull()
+    })
+
+    it('全 12 書類カテゴリにルールがあり、参照先理論が実在する', () => {
+        const categories = [
+            'hiring', 'budget', 'product_plan', 'marketing', 'equipment',
+            'personnel_change', 'promotion', 'training', 'salary_raise',
+            'new_business', 'cost_cut', 'partnership',
+        ]
+        categories.forEach(c => {
+            const rule = DOCUMENT_CATEGORY_THEORY_RULES[c]
+            expect(rule, `カテゴリ ${c} のルールが未定義`).toBeDefined()
+            expect(THEORIES[rule.theoryId], `カテゴリ ${c} の理論 ${rule.theoryId} が図鑑に不在`).toBeDefined()
+            expect(rule.lesson.length).toBeGreaterThan(0)
+        })
+        Object.values(DOCUMENT_NATURE_THEORY_RULES).forEach(rule => {
+            expect(THEORIES[rule.theoryId]).toBeDefined()
+        })
+        expect(THEORIES[INVESTIGATED_THEORY_RULE.theoryId]).toBeDefined()
+    })
+})
+
+describe('processVerdict の理論タグ付与と図鑑解禁 (Phase B 統合)', () => {
+    function makeCeoState(overrides: Record<string, unknown> = {}): any {
+        return {
+            turn: 1, month: 1, money: 10_000_000,
+            employees: [], products: [], marketShare: 5, brandPower: 50,
+            difficulty: 'normal',
+            ceo: {
+                approvalRating: 50, remandsThisWeek: 0, investigationBudget: 0,
+                trapsDetected: 0, trapsMissed: 0,
+                decisionsCorrect: 0, decisionsWrong: 0, gamblesRejected: 0,
+            },
+            documentQueue: [], documentHistory: [],
+            documentStats: { totalProcessed: 0, totalApproved: 0, totalRejected: 0, trapsDetected: 0, trapsMissed: 0 },
+            scandalRisk: 0,
+            unlockedTheories: [],
+            ...overrides,
+        }
+    }
+
+    function makeDoc(overrides: Record<string, unknown> = {}): any {
+        return {
+            id: 'doc_test_1', category: 'marketing', priority: 'normal',
+            title: 'テスト稟議', department: '営業',
+            submitter: { employeeId: null, name: '田中 太郎', position: '課長' },
+            summary: 'テスト', nature: 'clear_good', trap: null, clues: [],
+            details: { amount: 500_000, expectedBenefit: 'テスト効果', timeline: '1ヶ月', risks: 'なし', attachments: [] },
+            actualBenefit: 60, turnSubmitted: 1, deadline: null,
+            verdict: null, resultApplied: false, underInvestigation: false,
+            ...overrides,
+        }
+    }
+
+    it('承認時に theoryTag が付与され、図鑑に解禁される (newlyUnlocked=true)', () => {
+        const state = makeCeoState()
+        state.documentQueue.push(makeDoc())
+        const outcome = processVerdict(state, 'doc_test_1', 'approve')
+        expect(outcome?.theoryTag?.theoryId).toBe('brand_equity')
+        expect(outcome?.theoryTag?.newlyUnlocked).toBe(true)
+        expect(outcome?.theoryTag?.lesson.length).toBeGreaterThan(0)
+        expect(state.unlockedTheories).toContain('brand_equity')
+    })
+
+    it('同じ理論の 2 度目の決裁は newlyUnlocked=false (二重解禁しない)', () => {
+        const state = makeCeoState()
+        state.documentQueue.push(makeDoc({ id: 'doc_a' }), makeDoc({ id: 'doc_b' }))
+        processVerdict(state, 'doc_a', 'approve')
+        const second = processVerdict(state, 'doc_b', 'reject')
+        expect(second?.theoryTag?.theoryId).toBe('brand_equity')
+        expect(second?.theoryTag?.newlyUnlocked).toBe(false)
+        expect(state.unlockedTheories.filter((id: string) => id === 'brand_equity').length).toBe(1)
+    })
+
+    it('保留 (hold) では theoryTag を付与しない (決裁のみが学習機会)', () => {
+        const state = makeCeoState()
+        state.documentQueue.push(makeDoc())
+        const outcome = processVerdict(state, 'doc_test_1', 'hold')
+        expect(outcome?.theoryTag).toBeUndefined()
+        expect(state.unlockedTheories.length).toBe(0)
+    })
+
+    it('unlockedTheories 未定義の旧セーブでも自己修復する', () => {
+        const state = makeCeoState()
+        delete state.unlockedTheories
+        state.documentQueue.push(makeDoc({ nature: 'gamble' }))
+        const outcome = processVerdict(state, 'doc_test_1', 'reject')
+        expect(outcome?.theoryTag?.theoryId).toBe('expected_value')
+        expect(state.unlockedTheories).toContain('expected_value')
+    })
+})
+
+describe('event 型条件 (Phase B)', () => {
+    beforeEach(() => {
+        resetGameState()
+    })
+
+    it('event 型理論は状態評価 (checkTheories) では解禁されない', () => {
+        const game = getGame()
+        // 全状態を最大化しても event 型は解禁されない
+        game.turn = 999
+        game.marketShare = 60
+        game.brandPower = 100
+        const unlockedIds = checkTheories().map(t => t.id)
+        expect(unlockedIds).not.toContain('opportunity_cost')
+        expect(unlockedIds).not.toContain('expected_value')
+        expect(unlockedIds).not.toContain('sunk_cost')
+        expect(checkTheoryCondition({ type: 'event', value: 1 })).toBe(false)
     })
 })

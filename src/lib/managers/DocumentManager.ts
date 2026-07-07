@@ -3,6 +3,8 @@ import type { ApprovalDocument, DocumentCategory, DocumentNature, DocumentVerdic
 import { DOCUMENT_TEMPLATES, SITUATION_MODIFIERS, CAUSAL_CHAINS, TRAP_NAMES } from '../config/documents'
 import { CEO_BALANCE } from '../config/ceo'
 import { POLICY_FOCUSES } from '../config/ceo'
+import { THEORIES } from '../config/theories'
+import { getTheoryTagForDocument } from './TheoryManager'
 
 let docIdCounter = 0
 
@@ -351,6 +353,25 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
   // 承認 or 却下
   doc.verdict = verdict
   const outcome = calculateOutcome(state, doc, verdict)
+
+  // Phase B: 経営理論タグ —「今の判断」に理論の名前を付け、図鑑にも解禁する
+  // (行動→命名の学習体験。unlockedTheories は state 直接操作 = processVerdict の流儀に合わせ
+  //  getGame() シングルトンに依存しない)
+  const theoryRule = getTheoryTagForDocument(doc)
+  if (theoryRule && THEORIES[theoryRule.theoryId]) {
+    if (!Array.isArray(state.unlockedTheories)) state.unlockedTheories = []
+    const newlyUnlocked = !state.unlockedTheories.includes(theoryRule.theoryId)
+    if (newlyUnlocked) state.unlockedTheories.push(theoryRule.theoryId)
+    const def = THEORIES[theoryRule.theoryId]
+    outcome.theoryTag = {
+      theoryId: def.id,
+      theoryName: def.name,
+      emoji: def.emoji,
+      lesson: theoryRule.lesson,
+      newlyUnlocked
+    }
+  }
+
   doc.outcome = outcome
   doc.resultApplied = true
 

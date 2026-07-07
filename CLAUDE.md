@@ -22,6 +22,12 @@
 ## コード規約
 - TypeScript: `strict: true`, `noUnusedLocals`, `noUnusedParameters`
 - UI: Lit 3 (段階移行中) + テンプレートリテラル
-- ビルド: Vite 7
-- テスト: Vitest (57テスト)
+- ビルド: Vite 8 (rolldown。manualChunks は関数形式、minify は oxc)
+- テスト: Vitest (`npm test -- --run`。件数は増え続けるためここに固定値を書かない)
 - ESLint 準拠
+
+## 検証コマンド (proof)
+- テスト: `npm test -- --run`
+- 型チェック: `node ./node_modules/typescript/bin/tsc --noEmit` (npx は環境 deny のため不使用)
+- ビルド: `npm run build`
+- UI 変更は実ブラウザ検証必須 (Chrome headless + CDP。HTTP テスト緑だけでは不可)

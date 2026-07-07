@@ -3245,3 +3245,51 @@
         transform: translate(-50%, 0);
     }
 }
+
+/* ============================================
+   経営理論図鑑 Phase B: 決裁結果の理論タグ
+   ============================================ */
+.verdict-theory-tag {
+    margin-top: 14px;
+    padding: 12px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.15s ease;
+}
+
+.verdict-theory-tag:active {
+    transform: scale(0.98);
+}
+
+.verdict-theory-head {
+    font-size: 13px;
+    color: #444;
+}
+
+.verdict-theory-new {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #f0c040, #e8a020);
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+.verdict-theory-lesson {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+    margin-top: 6px;
+}
+
+.verdict-theory-cta {
+    font-size: 11px;
+    color: #667eea;
+    font-weight: bold;
+    margin-top: 6px;
+}
