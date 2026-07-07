@@ -219,14 +219,14 @@ const gameHTML = `
             <div id="employees" class="panel">
                 <h3>👥 従業員管理</h3>
                 <div id="employeeList"></div>
-                <button class="btn" data-requires-active="true" onclick="showHiring()">➕ 採用活動</button>
+                <button class="btn" data-requires-active="true" data-coachmark="hire" onclick="showHiring()">➕ 採用活動</button>
                 <button class="btn" data-requires-active="true" onclick="trainEmployees()">📚 研修実施</button>
             </div>
 
             <div id="products" class="panel">
                 <h3>📦 製品開発</h3>
                 <div id="productList"></div>
-                <button class="btn" data-requires-active="true" onclick="developProduct()">🔧 新製品開発</button>
+                <button class="btn" data-requires-active="true" data-coachmark="develop" onclick="developProduct()">🔧 新製品開発</button>
             </div>
 
             <div id="market" class="panel">

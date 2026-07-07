@@ -317,10 +317,14 @@ export function updateEmployeeAnimation(employee: any): void {
     const game = getGame()
     let animState: AnimationState = 'idle'
 
-    const isWorking = game.products?.some((p: any) =>
-        p.assignedEmployees?.includes(employee.id) ||
-        p.assignedEmployees?.some((e: any) => e.id === employee.id)
-    )
+    // 稼働判定は HRManager.updateMonthlyStress と同一基準
+    // (assignedEmployees は未実装の明示アサイン用。現行は製品あり×開発部で稼働)
+    const isWorking =
+        (game.products.length > 0 && employee.department === 'development') ||
+        game.products?.some((p: any) =>
+            p.assignedEmployees?.includes(employee.id) ||
+            p.assignedEmployees?.some((e: any) => e.id === employee.id)
+        )
 
     if (isWorking) {
         const stress = employee.stress || 0

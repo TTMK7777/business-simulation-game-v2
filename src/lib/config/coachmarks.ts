@@ -55,7 +55,8 @@ export const COACHMARKS: Record<string, CoachmarkDef> = {
         emoji: '🤝',
         title: '従業員を採用しよう',
         description: '「採用活動」から候補者を選んで採用しましょう。給与3ヶ月分が必要です。',
-        targetSelector: '[onclick="showHiring()"]',
+        // onclick 属性でなく data 属性で参照 (イベント配線の変更・Lit 化に耐性を持たせる)
+        targetSelector: '[data-coachmark="hire"]',
         action: 'hire_employee',
         reward: { type: 'money', value: 100000 },
         next: 'tab_products',
@@ -74,7 +75,7 @@ export const COACHMARKS: Record<string, CoachmarkDef> = {
         emoji: '🔧',
         title: '製品を開発しよう',
         description: '「新製品開発」で開発スタート。開発部の従業員2名以上が必要です。',
-        targetSelector: '[onclick="developProduct()"]',
+        targetSelector: '[data-coachmark="develop"]',
         action: 'develop_product',
         reward: { type: 'money', value: 200000 },
         next: 'tab_market',

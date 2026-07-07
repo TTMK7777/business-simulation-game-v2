@@ -1,10 +1,13 @@
 # Business Simulation Game v2 — 計画
 
 ## 現在のステータス
-**Sprint E (v2.2.0) 進行中** — 取締役会 🟡条件付きGo (2026-05-04)。
-T1 (型・state・Zod) 完了 → ローカルコミット 0cf6133 (未push、T2-T7 完了後にまとめて push 予定)。
-Android (Capacitor 想定) 移植準備として Coachmark 方式チュートリアル + 軽微バグ修正。
-工数 4 人日、必須5条件 + 推奨5条件すべて反映。
+**v2.2.0 リリース済み (2026-07-07)** — Sprint E 完了 + 全面レビュー・バランス修正。
+- Sprint E (Coachmark チュートリアル) T1-T7 完了、取締役会 Go (PR #21)
+- ゲーム詰みバグ根治: 候補者給与の年収/月給スケール混在 (PR #20)
+- tsc --noEmit 89件→0 (types.d.ts と types/ の同名衝突が真因、PR #22)
+- バランス構造欠陥5件修正 + Tier3スキル実接続 + UX3件 (PR #23)
+- レガシー一掃: v1残骸20ファイル + Phaser死コード約1,900行 + ProductManager二重実装
+次: Phase 7 (Android/Capacitor) または管理モードのテンポ・深化 (下記バックログ)
 
 ## フェーズ
 ### Phase 0: 基盤レイヤー (完了)
@@ -38,14 +41,12 @@ Android (Capacitor 想定) 移植準備として Coachmark 方式チュートリ
 - Sprint D: 観測性改善 + ドキュメント (R-1, R-3) — D1完了
 - 全体: 14+コミット、vitest 57→67、tag: v2.1.0-sprintA/B/C-*
 
-### Phase 6: Sprint E (v2.2.0) チュートリアル刷新 + Android 準備 (進行中 2026-05-04)
-- T1: 型・state・Zod 基盤 (完了 0cf6133)
-- T2: Coachmark UI (coachmark.ts + 位置計算ユーティリティ + main.css) — 次セッション
-- T3: coachmarks.ts 定義表 + TutorialManager 全置換
-- T4: hook 差替 (game.ts/GameManager/renderers/modals)
-- T5: Vitest 12-15 ケース (順序・保存復元・競合・互換・リサイズ追従)
-- T6: 軽微バグ修正 (B-1 stress / B-2 leaveProbability / B-4 二重 escape / game.ts.backup 削除)
-- T7: 取締役会再レビュー + push
+### Phase 6: Sprint E (v2.2.0) チュートリアル刷新 + 全面品質向上 (完了 2026-07-07)
+- T1-T7 全完了 (PR #21)。Coachmark 方式へ全面刷新、旧方式は tutorialV2.disabled でロールバック可
+- 追加成果: 給与スケール詰みバグ修正 (PR #20) / tsc 0件化 (PR #22) /
+  バランス構造欠陥5件 + Tier3スキル実接続 + UX3件 (PR #23) / レガシー一掃 (PR #19)
+- テスト 67→98 全緑。実ブラウザ E2E で経済ループ成立を実測
+  (修正前: ノーマル開始2分で詰み → 修正後: 2名+製品1本で月次+32万黒字)
 
 ### Phase 7: Android (Capacitor) 移植 (Sprint E 完了後)
 - ANDROID_MIGRATION_PLAN.md 策定 (TAURI_MIGRATION_PLAN.md は陳腐化、Capacitor 軸で再構築)
