@@ -430,7 +430,7 @@ npm run dev
 
 ### 環境確認
 ```bash
-cd /home/ttsuj/tauri-migration-workspace
+cd <project-root>
 node --version  # v22.16.0
 npm --version   # 11.4.2
 git status      # clean working directory

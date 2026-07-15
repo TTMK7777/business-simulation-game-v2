@@ -10,7 +10,7 @@
 /src/lib/
 └── game.ts                       # Game logic (UPDATED)
 
-/home/ttsuj/tauri-migration-workspace/
+<project-root>/
 ├── SPRITE_LAYERING_IMPLEMENTATION.md  # Full documentation
 ├── VISUAL_TESTING_GUIDE.md           # Testing checklist
 └── QUICK_REFERENCE.md                # This file

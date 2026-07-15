@@ -394,7 +394,7 @@ lawyer: {
 
 ### 質問・不明点
 1. このガイドの該当セクションを確認
-2. `/home/ttsuj/docs/QUALIFICATION_SYSTEM_DESIGN_2025-10-26.md` の設計書を参照
+2. `<user-home>/docs/QUALIFICATION_SYSTEM_DESIGN_2025-10-26.md` の設計書を参照
 3. コード内のJSDocコメントを確認
 
 ### バグ報告

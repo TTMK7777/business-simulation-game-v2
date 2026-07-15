@@ -5,7 +5,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-124%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-125%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 > IT企業を経営し、従業員の採用・育成、製品開発、市場競争を通じて成功を目指す本格的な経営シミュレーションゲーム。プレイヤーの行動に対応する実在の経営理論 (PPM・アンゾフ・二要因理論など14本) が図鑑として解禁され、**遊びながら経営を学べる**。
 
@@ -28,7 +28,7 @@ npm test           # テスト実行
 | ビルド | Vite 8 (rolldown), PWA対応 |
 | チャート | Chart.js 4 (遅延初期化) |
 | ストレージ | LocalForage + Zod バリデーション |
-| テスト | Vitest (124テスト) |
+| テスト | Vitest (125テスト) |
 
 ## アーキテクチャ
 
@@ -74,7 +74,7 @@ npm test           # 全テスト実行
 npm test -- --run  # CI用 (watchなし)
 ```
 
-7テストファイル / 124テストケース:
+7テストファイル / 125テストケース:
 - DocumentManager — F4演算子優先度バグ回帰テスト
 - HRManager — 昇進判定・成長倍率・チーム相性・月次ストレス (v2.2.0で追加)
 - qualificationGenerator — 資格割当・前提条件チェック・給与月給スケール (v2.2.0で追加)
@@ -94,7 +94,7 @@ npm test -- --run  # CI用 (watchなし)
 - **実績通知の断線修復**: 実績解除の演出と報酬付与が一度も発火していなかった実バグを修復
 - **UI/UX 8件**: ランキングバー二重表示バグ修正 / ターン送りFAB (決算週予告付き) / 資金カウントアップ+危険水域警告 / 資格タブ蘇生 / 月次収支見込み表示 / 実績解除演出強化
 - **アクセシビリティ**: prefers-reduced-motion で無限アニメーション抑制
-- **テスト**: 98 → 124 tests (theory 新設26 + worktree 二重実行 exclude)
+- **テスト**: 98 → 125 tests (theory 新設27 + worktree 二重実行 exclude)
 
 ### v2.2.0 (2026-07)
 
