@@ -18,6 +18,8 @@ Pick an entry point based on your role.
 
 ### ドキュメント一覧
 
+#### 利用者向け
+
 | ドキュメント | Diátaxis 種別 | 概要 |
 |-------------|--------------|------|
 | [利用ガイド](./user/usage-guide.md) | How-to | インストール・起動・基本的な遊び方 |
@@ -29,9 +31,16 @@ Pick an entry point based on your role.
 | [行動規範 (CODE_OF_CONDUCT.md)](../CODE_OF_CONDUCT.md) | Reference | コミュニティ行動規範 |
 | [セキュリティポリシー (SECURITY.md)](../SECURITY.md) | Reference | 脆弱性報告ポリシー |
 | [クイックリファレンス (QUICK_REFERENCE.md)](../QUICK_REFERENCE.md) | Reference | よく使うコマンド・要点まとめ |
-| [プロジェクト概要 (PROJECT_SUMMARY.md)](./PROJECT_SUMMARY.md) | Explanation | プロジェクト全体のサマリ |
 | [改善ロードマップ (GAME-IMPROVEMENT-ROADMAP.md)](./GAME-IMPROVEMENT-ROADMAP.md) | Explanation | ゲーム改善の方向性 |
-| [次タスク (NEXT_TASKS.md)](./NEXT_TASKS.md) | Explanation | 未着手・優先タスク一覧 |
+
+#### 開発ログ / アーカイブ
+
+過去の AI セッションが残した引き継ぎメモ・作業報告です。現行実装との差分がある場合があります（歴史的記録として保持）。
+
+| ドキュメント | Diátaxis 種別 | 概要 |
+|-------------|--------------|------|
+| [プロジェクト概要 (PROJECT_SUMMARY.md)](./PROJECT_SUMMARY.md) | Explanation | 拡張開発セッションの作業完了報告 |
+| [次タスク (NEXT_TASKS.md)](./NEXT_TASKS.md) | Explanation | 未着手・優先タスク一覧（特定セッション時点） |
 | [実装ハンドオーバー (IMPLEMENTATION-HANDOVER.md)](./IMPLEMENTATION-HANDOVER.md) | Explanation | 実装引き継ぎメモ |
 | [ハンドオーバーガイド (HANDOVER_GUIDE.md)](./HANDOVER_GUIDE.md) | How-to | セッション引き継ぎの進め方 |
 | [ハンドオーバー記録 2025-10-23 (HANDOVER_2025-10-23.md)](./HANDOVER_2025-10-23.md) | Explanation | 特定セッションの引き継ぎ記録 |
@@ -50,6 +59,8 @@ Pick an entry point based on your role.
 
 ### Document list
 
+#### For users
+
 | Document | Diátaxis type | Summary |
 |----------|---------------|---------|
 | [Usage Guide](./user/usage-guide.md) | How-to | Install, launch, and how to play |
@@ -61,9 +72,16 @@ Pick an entry point based on your role.
 | [Code of Conduct (CODE_OF_CONDUCT.md)](../CODE_OF_CONDUCT.md) | Reference | Community code of conduct |
 | [Security Policy (SECURITY.md)](../SECURITY.md) | Reference | Vulnerability reporting policy |
 | [Quick Reference (QUICK_REFERENCE.md)](../QUICK_REFERENCE.md) | Reference | Common commands and key points |
-| [Project Summary (PROJECT_SUMMARY.md)](./PROJECT_SUMMARY.md) | Explanation | High-level project summary |
 | [Improvement Roadmap (GAME-IMPROVEMENT-ROADMAP.md)](./GAME-IMPROVEMENT-ROADMAP.md) | Explanation | Direction of game improvements |
-| [Next Tasks (NEXT_TASKS.md)](./NEXT_TASKS.md) | Explanation | Backlog and prioritized tasks |
+
+#### Dev session log / Archive
+
+Handover notes and work reports left behind by past AI sessions. May diverge from the current implementation (kept as a historical record).
+
+| Document | Diátaxis type | Summary |
+|----------|---------------|---------|
+| [Project Summary (PROJECT_SUMMARY.md)](./PROJECT_SUMMARY.md) | Explanation | Work-completion report for an extension development session |
+| [Next Tasks (NEXT_TASKS.md)](./NEXT_TASKS.md) | Explanation | Backlog and prioritized tasks (as of a specific session) |
 | [Implementation Handover (IMPLEMENTATION-HANDOVER.md)](./IMPLEMENTATION-HANDOVER.md) | Explanation | Implementation handover notes |
 | [Handover Guide (HANDOVER_GUIDE.md)](./HANDOVER_GUIDE.md) | How-to | How to run a session handover |
 | [Handover Record 2025-10-23 (HANDOVER_2025-10-23.md)](./HANDOVER_2025-10-23.md) | Explanation | Handover record for a specific session |

@@ -205,7 +205,7 @@ const closeAction = (fromHiring || window.hireCandidates)
 ## 📚 関連ドキュメント
 
 - `INTEGRATION_GUIDE_30_QUALIFICATIONS.md` - 30資格システム統合ガイド
-- `QUALIFICATION_SYSTEM_DESIGN_2025-10-26.md` - 資格システム設計書（`/home/ttsuj/docs/`）
+- `QUALIFICATION_SYSTEM_DESIGN_2025-10-26.md` - 資格システム設計書（`<user-home>/docs/`）
 - `LAUNCH.bat` - Windows起動スクリプト
 
 ---

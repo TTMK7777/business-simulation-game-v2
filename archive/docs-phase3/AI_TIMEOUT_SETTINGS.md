@@ -61,8 +61,8 @@ nano ~/.codex/config.toml
     },
     "ai-orchestrator": {
       "type": "stdio",
-      "command": "/home/ttsuj/Desktop/01_AI-Agents/mcp-ai-orchestrator/venv/bin/python3",
-      "args": ["/home/ttsuj/Desktop/01_AI-Agents/mcp-ai-orchestrator/mcp_server.py"],
+      "command": "<user-home>/Desktop/01_AI-Agents/mcp-ai-orchestrator/venv/bin/python3",
+      "args": ["<user-home>/Desktop/01_AI-Agents/mcp-ai-orchestrator/mcp_server.py"],
       "env": {
         "MCP_TIMEOUT": "600000",
         "REQUEST_TIMEOUT": "600000"
@@ -274,7 +274,7 @@ cat ~/.mcp.json | python3 -m json.tool
 ## 🔗 関連ドキュメント
 
 - [CODEX_BEST_PRACTICES.md](./CODEX_BEST_PRACTICES.md) - Codex利用ガイド
-- [CLAUDE.md](/home/ttsuj/CLAUDE.md) - AIチーム構成
+- [CLAUDE.md](<user-home>/CLAUDE.md) - AIチーム構成
 - [TAURI_MIGRATION_PLAN.md](./TAURI_MIGRATION_PLAN.md) - プロジェクト計画
 
 ---

@@ -4,7 +4,7 @@
 
 ### 1. Start the Development Server
 ```bash
-cd /home/ttsuj/tauri-migration-workspace
+cd <project-root>
 npm run dev
 ```
 
