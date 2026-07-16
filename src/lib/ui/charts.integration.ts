@@ -147,22 +147,24 @@ export function updateFinanceCharts(): void {
 }
 
 // P/L構成: 今月の売上・人件費・利息・純利益を1本ずつの棒で表示
+//
+// 財務パネルは .panel { display: none } で初期非表示のため、mutate-in-place
+// (.data 書き換え + .update()) だと初回作成時の 0×0 サイズが固定化され、
+// タブを開いても潰れたまま描画される。marketChart と同じ「毎回 destroy → 再作成」
+// パターンを踏襲し、パネルが可視化されたタイミングで正しいサイズを取得させる。
 function updateFinancePlChart(history: FinanceSnapshot[]): void {
     const canvas = document.getElementById('financePlChart') as HTMLCanvasElement | null
     if (!canvas) return
+
+    if (financePlChart) {
+        financePlChart.destroy()
+    }
 
     const latest = history[history.length - 1]
     const values = latest
         ? [latest.revenue, latest.salaryTotal, latest.interest, latest.profit]
         : [0, 0, 0, 0]
     const profitColor = !latest || latest.profit >= 0 ? '#4caf50' : '#f44336'
-
-    if (financePlChart) {
-        financePlChart.data.datasets[0].data = values.map(v => v / 10000)
-        financePlChart.data.datasets[0].backgroundColor = ['#667eea', '#f093fb', '#ffb74d', profitColor]
-        financePlChart.update()
-        return
-    }
 
     financePlChart = new Chart(canvas, {
         type: 'bar',
@@ -187,22 +189,18 @@ function updateFinancePlChart(history: FinanceSnapshot[]): void {
     })
 }
 
-// CF推移: 営業CF・財務CFの折れ線
+// CF推移: 営業CF・財務CFの折れ線（destroy → 再作成方式。理由は updateFinancePlChart 参照）
 function updateFinanceCfChart(history: FinanceSnapshot[]): void {
     const canvas = document.getElementById('financeCfChart') as HTMLCanvasElement | null
     if (!canvas) return
 
+    if (financeCfChart) {
+        financeCfChart.destroy()
+    }
+
     const labels = history.map((_, i) => `${i + 1}月`)
     const operating = history.map(h => h.operatingCF / 10000)
     const financing = history.map(h => h.financingCF / 10000)
-
-    if (financeCfChart) {
-        financeCfChart.data.labels = labels
-        financeCfChart.data.datasets[0].data = operating
-        financeCfChart.data.datasets[1].data = financing
-        financeCfChart.update()
-        return
-    }
 
     financeCfChart = new Chart(canvas, {
         type: 'line',
@@ -237,22 +235,18 @@ function updateFinanceCfChart(history: FinanceSnapshot[]): void {
     })
 }
 
-// 簡易B/S推移: 現金（プラス）と借入残高（マイナス）の積上げ棒
+// 簡易B/S推移: 現金（プラス）と借入残高（マイナス）の積上げ棒（destroy → 再作成方式。理由は updateFinancePlChart 参照）
 function updateFinanceBsChart(history: FinanceSnapshot[]): void {
     const canvas = document.getElementById('financeBsChart') as HTMLCanvasElement | null
     if (!canvas) return
 
+    if (financeBsChart) {
+        financeBsChart.destroy()
+    }
+
     const labels = history.map((_, i) => `${i + 1}月`)
     const cash = history.map(h => h.cash / 10000)
     const debt = history.map(h => -h.debt / 10000)
-
-    if (financeBsChart) {
-        financeBsChart.data.labels = labels
-        financeBsChart.data.datasets[0].data = cash
-        financeBsChart.data.datasets[1].data = debt
-        financeBsChart.update()
-        return
-    }
 
     financeBsChart = new Chart(canvas, {
         type: 'bar',
