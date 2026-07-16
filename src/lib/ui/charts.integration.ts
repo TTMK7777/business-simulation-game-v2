@@ -149,7 +149,7 @@ export function updateFinanceCharts(): void {
 // P/L構成: 今月の売上・人件費・利息・純利益を1本ずつの棒で表示
 //
 // 財務パネルは .panel { display: none } で初期非表示のため、mutate-in-place
-// (.data 書き換え + .update()) だと初回作成時の 0×0 サイズが固定化され、
+// (.data を書き換えて .update() する方式) だと初回作成時の 0×0 サイズが固定化され、
 // タブを開いても潰れたまま描画される。marketChart と同じ「毎回 destroy → 再作成」
 // パターンを踏襲し、パネルが可視化されたタイミングで正しいサイズを取得させる。
 function updateFinancePlChart(history: FinanceSnapshot[]): void {
