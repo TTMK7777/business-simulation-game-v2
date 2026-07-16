@@ -55,6 +55,12 @@ export class A2UIManager {
   private static instance: A2UIManager
   private notificationContainer: HTMLElement | null = null
 
+  // 月次イベント系カード (ニュース/アドバイザー/財務サマリー) の自動消滅タイマー競合防止用
+  // (再発火で内容が上書きされた後に古いタイマーが新しい内容を消してしまうのを防ぐ)
+  private newsGeneration = 0
+  private advisorGeneration = 0
+  private financeSummaryGeneration = 0
+
   private constructor() {
     // DOM Ready後に初期化（安全性向上）
     if (document.readyState === 'loading') {
@@ -412,18 +418,114 @@ export class A2UIManager {
     if (!container) {
       container = document.createElement('div')
       container.id = 'a2ui-news'
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9998;
+        max-width: 360px;
+      `
       document.body.appendChild(container)
     }
     return container
   }
 
   /**
+   * Helper to get or create finance summary container
+   * (turn-fab ボタン (bottom:18px/right:16px) と被らないよう上に確保)
+   */
+  private getOrCreateFinanceSummaryContainer(): HTMLElement {
+    let container = document.getElementById('a2ui-finance-summary')
+    if (!container) {
+      container = document.createElement('div')
+      container.id = 'a2ui-finance-summary'
+      container.style.cssText = `
+        position: fixed;
+        bottom: 90px;
+        right: 16px;
+        z-index: 9998;
+        max-width: 340px;
+      `
+      document.body.appendChild(container)
+    }
+    return container
+  }
+
+  /**
+   * 月次ニュースカード (市況/競合イベント) を表示し、一定時間後に自動で消す
+   */
+  showMonthlyNews(news: NewsItem, durationMs = 12000): void {
+    this.showNews(news)
+    const container = this.getOrCreateNewsContainer()
+    const myGeneration = ++this.newsGeneration
+    setTimeout(() => {
+      if (this.newsGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
+   * 資金危険水域アドバイザーカードを表示し、一定時間後に自動で消す
+   * (呼び出し元で「新規突入時のみ」の判定を行う想定)
+   */
+  showDangerAdvisor(data: AdvisorMessage, durationMs = 16000): void {
+    this.showAdvisor(data)
+    const container = this.getOrCreateAdvisorContainer()
+    const myGeneration = ++this.advisorGeneration
+    setTimeout(() => {
+      if (this.advisorGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
+   * 月次決算サマリーカードを表示し、一定時間後に自動で消す
+   */
+  showFinanceSummary(data: FinanceData, durationMs = 14000): void {
+    const container = this.getOrCreateFinanceSummaryContainer()
+    const myGeneration = ++this.financeSummaryGeneration
+
+    const template = html`
+      <div style="background: rgba(255,255,255,0.97); border-radius: 16px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
+        <div style="font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 8px;">📊 今月の決算</div>
+        <a2ui-finance-dashboard
+          revenue=${data.revenue}
+          expenses=${data.expenses}
+          profit=${data.profit}
+          cash=${data.cash}
+          debt=${data.debt}
+        ></a2ui-finance-dashboard>
+      </div>
+    `
+    render(template, container)
+
+    setTimeout(() => {
+      if (this.financeSummaryGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
    * Clear all A2UI elements
    */
   clearAll(): void {
+    // notificationContainer は各トースト用 wrapper を直接 appendChild したもの (lit render 対象は
+    // wrapper 側) のため replaceChildren で安全。advisor/news/finance-summary はコンテナ自体に
+    // lit render() しているため、replaceChildren で子要素だけ消すと内部の part 参照が不整合になる
+    // (次回 render() 時に古い part を参照してしまう) ので、空テンプレートの render() で消す
     this.notificationContainer?.replaceChildren()
-    document.getElementById('a2ui-advisor')?.replaceChildren()
-    document.getElementById('a2ui-news')?.replaceChildren()
+    const advisorContainer = document.getElementById('a2ui-advisor')
+    if (advisorContainer) render(html``, advisorContainer)
+    const newsContainer = document.getElementById('a2ui-news')
+    if (newsContainer) render(html``, newsContainer)
+    const financeContainer = document.getElementById('a2ui-finance-summary')
+    if (financeContainer) render(html``, financeContainer)
+    this.newsGeneration++
+    this.advisorGeneration++
+    this.financeSummaryGeneration++
   }
 }
 
