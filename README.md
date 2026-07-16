@@ -5,7 +5,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-125%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-192%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 > IT企業を経営し、従業員の採用・育成、製品開発、市場競争を通じて成功を目指す本格的な経営シミュレーションゲーム。プレイヤーの行動に対応する実在の経営理論 (PPM・アンゾフ・二要因理論など14本) が図鑑として解禁され、**遊びながら経営を学べる**。
 
@@ -28,7 +28,7 @@ npm test           # テスト実行
 | ビルド | Vite 8 (rolldown), PWA対応 |
 | チャート | Chart.js 4 (遅延初期化) |
 | ストレージ | LocalForage + Zod バリデーション |
-| テスト | Vitest (125テスト) |
+| テスト | Vitest (192テスト) |
 
 ## アーキテクチャ
 
@@ -60,6 +60,16 @@ src/lib/
 - **CEO 決裁タグ**: 社長モードの決裁結果に「今の判断は○○理論」+1行レッスン。トレードオフ稟議 → 機会費用、ギャンブル稟議 → 期待値思考、調査済み稟議 → サンクコスト
 - 各理論 = 3行説明 + 実在企業の実例1社 + ゲーム内ヒント1行 (読ませすぎ防止の文字数上限をテストで固定)
 
+## 財務の見える化 + ビジュアル (main / v2.4.0 予定)
+
+ターゲットペルソナ3類型 ([docs/PERSONAS.md](./docs/PERSONAS.md)) の共通ニーズ「**打ち手→数字の因果を体感したい**」に応える可視化レイヤー。
+
+- **財務3表グラフ**: P/L 構成・キャッシュフロー推移・簡易貸借対照表を財務タブに表示 (月次決算スナップショット5年分)
+- **売上ドライバー分解**: カリスマ×スキル×シェア×ブランド×難易度の寄与額を「今月の売上ドライバー」として毎月表示
+- **ライブ通知カード**: 月次決算サマリー / 市況・競合ニュース (影響ラベル付き) / 資金危機アドバイザー
+- **キャラクター日課**: 従業員が出勤→職種別モーションで働く→休憩→退勤する生きたオフィス
+- **ダークモード**: 🌙/☀️ トグル + OS 設定追従 (CSS 変数トークン層、Chart.js も追随)
+
 ## セキュリティ
 
 - LocalStorage入力のサニタイズ (escapeHtml, 許可リスト方式)
@@ -74,7 +84,7 @@ npm test           # 全テスト実行
 npm test -- --run  # CI用 (watchなし)
 ```
 
-7テストファイル / 125テストケース:
+12テストファイル / 192テストケース:
 - DocumentManager — F4演算子優先度バグ回帰テスト
 - HRManager — 昇進判定・成長倍率・チーム相性・月次ストレス (v2.2.0で追加)
 - qualificationGenerator — 資格割当・前提条件チェック・給与月給スケール (v2.2.0で追加)
@@ -82,8 +92,24 @@ npm test -- --run  # CI用 (watchなし)
 - gameStore — I-1/I-3/I-6 セーブデータ汚染防止回帰テスト (v2.1.0で追加)
 - coachmark — チュートリアル v2 状態機械・位置計算 (v2.2.0で新設)
 - theory — 理論図鑑の解禁条件・CEO決裁タグ・定義整合性 (v2.3.0で新設)
+- FinanceManager — 月次スナップショット・ドライバー分解・旧セーブ後方互換 (Phase 1 で新設)
+- characterRoutine — 日課状態機械・座席割当・デスク位置 (Phase 1 で新設)
+- eventMapping — a2ui 発火条件・二重通知防止 (Phase 1 で新設)
+- GameManager — アニメ状態決定の純関数 (Phase 1 で新設)
+- theme — テーマ解決・トグルの純関数 (Phase 1 で新設)
 
 ## 変更履歴
+
+### Unreleased (main, 2026-07)
+
+Phase 1 見える化スプリント — PR #32
+
+- **財務3表グラフ + 売上ドライバー分解**: 財務タブを Chart.js グラフ主体に刷新、FinanceManager に月次決算スナップショット履歴 (60件キャップ・旧セーブ後方互換)
+- **a2ui 死蔵コンポーネント接続**: 月次決算カード / 市況・競合ニュースカード (影響ラベル実値化) / 資金危機アドバイザー (危険水域への状態遷移時のみ)
+- **キャラクター日課 v1**: 出勤→働く (職種別モーション4種)→休憩→退勤。sales/manager の絵文字重複を解消
+- **デザイントークン + ダークモード**: CSS 変数トークン層、prefers-color-scheme + data-theme 両対応 (color-scheme 明示宣言が要点)、Chart.js テーマ追随
+- **ターゲットペルソナ正本化**: docs/PERSONAS.md (3類型) + specs/001-phase1-visualization.md
+- **テスト**: 125 → 192 tests
 
 ### v2.3.0 (2026-07)
 
