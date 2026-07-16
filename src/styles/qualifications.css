@@ -42,7 +42,7 @@
    ============================================ */
 
 .qualification-badge.tier-S {
-    background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+    background: linear-gradient(135deg, var(--color-gold) 0%, #FFA500 100%);
     color: #000;
     border: 2px solid #FF8C00;
     animation: shimmerGold 3s infinite;
@@ -108,7 +108,7 @@
 
 .qualification-bonus-details h4 {
     margin: 0 0 12px 0;
-    color: #FFD700;
+    color: var(--color-gold);
     font-size: 14px;
     font-weight: 600;
 }
@@ -136,7 +136,7 @@
 }
 
 .bonus-value {
-    color: #4CAF50;
+    color: var(--color-success);
     font-weight: 600;
     font-size: 13px;
 }
@@ -152,7 +152,7 @@
 }
 
 .qual-salary-info strong {
-    color: #FFD700;
+    color: var(--color-gold);
 }
 
 .qual-description {
@@ -230,7 +230,7 @@
    ============================================ */
 
 .qualification-badge:focus {
-    outline: 2px solid #4CAF50;
+    outline: 2px solid var(--color-success);
     outline-offset: 2px;
 }
 
@@ -251,4 +251,15 @@
         background: rgba(0, 0, 0, 0.3);
         border-color: rgba(255, 255, 255, 0.1);
     }
+}
+
+/* prefers-color-scheme に加え、data-theme 明示指定が両方向で勝つようにする */
+:root[data-theme="dark"] .qualification-bonus-details {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+:root[data-theme="light"] .qualification-bonus-details {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
 }

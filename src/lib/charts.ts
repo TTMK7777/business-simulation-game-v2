@@ -6,11 +6,13 @@ import {
   LineController,
   DoughnutController,
   RadarController,
+  BarController,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
   ArcElement,
+  BarElement,
   RadialLinearScale,
   Title,
   Tooltip,
@@ -32,11 +34,13 @@ export function ensureRegistered(): void {
     LineController,
     DoughnutController,
     RadarController,
+    BarController,
     CategoryScale,
     LinearScale,
     PointElement,
     LineElement,
     ArcElement,
+    BarElement,
     RadialLinearScale,
     Title,
     Tooltip,
@@ -44,6 +48,20 @@ export function ensureRegistered(): void {
     Filler
   )
   registered = true
+}
+
+/**
+ * Chart.js の目盛・凡例・グリッド線の色をデザイントークン（CSS変数）から反映する。
+ * データセットの系列色（backgroundColor/borderColor）は個別指定を維持するため触らない。
+ * テーマ切替時に呼び出す想定（charts.integration.ts の refreshChartsForTheme 経由）。
+ */
+export function applyChartTheme(): void {
+  if (typeof document === 'undefined') return
+  const styles = getComputedStyle(document.documentElement)
+  const textColor = styles.getPropertyValue('--color-text-secondary').trim()
+  const gridColor = styles.getPropertyValue('--color-border').trim()
+  if (textColor) Chart.defaults.color = textColor
+  if (gridColor) Chart.defaults.borderColor = gridColor
 }
 
 // Chartをエクスポート

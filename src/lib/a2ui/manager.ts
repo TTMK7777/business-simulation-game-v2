@@ -55,6 +55,12 @@ export class A2UIManager {
   private static instance: A2UIManager
   private notificationContainer: HTMLElement | null = null
 
+  // 月次イベント系カード (ニュース/アドバイザー/財務サマリー) の自動消滅タイマー競合防止用
+  // (再発火で内容が上書きされた後に古いタイマーが新しい内容を消してしまうのを防ぐ)
+  private newsGeneration = 0
+  private advisorGeneration = 0
+  private financeSummaryGeneration = 0
+
   private constructor() {
     // DOM Ready後に初期化（安全性向上）
     if (document.readyState === 'loading') {
@@ -412,18 +418,133 @@ export class A2UIManager {
     if (!container) {
       container = document.createElement('div')
       container.id = 'a2ui-news'
+      container.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9998;
+        max-width: 360px;
+      `
       document.body.appendChild(container)
     }
     return container
   }
 
   /**
+   * Helper to get or create finance summary container
+   * (turn-fab ボタン (bottom:18px/right:16px) と被らないよう上に確保)
+   */
+  private getOrCreateFinanceSummaryContainer(): HTMLElement {
+    let container = document.getElementById('a2ui-finance-summary')
+    if (!container) {
+      container = document.createElement('div')
+      container.id = 'a2ui-finance-summary'
+      container.style.cssText = `
+        position: fixed;
+        bottom: 90px;
+        right: 16px;
+        z-index: 9998;
+        max-width: 340px;
+      `
+      document.body.appendChild(container)
+    }
+    return container
+  }
+
+  /**
+   * 月次ニュースカード (市況/競合イベント) を表示し、一定時間後に自動で消す
+   */
+  showMonthlyNews(news: NewsItem, durationMs = 12000): void {
+    this.showNews(news)
+    const container = this.getOrCreateNewsContainer()
+    const myGeneration = ++this.newsGeneration
+    setTimeout(() => {
+      if (this.newsGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
+   * 資金危険水域アドバイザーカードを表示し、一定時間後に自動で消す
+   * (呼び出し元で「新規突入時のみ」の判定を行う想定)
+   */
+  showDangerAdvisor(data: AdvisorMessage, durationMs = 16000): void {
+    this.showAdvisor(data)
+    const container = this.getOrCreateAdvisorContainer()
+    const myGeneration = ++this.advisorGeneration
+    setTimeout(() => {
+      if (this.advisorGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
+   * トースト表示用の簡略金額フォーマット (億/万円単位。a2ui-finance-dashboard の
+   * formatMoney と同じ考え方だがコンポーネント private のため個別実装)
+   */
+  private formatMoneyCompact(value: number): string {
+    if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(1)}億円`
+    return `${Math.floor(value / 10000)}万円`
+  }
+
+  /**
+   * 月次決算サマリーカードを表示し、一定時間後に自動で消す
+   *
+   * a2ui-finance-dashboard (4メトリックカード+損益サマリーで縦800px超) はこのトースト用途には
+   * 過大なため使わず、2×2ミニグリッド+1行サマリーの軽量表示に留める (総高さ150px程度)
+   */
+  // showModal('📅 月次決算') と同時発火するため、モーダルを閉じてから読める猶予を長めに取る
+  showFinanceSummary(data: FinanceData, durationMs = 20000): void {
+    const container = this.getOrCreateFinanceSummaryContainer()
+    const myGeneration = ++this.financeSummaryGeneration
+
+    const profitColor = data.profit >= 0 ? '#4CAF50' : '#F44336'
+    const rowStyle = 'display:flex; justify-content:space-between; gap: 8px;'
+
+    const template = html`
+      <div style="background: rgba(255,255,255,0.97); border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;">
+        <div style="font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 10px;">📊 今月の決算</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 12px; color: #333;">
+          <div style=${rowStyle}><span>💰 資金</span><strong>${this.formatMoneyCompact(data.cash)}</strong></div>
+          <div style=${rowStyle}><span>📈 売上</span><strong>${this.formatMoneyCompact(data.revenue)}</strong></div>
+          <div style=${rowStyle}><span>📊 利益</span><strong style="color:${profitColor}">${this.formatMoneyCompact(data.profit)}</strong></div>
+          <div style=${rowStyle}><span>🏦 借入</span><strong>${this.formatMoneyCompact(data.debt)}</strong></div>
+        </div>
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
+          売上${this.formatMoneyCompact(data.revenue)} − 経費${this.formatMoneyCompact(data.expenses)} =
+          <strong style="color:${profitColor}">${this.formatMoneyCompact(data.profit)}</strong>
+        </div>
+      </div>
+    `
+    render(template, container)
+
+    setTimeout(() => {
+      if (this.financeSummaryGeneration === myGeneration) {
+        render(html``, container)
+      }
+    }, durationMs)
+  }
+
+  /**
    * Clear all A2UI elements
    */
   clearAll(): void {
+    // notificationContainer は各トースト用 wrapper を直接 appendChild したもの (lit render 対象は
+    // wrapper 側) のため replaceChildren で安全。advisor/news/finance-summary はコンテナ自体に
+    // lit render() しているため、replaceChildren で子要素だけ消すと内部の part 参照が不整合になる
+    // (次回 render() 時に古い part を参照してしまう) ので、空テンプレートの render() で消す
     this.notificationContainer?.replaceChildren()
-    document.getElementById('a2ui-advisor')?.replaceChildren()
-    document.getElementById('a2ui-news')?.replaceChildren()
+    const advisorContainer = document.getElementById('a2ui-advisor')
+    if (advisorContainer) render(html``, advisorContainer)
+    const newsContainer = document.getElementById('a2ui-news')
+    if (newsContainer) render(html``, newsContainer)
+    const financeContainer = document.getElementById('a2ui-finance-summary')
+    if (financeContainer) render(html``, financeContainer)
+    this.newsGeneration++
+    this.advisorGeneration++
+    this.financeSummaryGeneration++
   }
 }
 

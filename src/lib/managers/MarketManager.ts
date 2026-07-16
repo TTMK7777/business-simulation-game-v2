@@ -35,7 +35,7 @@ export interface RankingEntry {
 // ============================================
 // ニュース生成（DOM操作なし、文字列を返す）
 // ============================================
-export function generateNews(forceCategory?: string): { emoji: string; text: string } | null {
+export function generateNews(forceCategory?: string): { emoji: string; text: string; impact: 'positive' | 'negative' | 'neutral' } | null {
     const game = getGame()
     const competitors = getCompetitors()
 
@@ -59,7 +59,8 @@ export function generateNews(forceCategory?: string): { emoji: string; text: str
         const company = competitors[Math.floor(Math.random() * competitors.length)].name
         const percent = Math.floor(Math.random() * 30) + 10
         const news = template.replace('${company}', company).replace('${percent}', String(percent))
-        return { emoji: '\u{1F4F0}', text: news }
+        // レガシーテンプレートは impact 情報を持たないため neutral 扱い
+        return { emoji: '\u{1F4F0}', text: news, impact: 'neutral' }
     }
 
     // ランダムにニュースを選択
@@ -73,7 +74,7 @@ export function generateNews(forceCategory?: string): { emoji: string; text: str
         .replace('${company}', company)
         .replace('${percent}', String(percent))
 
-    return { emoji: selectedNews.emoji, text: newsText }
+    return { emoji: selectedNews.emoji, text: newsText, impact: selectedNews.impact }
 }
 
 // ============================================

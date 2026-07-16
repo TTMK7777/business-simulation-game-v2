@@ -25,6 +25,7 @@ const defaultGameState: GameState = {
     debt: 0,
     isBankrupt: false,
     revenueHistory: [],
+    financeHistory: [],
     officeLevel: 1,
     difficulty: 'normal' as DifficultyLevel,
     competitorAttacks: [] as string[],
@@ -138,6 +139,8 @@ export function ensureCollections(): void {
     if (!Array.isArray(game.employees)) game.employees = []
     if (!Array.isArray(game.products)) game.products = []
     if (!Array.isArray(game.revenueHistory)) game.revenueHistory = []
+    // 旧セーブ (v2.3.0 以前) は financeHistory を持たない
+    if (!Array.isArray(game.financeHistory)) game.financeHistory = []
 }
 
 export function normalizeGameState(): void {

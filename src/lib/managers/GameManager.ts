@@ -35,9 +35,26 @@ import { renderVisitorDialog } from '../ui/visitorDialog'
 import { applyTabVisibilityForMode } from '../ui/renderers'
 import { escapeHtml } from '../ui/escape'
 
+// ======= a2ui 配線 (Phase 1 見える化スプリント C) =======
+import { getA2UIManager } from '../a2ui/manager'
+import {
+    pickMonthlyNews,
+    isFinanceDanger,
+    shouldFireDangerAdvisor,
+    buildDangerAdvisorMessage,
+    buildFinanceSummaryData,
+    type GeneratedNews,
+    type CompetitorAttackLike,
+} from '../a2ui/eventMapping'
+
 // ============================================
 // 定数
 // ============================================
+
+// 資金危険水域アドバイザーの「新規突入時のみ発火」判定用 (セッション内で保持。
+// リロード直後は常に false 始まりのため、既に危険水域のセーブをロードした場合は
+// 次の月次到達時に1回だけ再度アドバイザーが出る)
+let _wasFinanceDanger = false
 
 // ============================================
 // R-1: window 関数呼び出しヘルパー
@@ -206,7 +223,14 @@ export async function initWithSlot(slotId: number, difficulty?: DifficultyLevel)
     }
 
     // R-1: 初期化完了後の描画系は critical のため silent fail を警告化
-    invokeWindowCritical('generateNews')
+    // generateNews は戻り値を a2ui ニュースカードの初期表示に使うため invokeWindowCritical を使わず個別に呼ぶ
+    const initialNews = (window as any).generateNews?.() as GeneratedNews | undefined
+    if (!initialNews) {
+        console.warn('[GameManager] critical: window.generateNews is not bound. Initialization may be incomplete.')
+    } else {
+        const initialNewsItem = pickMonthlyNews(initialNews, game.lastNewsCategory, [])
+        if (initialNewsItem) getA2UIManager().showMonthlyNews(initialNewsItem)
+    }
     invokeWindowCritical('updateDisplay')
     invokeWindowCritical('updateRanking')
     invokeWindowCritical('initCharts')
@@ -273,9 +297,17 @@ export function syncAllEmployeeSprites(): void {
     })
 }
 
+// アニメーション状態の決定ロジック (DOM 非依存の純関数)。
+// 優先順位: ストレス過多 > モチベーション低下 > 通常稼働。稼働していなければ常に idle
+export function determineAnimationState(isWorking: boolean, stress: number, motivation: number): AnimationState {
+    if (!isWorking) return 'idle'
+    if (stress > 70) return 'stressed'
+    if (motivation < 30) return 'idle'
+    return 'working'
+}
+
 export function updateEmployeeAnimation(employee: any): void {
     const game = getGame()
-    let animState: AnimationState = 'idle'
 
     // 稼働判定は HRManager.updateMonthlyStress と同一基準
     // (assignedEmployees は未実装の明示アサイン用。現行は製品あり×開発部で稼働)
@@ -286,10 +318,9 @@ export function updateEmployeeAnimation(employee: any): void {
             p.assignedEmployees?.some((e: any) => e.id === employee.id)
         )
 
-    if (isWorking) {
-        const stress = employee.stress || 0
-        animState = stress > 70 ? 'stressed' : 'working'
-    }
+    const stress = employee.stress || 0
+    const motivation = employee.motivation ?? 50
+    const animState = determineAnimationState(isWorking, stress, motivation)
 
     characterManager.setAnimation(String(employee.id), animState)
 }
@@ -473,8 +504,27 @@ export function nextTurn(): void {
             💰 最終利益: <strong style="color: ${profitColor}">${Math.floor(profit / 10000)}万円</strong>
         </div>`)
         ;(window as any).showModal?.('📅 月次決算', summaryLines.join('<br>'), true)
-        ;(window as any).updateCompetitors?.()
-        ;(window as any).generateNews?.()
+        const attackResults = ((window as any).updateCompetitors?.() || []) as CompetitorAttackLike[]
+        const monthlyNews = (window as any).generateNews?.() as GeneratedNews | undefined
+
+        // a2ui: 市況/競合ニュース → ニュースカード (競合攻撃があればそちらを優先表示)
+        const monthlyNewsItem = pickMonthlyNews(monthlyNews ?? null, game.lastNewsCategory, attackResults)
+        if (monthlyNewsItem) {
+            getA2UIManager().showMonthlyNews(monthlyNewsItem)
+        }
+
+        // a2ui: 月次決算 → 財務ダッシュボードカード更新
+        getA2UIManager().showFinanceSummary(
+            buildFinanceSummaryData({ revenue, salaryTotal, interest, profit, cash: game.money, debt: game.debt })
+        )
+
+        // a2ui: 資金危険水域への新規突入時のみアドバイザーカード (継続中は再発火しない)
+        const monthlyCost = salaryTotal + interest
+        const isDanger = isFinanceDanger(game.money, monthlyCost)
+        if (shouldFireDangerAdvisor(_wasFinanceDanger, isDanger)) {
+            getA2UIManager().showDangerAdvisor(buildDangerAdvisorMessage(game.money, monthlyCost))
+        }
+        _wasFinanceDanger = isDanger
 
         // Sprint E: 初黒字で条件発火型 coachmark を投入 (shownIds が重複を防ぐ)
         if (profit > 0) {
@@ -611,6 +661,11 @@ export async function restartGame(): Promise<void> {
     resetGameState()
     addInitialEmployee()
 
+    // a2ui: 前セッションの浮遊カード (ニュース/アドバイザー/財務サマリー) を一掃し、
+    // 資金危険水域の発火判定もリセットする
+    getA2UIManager().clearAll()
+    _wasFinanceDanger = false
+
     // 管理モードに戻ったタブ可視性を復元
     applyTabVisibilityForMode('management')
 
@@ -623,6 +678,11 @@ export async function restartGame(): Promise<void> {
     ;(window as any).updateRanking?.()
     ;(window as any).initCharts?.()
     ;(window as any).showPanel?.(null, 'overview')
-    ;(window as any).generateNews?.()
+    const restartNews = (window as any).generateNews?.() as GeneratedNews | undefined
+    if (restartNews) {
+        const game = getGame()
+        const restartNewsItem = pickMonthlyNews(restartNews, game.lastNewsCategory, [])
+        if (restartNewsItem) getA2UIManager().showMonthlyNews(restartNewsItem)
+    }
     ;(window as any).showModal?.('🔄 再スタート', '新しいゲームを開始しました')
 }

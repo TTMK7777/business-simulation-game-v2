@@ -5,6 +5,7 @@ import { html as litHtml, render as litRender, nothing } from 'lit'
 import { unsafeHTML } from 'lit/directives/unsafe-html.js'
 import { getGame, getActivePanel, setActivePanel, getCompetitors } from '../store/gameStore'
 import { renderDeskView } from './deskView'
+import { updateFinanceCharts } from './charts.integration'
 import { notifyCoachmarkAction } from './coachmark'
 import { renderTheories } from './theoryCodex'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalities'
@@ -432,6 +433,7 @@ export function renderActivePanel(): void {
         }
     } else if (activePanel === 'finance') {
         renderFinance()
+        updateFinanceCharts()
     } else if (activePanel === 'certifications') {
         renderCertifications()
     } else if (activePanel === 'desk') {
@@ -800,6 +802,54 @@ export function renderFinance(): void {
         </div>
     `
     litRender(template, info)
+
+    renderFinanceDrivers()
+}
+
+// ============================================
+// 今月の売上ドライバー分解
+// ============================================
+
+function renderFinanceDrivers(): void {
+    const game = getGame()
+    const mount = document.getElementById('financeDrivers')
+    if (!mount) return
+
+    const history = game.financeHistory ?? []
+    const latest = history[history.length - 1]
+
+    if (!latest) {
+        litRender(litHtml`<div class="empty">まだ決算がありません（初回の月次決算後に表示されます）</div>`, mount)
+        return
+    }
+
+    const { contributions } = latest.revenueDrivers
+    const maxAbs = Math.max(1, ...contributions.map(c => Math.abs(c.amount)))
+
+    const template = litHtml`
+        <div class="driver-breakdown">
+            <div class="driver-breakdown-title">📐 今月の売上ドライバー</div>
+            ${contributions.map(c => {
+                const widthPercent = Math.min(100, (Math.abs(c.amount) / maxAbs) * 100)
+                const isNegative = c.amount < 0
+                return litHtml`
+                    <div class="driver-row">
+                        <span class="driver-label">${c.label}</span>
+                        <div class="driver-bar-track">
+                            <div
+                                class="driver-bar ${isNegative ? 'driver-bar-negative' : 'driver-bar-positive'}"
+                                style="width: ${widthPercent}%"
+                            ></div>
+                        </div>
+                        <strong class="driver-amount ${isNegative ? 'driver-amount-negative' : ''}">
+                            ${isNegative ? '' : '+'}${Math.floor(c.amount / 10000)}万円
+                        </strong>
+                    </div>
+                `
+            })}
+        </div>
+    `
+    litRender(template, mount)
 }
 
 // ============================================

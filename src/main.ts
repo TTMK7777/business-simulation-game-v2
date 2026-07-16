@@ -4,6 +4,7 @@
 import './styles/main.css'
 import './styles/qualifications.css'
 import './styles/desk.css'
+import './styles/finance.css'
 import './lib/game.ts'
 import { getAllSlotsMetadata, slotHasData } from './lib/storage'
 import { type DifficultyLevel } from './lib/gameConfig'
@@ -11,11 +12,44 @@ import { type DifficultyLevel } from './lib/gameConfig'
 // A2UI Integration - Google A2UI inspired rich UI components
 import { getA2UIManager } from './lib/a2ui/index'
 
+// デザイントークン + ダークモード
+import { initTheme, toggleTheme, getCurrentTheme, onThemeChange, type ThemeMode } from './lib/theme'
+import { refreshChartsForTheme } from './lib/ui/charts.integration'
+
 // Initialize A2UI Manager globally
 const a2ui = getA2UIManager()
 ;(window as any).a2ui = a2ui
 
 console.log('🏢 ビジネスエンパイア 2.0 - 起動中...')
+
+// ============================================
+// ダークモードトグル
+// ============================================
+
+const THEME_ICON: Record<ThemeMode, string> = { light: '🌙', dark: '☀️' }
+
+function themeToggleIcon(mode: ThemeMode): string {
+  // ボタンのアイコンは「押すと切り替わる先」ではなく「現在のモード」を示す
+  return THEME_ICON[mode]
+}
+
+function syncThemeToggleButtons(): void {
+  const icon = themeToggleIcon(getCurrentTheme())
+  document.querySelectorAll<HTMLButtonElement>('.theme-toggle-btn').forEach((btn) => {
+    btn.textContent = icon
+  })
+}
+
+function bindThemeToggleButtons(): void {
+  document.querySelectorAll<HTMLButtonElement>('.theme-toggle-btn').forEach((btn) => {
+    if (btn.dataset.themeBound === 'true') return
+    btn.dataset.themeBound = 'true'
+    btn.addEventListener('click', () => {
+      toggleTheme()
+    })
+  })
+  syncThemeToggleButtons()
+}
 
 // フェーズ1: 難易度選択を保持
 let selectedDifficulty: DifficultyLevel = 'normal'
@@ -25,6 +59,7 @@ let selectedGameMode: 'management' | 'ceo' = 'management'
 const menuHTML = `
     <div class="menu-screen">
         <div class="menu-header">
+            <button class="theme-toggle-btn" aria-label="ダークモード切替" title="ダークモード切替">🌙</button>
             <div class="menu-logo">🏢</div>
             <h1 class="menu-title">ビジネスエンパイア 2.0</h1>
             <p class="menu-subtitle">IT業界で成功を目指せ！</p>
@@ -120,6 +155,7 @@ const menuHTML = `
 const gameHTML = `
     <div class="container">
         <div class="header">
+            <button class="theme-toggle-btn" aria-label="ダークモード切替" title="ダークモード切替">🌙</button>
             <div class="company-name">🏢 株式会社スタートアップ</div>
             <div class="date" id="gameDate">2025年1月 第1週</div>
             <div class="stats">
@@ -231,6 +267,21 @@ const gameHTML = `
 
             <div id="finance" class="panel">
                 <h3>💰 財務状況</h3>
+                <div class="finance-charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">📊 P/L構成（今月）</div>
+                        <canvas id="financePlChart" height="180"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">💧 キャッシュフロー推移</div>
+                        <canvas id="financeCfChart" height="180"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">🏦 簡易貸借対照表 推移</div>
+                        <canvas id="financeBsChart" height="180"></canvas>
+                    </div>
+                </div>
+                <div id="financeDrivers"></div>
                 <div id="financeInfo"></div>
                 <button class="btn" data-requires-active="true" onclick="getLoan()">🏦 銀行融資</button>
                 <button class="btn" data-requires-active="true" onclick="repayLoan()">💸 融資返済</button>
@@ -291,6 +342,7 @@ async function startGameWithSlot(slotNumber: number, difficulty: DifficultyLevel
   // ゲーム画面に切り替え
   app.innerHTML = gameHTML
   console.log('✅ ゲームHTML挿入完了')
+  bindThemeToggleButtons()
 
   // ゲームを初期化（スロット番号と難易度を渡す）
   if (typeof (window as any).initWithSlot === 'function') {
@@ -325,6 +377,7 @@ async function returnToMenu() {
   // メニュー画面に切り替え
   app.innerHTML = menuHTML
   console.log('✅ メニューHTML挿入完了')
+  bindThemeToggleButtons()
 
   // メニュー画面を初期化（メタデータを再読み込み）
   await initMenu()
@@ -606,11 +659,22 @@ async function initMenu() {
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('✅ DOM読み込み完了')
 
+  // テーマ初期化（保存値 or システム設定を反映）。
+  // 以後のテーマ変更は Chart.js のテキスト/グリッド色にも反映する
+  // （revenueChart は mutate-in-place 方式のため明示再描画が必要。
+  //  財務チャート・marketChart は destroy→recreate 方式なので次回描画時に自動追随）
+  initTheme()
+  onThemeChange(() => {
+    syncThemeToggleButtons()
+    refreshChartsForTheme()
+  })
+
   const app = document.querySelector('#app')
   if (app) {
     // まずメニュー画面を表示
     app.innerHTML = menuHTML
     console.log('✅ メニューHTML挿入完了')
+    bindThemeToggleButtons()
 
     // メニュー画面を初期化
     await initMenu()
