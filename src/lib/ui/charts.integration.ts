@@ -1,7 +1,7 @@
 // ビジネスエンパイア 2.0 - Chart.js統合モジュール
 // game.ts:741-742, 1530-1565, 1639-1688 から抽出
 
-import { Chart, ensureRegistered } from '../charts'
+import { Chart, ensureRegistered, applyChartTheme } from '../charts'
 import { getGame, getActivePanel, getCompetitors } from '../store/gameStore'
 import type { FinanceSnapshot } from '../types'
 
@@ -308,4 +308,19 @@ export function destroyCharts(): void {
         marketChart = null
     }
     destroyFinanceCharts()
+}
+
+// ============================================
+// テーマ追随（デザイントークン + ダークモード）
+// ============================================
+
+// テーマ切替時に呼び出す。Chart.defaults の色をCSS変数から再取得したうえで、
+// revenueChart（mutate-in-place方式のため destroy→recreate されない）だけ明示的に再描画する。
+// financePlChart/financeCfChart/financeBsChart/marketChart は
+// 毎回 destroy→再作成されるため、次回のパネル更新時に新しい Chart.defaults を自動的に拾う。
+export function refreshChartsForTheme(): void {
+    applyChartTheme()
+    if (revenueChart) {
+        revenueChart.update()
+    }
 }

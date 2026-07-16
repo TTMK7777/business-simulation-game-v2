@@ -14,7 +14,7 @@
 
 /* 今月の売上ドライバー分解 */
 .driver-breakdown {
-    background: rgba(240, 240, 240, 0.6);
+    background: rgba(var(--color-surface-alt-rgb), 0.6);
     backdrop-filter: blur(10px);
     padding: 16px;
     border-radius: 12px;
@@ -25,7 +25,7 @@
 .driver-breakdown-title {
     font-size: 14px;
     font-weight: 600;
-    color: #667eea;
+    color: var(--color-brand);
     margin-bottom: 12px;
 }
 
@@ -60,21 +60,21 @@
 }
 
 .driver-bar-positive {
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, var(--color-brand), var(--color-brand-dark));
 }
 
 .driver-bar-negative {
-    background: linear-gradient(90deg, #f44336, #ff7961);
+    background: linear-gradient(90deg, var(--color-danger), #ff7961);
 }
 
 .driver-amount {
     min-width: 72px;
     text-align: right;
-    color: #4caf50;
+    color: var(--color-success);
 }
 
 .driver-amount-negative {
-    color: #f44336;
+    color: var(--color-danger);
 }
 
 @media (max-width: 600px) {
