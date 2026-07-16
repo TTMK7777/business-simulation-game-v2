@@ -481,23 +481,41 @@ export class A2UIManager {
   }
 
   /**
+   * トースト表示用の簡略金額フォーマット (億/万円単位。a2ui-finance-dashboard の
+   * formatMoney と同じ考え方だがコンポーネント private のため個別実装)
+   */
+  private formatMoneyCompact(value: number): string {
+    if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(1)}億円`
+    return `${Math.floor(value / 10000)}万円`
+  }
+
+  /**
    * 月次決算サマリーカードを表示し、一定時間後に自動で消す
+   *
+   * a2ui-finance-dashboard (4メトリックカード+損益サマリーで縦800px超) はこのトースト用途には
+   * 過大なため使わず、2×2ミニグリッド+1行サマリーの軽量表示に留める (総高さ150px程度)
    */
   // showModal('📅 月次決算') と同時発火するため、モーダルを閉じてから読める猶予を長めに取る
   showFinanceSummary(data: FinanceData, durationMs = 20000): void {
     const container = this.getOrCreateFinanceSummaryContainer()
     const myGeneration = ++this.financeSummaryGeneration
 
+    const profitColor = data.profit >= 0 ? '#4CAF50' : '#F44336'
+    const rowStyle = 'display:flex; justify-content:space-between; gap: 8px;'
+
     const template = html`
-      <div style="background: rgba(255,255,255,0.97); border-radius: 16px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.18);">
-        <div style="font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 8px;">📊 今月の決算</div>
-        <a2ui-finance-dashboard
-          revenue=${data.revenue}
-          expenses=${data.expenses}
-          profit=${data.profit}
-          cash=${data.cash}
-          debt=${data.debt}
-        ></a2ui-finance-dashboard>
+      <div style="background: rgba(255,255,255,0.97); border-radius: 16px; padding: 14px 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); font-family: 'Segoe UI', 'Hiragino Sans', 'Meiryo', sans-serif;">
+        <div style="font-size: 13px; font-weight: 600; color: #667eea; margin-bottom: 10px;">📊 今月の決算</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 12px; color: #333;">
+          <div style=${rowStyle}><span>💰 資金</span><strong>${this.formatMoneyCompact(data.cash)}</strong></div>
+          <div style=${rowStyle}><span>📈 売上</span><strong>${this.formatMoneyCompact(data.revenue)}</strong></div>
+          <div style=${rowStyle}><span>📊 利益</span><strong style="color:${profitColor}">${this.formatMoneyCompact(data.profit)}</strong></div>
+          <div style=${rowStyle}><span>🏦 借入</span><strong>${this.formatMoneyCompact(data.debt)}</strong></div>
+        </div>
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; font-size: 11px; color: #666;">
+          売上${this.formatMoneyCompact(data.revenue)} − 経費${this.formatMoneyCompact(data.expenses)} =
+          <strong style="color:${profitColor}">${this.formatMoneyCompact(data.profit)}</strong>
+        </div>
       </div>
     `
     render(template, container)

@@ -47,12 +47,22 @@ describe('mapGameNewsCategory', () => {
 })
 
 describe('buildNewsItem', () => {
-    it('市況ニュースを NewsItem に変換する', () => {
+    it('市況ニュースを NewsItem に変換する (headline はカテゴリラベル、content が本文)', () => {
         const item = buildNewsItem({ emoji: '📈', text: 'IT業界に追い風！', impact: 'positive' }, 'market')
-        expect(item.headline).toBe('IT業界に追い風！')
         expect(item.content).toBe('IT業界に追い風！')
         expect(item.category).toBe('industry')
         expect(item.impact).toBe('positive')
+    })
+
+    it('headline と content が重複しない (二重表示防止)', () => {
+        const item = buildNewsItem({ emoji: '📈', text: 'IT業界に追い風！', impact: 'positive' }, 'market')
+        expect(item.headline).not.toBe(item.content)
+    })
+
+    it('headline はカテゴリごとに固定のラベルになる', () => {
+        expect(buildNewsItem({ emoji: '📈', text: 'A', impact: 'neutral' }, 'market').headline).toBe('🏭 業界ニュース')
+        expect(buildNewsItem({ emoji: '📈', text: 'B', impact: 'neutral' }, 'economy').headline).toBe('📈 経済ニュース')
+        expect(buildNewsItem({ emoji: '📈', text: 'C', impact: 'neutral' }, 'technology').headline).toBe('💻 テクノロジーニュース')
     })
 
     it('generateNews() の impact をそのまま NewsItem に引き継ぐ', () => {
@@ -101,7 +111,7 @@ describe('pickMonthlyNews', () => {
     it('競合攻撃が無ければ市況ニュースを使う', () => {
         const generated = { emoji: '📈', text: '市況ニュース', impact: 'positive' as const }
         const result = pickMonthlyNews(generated, 'market', [])
-        expect(result?.headline).toBe('市況ニュース')
+        expect(result?.content).toBe('市況ニュース')
     })
 
     it('複数の競合攻撃がある場合は先頭を採用する', () => {
