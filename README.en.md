@@ -5,7 +5,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat&logo=typescript&logoColor=white)
 ![Lit](https://img.shields.io/badge/Lit-3.3-324FFF?style=flat&logo=lit&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white)
-![Vitest](https://img.shields.io/badge/Vitest-125%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-192%20tests-6E9F18?style=flat&logo=vitest&logoColor=white)
 
 > A full-fledged management simulation game where you run an IT company and aim for success through hiring and developing employees, product development, and market competition. Player actions unlock real-world management theories (PPM, Ansoff, two-factor theory, and 14 others in total) as an in-game encyclopedia, so you **learn management while you play**.
 
@@ -28,7 +28,7 @@ npm test           # Run tests
 | Build | Vite 8 (rolldown), PWA support |
 | Charts | Chart.js 4 (lazy initialization) |
 | Storage | LocalForage + Zod validation |
-| Testing | Vitest (125 tests) |
+| Testing | Vitest (192 tests) |
 
 ## Architecture
 
@@ -60,6 +60,16 @@ A learning layer that unlocks real-world management theories tied to what you ac
 - **CEO decision tags**: CEO-mode document approvals are tagged with "this decision was theory X" plus a one-line lesson — trade-off approvals → opportunity cost, gambling-style approvals → expected-value thinking, well-researched approvals → sunk cost
 - Each theory entry = a 3-line explanation + one real-company example + one in-game hint (a character-count ceiling is pinned by tests to prevent over-explaining)
 
+## Financial Visibility + Visuals (main / planned for v2.4.0)
+
+A visualization layer that answers the shared need of our three target personas ([docs/PERSONAS.md](./docs/PERSONAS.md)): "**I want to feel the cause-and-effect between my decisions and the numbers**."
+
+- **Three financial statements as charts**: P/L composition, cash-flow trend, and a simplified balance sheet on the Finance tab (monthly closing snapshots, 5 years of history)
+- **Revenue driver breakdown**: monthly display of how much charisma × skills × market share × brand × difficulty each contributed to revenue
+- **Live notification cards**: monthly closing summary / market & competitor news (with impact labels) / cash-crisis advisor
+- **Character daily routines**: employees arrive at the office, work with job-specific motions, take breaks, and leave — a living office
+- **Dark mode**: 🌙/☀️ toggle + OS preference tracking (CSS variable token layer; Chart.js follows the theme)
+
 ## Security
 
 - Sanitization of LocalStorage input (escapeHtml, allowlist approach)
@@ -74,7 +84,7 @@ npm test           # Run all tests
 npm test -- --run  # For CI (no watch mode)
 ```
 
-7 test files / 125 test cases:
+12 test files / 192 test cases:
 - DocumentManager — regression test for the F4 operator-precedence bug
 - HRManager — promotion decisions, growth multipliers, team compatibility, monthly stress (added in v2.2.0)
 - qualificationGenerator — qualification assignment, prerequisite checks, monthly-salary scaling (added in v2.2.0)
@@ -82,8 +92,24 @@ npm test -- --run  # For CI (no watch mode)
 - gameStore — I-1/I-3/I-6 save-data corruption-prevention regression tests (added in v2.1.0)
 - coachmark — tutorial v2 state machine and position calculations (added in v2.2.0)
 - theory — theory-encyclopedia unlock conditions, CEO decision tags, definition consistency (added in v2.3.0)
+- FinanceManager — monthly snapshots, driver breakdown, legacy-save backward compatibility (added in Phase 1)
+- characterRoutine — daily-routine state machine, seat allocation, desk positions (added in Phase 1)
+- eventMapping — a2ui firing conditions, duplicate-notification prevention (added in Phase 1)
+- GameManager — pure function for animation-state decisions (added in Phase 1)
+- theme — pure functions for theme resolution and toggling (added in Phase 1)
 
 ## Changelog
+
+### Unreleased (main, 2026-07)
+
+Phase 1 visualization sprint — PR #32
+
+- **Three financial statements + revenue driver breakdown**: Finance tab rebuilt around Chart.js; FinanceManager records monthly closing snapshots (capped at 60, backward compatible with legacy saves)
+- **Wired up dormant a2ui components**: monthly closing card / market & competitor news cards (real impact labels) / cash-crisis advisor (fires only on transition into the danger zone)
+- **Character daily routine v1**: arrive → work (4 job-specific motions) → break → leave; resolved the duplicate sales/manager emoji
+- **Design tokens + dark mode**: CSS variable token layer, both prefers-color-scheme and data-theme supported (explicit color-scheme declaration is the key), Chart.js follows the theme
+- **Target personas canonicalized**: docs/PERSONAS.md (3 archetypes) + specs/001-phase1-visualization.md
+- **Tests**: 125 → 192 tests
 
 ### v2.3.0 (2026-07)
 
