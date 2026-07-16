@@ -60,8 +60,11 @@
             }
         }
 
-        /* data-theme 明示指定は prefers-color-scheme より優先（両方向で勝つ） */
+        /* data-theme 明示指定は prefers-color-scheme より優先（両方向で勝つ）。
+           color-scheme も明示上書きしないと、color 未指定要素（h3 等）の UA デフォルト配色が
+           OS 設定に追従し続け、data-theme="light" でも白文字のまま残る退行が起きる。 */
         :root[data-theme="light"] {
+            color-scheme: light;
             --color-text-primary: #333;
             --color-text-secondary: #666;
             --color-text-tertiary: #888;
@@ -74,6 +77,7 @@
         }
 
         :root[data-theme="dark"] {
+            color-scheme: dark;
             --color-text-primary: #e8e8ec;
             --color-text-secondary: #b0b0ba;
             --color-text-tertiary: #8a8a96;
@@ -86,6 +90,14 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* h3 は main.ts の各パネル見出し（会社概要/従業員管理/財務状況 等）や
+           desk.css の .directive-panel h3 が color 未指定のまま使っており、
+           ブラウザの UA デフォルト配色（OS の prefers-color-scheme 追従）に頼っていた。
+           明示的にトークンを参照させ、テーマ切替で確実に反転させる。 */
+        h3 {
+            color: var(--color-text-primary);
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
@@ -473,6 +485,7 @@
             padding: 8px 6px;
             border-radius: 8px;
             background: var(--color-surface);
+            color: var(--color-text-primary);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             flex: 1;
             transition: transform 0.2s;
