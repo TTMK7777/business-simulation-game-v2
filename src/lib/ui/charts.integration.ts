@@ -3,12 +3,16 @@
 
 import { Chart, ensureRegistered } from '../charts'
 import { getGame, getActivePanel, getCompetitors } from '../store/gameStore'
+import type { FinanceSnapshot } from '../types'
 
 // ============================================
 // チャートインスタンス（モジュールスコープ）
 // ============================================
 let revenueChart: any = null
 let marketChart: any = null
+let financePlChart: any = null
+let financeCfChart: any = null
+let financeBsChart: any = null
 
 // ============================================
 // チャート初期化
@@ -52,6 +56,9 @@ export function initCharts(): void {
     if (marketCtx) {
         updateMarketChart()
     }
+
+    // 財務3表チャート
+    initFinanceCharts()
 }
 
 // ============================================
@@ -70,6 +77,10 @@ export function updateCharts(): void {
 
     if (activePanel === 'market') {
         updateMarketChart()
+    }
+
+    if (activePanel === 'finance') {
+        updateFinanceCharts()
     }
 }
 
@@ -119,6 +130,169 @@ export function updateMarketChart(): void {
 }
 
 // ============================================
+// 財務3表チャート（P/L構成・CF推移・簡易B/S）
+// ============================================
+
+export function initFinanceCharts(): void {
+    ensureRegistered()
+    updateFinanceCharts()
+}
+
+export function updateFinanceCharts(): void {
+    const game = getGame()
+    const history: FinanceSnapshot[] = game.financeHistory ?? []
+    updateFinancePlChart(history)
+    updateFinanceCfChart(history)
+    updateFinanceBsChart(history)
+}
+
+// P/L構成: 今月の売上・人件費・利息・純利益を1本ずつの棒で表示
+function updateFinancePlChart(history: FinanceSnapshot[]): void {
+    const canvas = document.getElementById('financePlChart') as HTMLCanvasElement | null
+    if (!canvas) return
+
+    const latest = history[history.length - 1]
+    const values = latest
+        ? [latest.revenue, latest.salaryTotal, latest.interest, latest.profit]
+        : [0, 0, 0, 0]
+    const profitColor = !latest || latest.profit >= 0 ? '#4caf50' : '#f44336'
+
+    if (financePlChart) {
+        financePlChart.data.datasets[0].data = values.map(v => v / 10000)
+        financePlChart.data.datasets[0].backgroundColor = ['#667eea', '#f093fb', '#ffb74d', profitColor]
+        financePlChart.update()
+        return
+    }
+
+    financePlChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: ['売上', '人件費', '利息', '純利益'],
+            datasets: [{
+                label: '今月の P/L（万円）',
+                data: values.map(v => v / 10000),
+                backgroundColor: ['#667eea', '#f093fb', '#ffb74d', profitColor]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    })
+}
+
+// CF推移: 営業CF・財務CFの折れ線
+function updateFinanceCfChart(history: FinanceSnapshot[]): void {
+    const canvas = document.getElementById('financeCfChart') as HTMLCanvasElement | null
+    if (!canvas) return
+
+    const labels = history.map((_, i) => `${i + 1}月`)
+    const operating = history.map(h => h.operatingCF / 10000)
+    const financing = history.map(h => h.financingCF / 10000)
+
+    if (financeCfChart) {
+        financeCfChart.data.labels = labels
+        financeCfChart.data.datasets[0].data = operating
+        financeCfChart.data.datasets[1].data = financing
+        financeCfChart.update()
+        return
+    }
+
+    financeCfChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: '営業CF（万円）',
+                    data: operating,
+                    borderColor: '#4caf50',
+                    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: '財務CF（万円）',
+                    data: financing,
+                    borderColor: '#ff9800',
+                    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    })
+}
+
+// 簡易B/S推移: 現金（プラス）と借入残高（マイナス）の積上げ棒
+function updateFinanceBsChart(history: FinanceSnapshot[]): void {
+    const canvas = document.getElementById('financeBsChart') as HTMLCanvasElement | null
+    if (!canvas) return
+
+    const labels = history.map((_, i) => `${i + 1}月`)
+    const cash = history.map(h => h.cash / 10000)
+    const debt = history.map(h => -h.debt / 10000)
+
+    if (financeBsChart) {
+        financeBsChart.data.labels = labels
+        financeBsChart.data.datasets[0].data = cash
+        financeBsChart.data.datasets[1].data = debt
+        financeBsChart.update()
+        return
+    }
+
+    financeBsChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [
+                { label: '現金（万円）', data: cash, backgroundColor: '#667eea' },
+                { label: '借入残高（万円）', data: debt, backgroundColor: '#f44336' }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true }
+            }
+        }
+    })
+}
+
+export function destroyFinanceCharts(): void {
+    if (financePlChart) {
+        financePlChart.destroy()
+        financePlChart = null
+    }
+    if (financeCfChart) {
+        financeCfChart.destroy()
+        financeCfChart = null
+    }
+    if (financeBsChart) {
+        financeBsChart.destroy()
+        financeBsChart = null
+    }
+}
+
+// ============================================
 // チャートインスタンスアクセサ
 // ============================================
 
@@ -139,4 +313,5 @@ export function destroyCharts(): void {
         marketChart.destroy()
         marketChart = null
     }
+    destroyFinanceCharts()
 }

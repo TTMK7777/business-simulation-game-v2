@@ -94,6 +94,44 @@ export interface Product {
 }
 
 // ============================================
+// 財務3表: 月次決算スナップショット + 売上ドライバー分解
+// ============================================
+
+/** 売上乗算チェーンの1要素が生んだ寄与額（円）。合計は概算で今月売上に近似する */
+export interface RevenueDriverContribution {
+    key: 'base' | 'charisma' | 'skillBonus' | 'marketShare' | 'brandPower' | 'difficulty'
+    label: string
+    amount: number
+}
+
+export interface RevenueDriverBreakdown {
+    contributions: RevenueDriverContribution[]
+    /** 寄与額の合計（概算値。製品ごとの端数処理により実売上とは僅かにずれ得る） */
+    total: number
+}
+
+/** 月次決算スナップショット（P/L・簡易B/S・CF・売上ドライバー） */
+export interface FinanceSnapshot {
+    turn: number
+    year: number
+    month: number
+    // P/L
+    revenue: number
+    salaryTotal: number
+    interest: number
+    profit: number
+    // 簡易B/S
+    cash: number
+    debt: number
+    netWorth: number
+    // CF（簡易: 営業CF=純利益、財務CF=借入残高の対前回差分）
+    operatingCF: number
+    financingCF: number
+    // 売上ドライバー分解
+    revenueDrivers: RevenueDriverBreakdown
+}
+
+// ============================================
 // ゲーム状態
 // ============================================
 export interface GameState {
@@ -110,6 +148,14 @@ export interface GameState {
     debt: number
     isBankrupt: boolean
     revenueHistory: number[]
+    /**
+     * 月次決算スナップショット履歴（財務3表グラフ用、最大60件）。
+     * gameStore.ts の defaultGameState / normalizeGameState は所有権外のため
+     * 更新を依頼中（Lead 報告済み）。それまでは optional とし、
+     * FinanceManager.calculateMonthlyRevenue() 側の自己防御ガードで
+     * 未定義時も安全に配列初期化する。
+     */
+    financeHistory?: FinanceSnapshot[]
     officeLevel: number
     difficulty: DifficultyLevel
     competitorAttacks: string[]

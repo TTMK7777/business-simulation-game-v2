@@ -4,6 +4,7 @@
 import './styles/main.css'
 import './styles/qualifications.css'
 import './styles/desk.css'
+import './styles/finance.css'
 import './lib/game.ts'
 import { getAllSlotsMetadata, slotHasData } from './lib/storage'
 import { type DifficultyLevel } from './lib/gameConfig'
@@ -231,6 +232,21 @@ const gameHTML = `
 
             <div id="finance" class="panel">
                 <h3>💰 財務状況</h3>
+                <div class="finance-charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">📊 P/L構成（今月）</div>
+                        <canvas id="financePlChart" height="180"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">💧 キャッシュフロー推移</div>
+                        <canvas id="financeCfChart" height="180"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">🏦 簡易貸借対照表 推移</div>
+                        <canvas id="financeBsChart" height="180"></canvas>
+                    </div>
+                </div>
+                <div id="financeDrivers"></div>
                 <div id="financeInfo"></div>
                 <button class="btn" data-requires-active="true" onclick="getLoan()">🏦 銀行融資</button>
                 <button class="btn" data-requires-active="true" onclick="repayLoan()">💸 融資返済</button>

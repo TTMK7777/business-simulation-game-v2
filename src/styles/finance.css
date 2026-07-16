@@ -1,0 +1,85 @@
+/* 財務タブ - 財務3表グラフ + 売上ドライバー分解
+   既存 main.css の .chart-container / .chart-title / .info-box と見た目を統一する */
+
+.finance-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 12px 0;
+}
+
+.finance-charts-grid .chart-container {
+    margin: 0;
+}
+
+/* 今月の売上ドライバー分解 */
+.driver-breakdown {
+    background: rgba(240, 240, 240, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 12px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.driver-breakdown-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 12px;
+}
+
+.driver-row {
+    display: grid;
+    grid-template-columns: minmax(100px, 140px) 1fr auto;
+    align-items: center;
+    gap: 10px;
+    margin: 8px 0;
+    font-size: 13px;
+}
+
+.driver-label {
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.driver-bar-track {
+    position: relative;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.06);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.driver-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.driver-bar-positive {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.driver-bar-negative {
+    background: linear-gradient(90deg, #f44336, #ff7961);
+}
+
+.driver-amount {
+    min-width: 72px;
+    text-align: right;
+    color: #4caf50;
+}
+
+.driver-amount-negative {
+    color: #f44336;
+}
+
+@media (max-width: 600px) {
+    .driver-row {
+        grid-template-columns: 90px 1fr auto;
+        font-size: 12px;
+    }
+}

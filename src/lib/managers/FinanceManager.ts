@@ -4,6 +4,10 @@
 import { getGame } from '../store/gameStore'
 import { GAME_CONSTANTS, BALANCE_CONFIG, debugLog } from '../gameConfig'
 import { SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from '../config/skills'
+import type { FinanceSnapshot, RevenueDriverBreakdown } from '../types'
+
+/** financeHistory の最大保持件数（5年分の月次決算） */
+const FINANCE_HISTORY_LIMIT = 60
 
 const LOAN_AMOUNT = GAME_CONSTANTS.LOAN_AMOUNT
 const LOAN_INTEREST_RATE = GAME_CONSTANTS.LOAN_INTEREST_RATE
@@ -32,6 +36,8 @@ export interface MonthlyRevenueResult {
     profit: number
     isBankrupt: boolean
     productRevenues: { name: string; revenue: number }[]
+    /** 今月の売上ドライバー分解（円建て寄与額） */
+    revenueDrivers: RevenueDriverBreakdown
 }
 
 // ============================================
@@ -98,25 +104,34 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     const costReductionHolders = game.employees.filter((emp: any) =>
         emp.unlockedSkills?.some((id: string) => SKILL_SPECIAL_LOOKUP[id] === 'cost_reduction')).length
 
+    // 売上ドライバー分解用: 乗算チェーンの各段階を経た合計値をウォーターフォールで積算する。
+    // 実際の売上計算 (productRevenue の Math.floor) は変更しない。表示専用の並行集計。
+    let driverBaseTotal = 0
+    let driverAfterCharisma = 0
+    let driverAfterSkill = 0
+    let driverAfterShare = 0
+    let driverAfterBrand = 0
+    let driverAfterDifficulty = 0
+
     game.products.forEach((product: any) => {
         let salesMultiplier = 1.0
 
         // カリスマ性格の売上ボーナス (逓減: 1人+15%、上限+50% — 無限スタック防止)
         const charismaticCount = game.employees.filter((emp: any) => emp.personalityKey === 'charismatic').length
-        if (charismaticCount > 0) {
-            salesMultiplier *= (1 + Math.min(0.5, charismaticCount * 0.15))
-        }
+        const charismaMultiplier = charismaticCount > 0 ? (1 + Math.min(0.5, charismaticCount * 0.15)) : 1
+        salesMultiplier *= charismaMultiplier
 
         // Tier3 スキル: revenue_bonus (売上+5%/保有者)
-        if (revenueBonusHolders > 0) {
-            salesMultiplier *= (1 + SKILL_EFFECTS.revenue_bonus.value * revenueBonusHolders)
-        }
+        const skillMultiplier = revenueBonusHolders > 0 ? (1 + SKILL_EFFECTS.revenue_bonus.value * revenueBonusHolders) : 1
+        salesMultiplier *= skillMultiplier
 
         // 市場シェアボーナス
-        salesMultiplier *= (1 + game.marketShare * BALANCE_CONFIG.economy.marketShareRevenueBonus)
+        const shareMultiplier = (1 + game.marketShare * BALANCE_CONFIG.economy.marketShareRevenueBonus)
+        salesMultiplier *= shareMultiplier
 
         // ブランド力ボーナス
-        salesMultiplier *= (1 + game.brandPower * BALANCE_CONFIG.economy.brandPowerRevenueBonus)
+        const brandMultiplier = (1 + game.brandPower * BALANCE_CONFIG.economy.brandPowerRevenueBonus)
+        salesMultiplier *= brandMultiplier
 
         // 難易度調整
         salesMultiplier *= difficultyMultiplier.revenueMultiplier
@@ -124,12 +139,21 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         // 製品売上計算（基本売上 + 品質連動）
         const baseRevenue = BALANCE_CONFIG.economy.productRevenueBase
         const qualityRevenue = product.quality * BALANCE_CONFIG.economy.productRevenueMultiplier
-        const productRevenue = Math.floor((baseRevenue + qualityRevenue) * salesMultiplier)
+        const preMultiplier = baseRevenue + qualityRevenue
+        const productRevenue = Math.floor(preMultiplier * salesMultiplier)
 
         product.sales += productRevenue
         revenue += productRevenue
 
         productRevenues.push({ name: product.name, revenue: productRevenue })
+
+        // ドライバー分解: 乗算チェーンと同じ順序で段階的に積算する
+        driverBaseTotal += preMultiplier
+        driverAfterCharisma += preMultiplier * charismaMultiplier
+        driverAfterSkill += preMultiplier * charismaMultiplier * skillMultiplier
+        driverAfterShare += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier
+        driverAfterBrand += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier
+        driverAfterDifficulty += preMultiplier * salesMultiplier
 
         debugLog('balance', `製品売上計算: ${product.name}`, {
             baseRevenue,
@@ -138,6 +162,18 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
             finalRevenue: productRevenue
         })
     })
+
+    const revenueDrivers: RevenueDriverBreakdown = {
+        contributions: [
+            { key: 'base', label: '製品基礎売上', amount: Math.round(driverBaseTotal) },
+            { key: 'charisma', label: 'カリスマ社員ボーナス', amount: Math.round(driverAfterCharisma - driverBaseTotal) },
+            { key: 'skillBonus', label: 'スキル効果(売上+)', amount: Math.round(driverAfterSkill - driverAfterCharisma) },
+            { key: 'marketShare', label: '市場シェアボーナス', amount: Math.round(driverAfterShare - driverAfterSkill) },
+            { key: 'brandPower', label: 'ブランド力ボーナス', amount: Math.round(driverAfterBrand - driverAfterShare) },
+            { key: 'difficulty', label: '難易度調整', amount: Math.round(driverAfterDifficulty - driverAfterBrand) }
+        ],
+        total: Math.round(driverAfterDifficulty)
+    }
 
     // Tier3 スキル: cost_reduction (運営コスト-10%/保有者、上限-30%)
     const rawSalaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
@@ -154,12 +190,47 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         game.isBankrupt = true
     }
 
+    // 財務3表: 月次決算スナップショットを記録する。
+    // 旧セーブ (financeHistory 未定義) でも落ちないよう自前で配列初期化する
+    // (gameStore.normalizeGameState 側のデフォルト化に依存しない自己完結ガード)
+    const financeHistory: FinanceSnapshot[] = Array.isArray(game.financeHistory)
+        ? game.financeHistory
+        : (game.financeHistory = [])
+    const cash = game.money
+    const netWorth = cash - game.debt
+    const previousDebt = financeHistory.length > 0
+        ? financeHistory[financeHistory.length - 1].debt
+        : 0
+    const financingCF = game.debt - previousDebt
+    const operatingCF = profit
+
+    const snapshot: FinanceSnapshot = {
+        turn: game.turn,
+        year: game.year,
+        month: game.month,
+        revenue,
+        salaryTotal,
+        interest,
+        profit,
+        cash,
+        debt: game.debt,
+        netWorth,
+        operatingCF,
+        financingCF,
+        revenueDrivers
+    }
+    financeHistory.push(snapshot)
+    if (financeHistory.length > FINANCE_HISTORY_LIMIT) {
+        financeHistory.shift()
+    }
+
     return {
         revenue,
         salaryTotal,
         interest,
         profit,
         isBankrupt,
-        productRevenues
+        productRevenues,
+        revenueDrivers
     }
 }
