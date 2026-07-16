@@ -297,9 +297,17 @@ export function syncAllEmployeeSprites(): void {
     })
 }
 
+// アニメーション状態の決定ロジック (DOM 非依存の純関数)。
+// 優先順位: ストレス過多 > モチベーション低下 > 通常稼働。稼働していなければ常に idle
+export function determineAnimationState(isWorking: boolean, stress: number, motivation: number): AnimationState {
+    if (!isWorking) return 'idle'
+    if (stress > 70) return 'stressed'
+    if (motivation < 30) return 'idle'
+    return 'working'
+}
+
 export function updateEmployeeAnimation(employee: any): void {
     const game = getGame()
-    let animState: AnimationState = 'idle'
 
     // 稼働判定は HRManager.updateMonthlyStress と同一基準
     // (assignedEmployees は未実装の明示アサイン用。現行は製品あり×開発部で稼働)
@@ -310,10 +318,9 @@ export function updateEmployeeAnimation(employee: any): void {
             p.assignedEmployees?.some((e: any) => e.id === employee.id)
         )
 
-    if (isWorking) {
-        const stress = employee.stress || 0
-        animState = stress > 70 ? 'stressed' : 'working'
-    }
+    const stress = employee.stress || 0
+    const motivation = employee.motivation ?? 50
+    const animState = determineAnimationState(isWorking, stress, motivation)
 
     characterManager.setAnimation(String(employee.id), animState)
 }
