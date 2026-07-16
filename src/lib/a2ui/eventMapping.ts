@@ -29,16 +29,15 @@ export function mapGameNewsCategory(category: string): NewsItem['category'] {
 export interface GeneratedNews {
     emoji: string
     text: string
+    impact: NewsItem['impact']
 }
 
-// MarketManager.generateNews() は impact を戻り値に含まないため (テンプレート内部にのみ保持)、
-// 市況ニュース由来の NewsItem は impact 情報を持たず一律 'neutral' になる (既知の制約)
 export function buildNewsItem(news: GeneratedNews, category: string): NewsItem {
     return {
         headline: news.text,
         content: news.text,
         category: mapGameNewsCategory(category),
-        impact: 'neutral',
+        impact: news.impact,
     }
 }
 

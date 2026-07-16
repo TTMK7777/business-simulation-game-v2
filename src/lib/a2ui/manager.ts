@@ -483,7 +483,8 @@ export class A2UIManager {
   /**
    * 月次決算サマリーカードを表示し、一定時間後に自動で消す
    */
-  showFinanceSummary(data: FinanceData, durationMs = 14000): void {
+  // showModal('📅 月次決算') と同時発火するため、モーダルを閉じてから読める猶予を長めに取る
+  showFinanceSummary(data: FinanceData, durationMs = 20000): void {
     const container = this.getOrCreateFinanceSummaryContainer()
     const myGeneration = ++this.financeSummaryGeneration
 

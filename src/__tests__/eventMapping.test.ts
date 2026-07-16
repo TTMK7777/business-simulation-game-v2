@@ -47,12 +47,17 @@ describe('mapGameNewsCategory', () => {
 })
 
 describe('buildNewsItem', () => {
-    it('市況ニュースを NewsItem に変換する (impact は情報が無いため neutral 固定)', () => {
-        const item = buildNewsItem({ emoji: '📈', text: 'IT業界に追い風！' }, 'market')
+    it('市況ニュースを NewsItem に変換する', () => {
+        const item = buildNewsItem({ emoji: '📈', text: 'IT業界に追い風！', impact: 'positive' }, 'market')
         expect(item.headline).toBe('IT業界に追い風！')
         expect(item.content).toBe('IT業界に追い風！')
         expect(item.category).toBe('industry')
-        expect(item.impact).toBe('neutral')
+        expect(item.impact).toBe('positive')
+    })
+
+    it('generateNews() の impact をそのまま NewsItem に引き継ぐ', () => {
+        expect(buildNewsItem({ emoji: '📉', text: '景気減速', impact: 'negative' }, 'market').impact).toBe('negative')
+        expect(buildNewsItem({ emoji: '🔥', text: 'ブーム到来', impact: 'neutral' }, 'market').impact).toBe('neutral')
     })
 })
 
@@ -87,14 +92,14 @@ describe('buildCompetitorNewsItem', () => {
 
 describe('pickMonthlyNews', () => {
     it('競合攻撃があれば市況ニュースより優先する', () => {
-        const generated = { emoji: '📈', text: '市況ニュース' }
+        const generated = { emoji: '📈', text: '市況ニュース', impact: 'positive' as const }
         const attacks = [makeAttack()]
         const result = pickMonthlyNews(generated, 'market', attacks)
         expect(result?.headline).toContain('ライバル商事')
     })
 
     it('競合攻撃が無ければ市況ニュースを使う', () => {
-        const generated = { emoji: '📈', text: '市況ニュース' }
+        const generated = { emoji: '📈', text: '市況ニュース', impact: 'positive' as const }
         const result = pickMonthlyNews(generated, 'market', [])
         expect(result?.headline).toBe('市況ニュース')
     })
