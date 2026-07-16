@@ -1824,7 +1824,7 @@
     flex-direction: column;
     align-items: center;
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: transform 0.2s, left 0.6s ease, bottom 0.6s ease;
     will-change: transform;
     transform: translateZ(0); /* GPU acceleration */
 }
@@ -1889,6 +1889,55 @@
     75% { transform: translateX(2px); }
 }
 
+/* 休憩中（コーヒー休憩）。working/stressed 等の状態クラスと併用されるため
+   同一プロパティを上書きできるよう属性セレクタより後段に配置する */
+.character.on-break .character-emoji {
+    animation: characterBreak 1.6s ease-in-out infinite;
+    opacity: 0.85;
+}
+
+@keyframes characterBreak {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-2px) rotate(-4deg); }
+}
+
+/* 職種別ワーキングモーション（稼働中のみ。data-job属性で通常のworkingを上書き） */
+.character[data-job="developer"].working .character-emoji {
+    animation: characterTyping 0.4s steps(2) infinite;
+}
+
+.character[data-job="sales"].working .character-emoji {
+    animation: characterCalling 0.6s ease-in-out infinite;
+}
+
+.character[data-job="marketing"].working .character-emoji {
+    animation: characterSketching 0.5s ease-in-out infinite;
+}
+
+.character[data-job="manager"].working .character-emoji {
+    animation: characterPacing 0.7s ease-in-out infinite;
+}
+
+@keyframes characterTyping {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1px); }
+}
+
+@keyframes characterCalling {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(8deg); }
+}
+
+@keyframes characterSketching {
+    0%, 100% { transform: translateX(0) rotate(0deg); }
+    50% { transform: translateX(2px) rotate(-5deg); }
+}
+
+@keyframes characterPacing {
+    0%, 100% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+}
+
 /* 職種別の絵文字色（疑似要素でバッジ表示） */
 .character[data-job="developer"]::after {
     content: "💻";
@@ -1922,7 +1971,7 @@
     font-size: 10px;
 }
 
-/* オフィス家具 */
+/* オフィス家具（職種別に色・小物アイコンを描き分け） */
 .office-desk {
     position: absolute;
     width: 40px;
@@ -1930,6 +1979,26 @@
     background: #8b7355;
     border-radius: 4px;
 }
+
+.office-desk[data-job]::before {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+}
+
+.office-desk[data-job="developer"] { background: #6c7a89; }
+.office-desk[data-job="developer"]::before { content: "🖥️"; }
+
+.office-desk[data-job="sales"] { background: #8b7355; }
+.office-desk[data-job="sales"]::before { content: "☎️"; }
+
+.office-desk[data-job="marketing"] { background: #a0785a; }
+.office-desk[data-job="marketing"]::before { content: "🎨"; }
+
+.office-desk[data-job="manager"] { background: #7a6a8b; }
+.office-desk[data-job="manager"]::before { content: "📋"; }
 
 .office-plant {
     position: absolute;
