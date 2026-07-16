@@ -32,11 +32,23 @@ export interface GeneratedNews {
     impact: NewsItem['impact']
 }
 
+// a2ui-news-card は category バッジと別に headline (太字見出し) を表示するため、
+// headline に本文と同じ文をそのまま入れると content と重複して二度読みになる。
+// headline はカテゴリ由来の短いラベルに留め、実際の文面は content 側にのみ出す
+const NEWS_ITEM_HEADLINE: Record<NewsItem['category'], string> = {
+    industry: '🏭 業界ニュース',
+    company: '🏢 企業ニュース',
+    tech: '💻 テクノロジーニュース',
+    economy: '📈 経済ニュース',
+    policy: '📋 政策ニュース',
+}
+
 export function buildNewsItem(news: GeneratedNews, category: string): NewsItem {
+    const a2uiCategory = mapGameNewsCategory(category)
     return {
-        headline: news.text,
+        headline: NEWS_ITEM_HEADLINE[a2uiCategory],
         content: news.text,
-        category: mapGameNewsCategory(category),
+        category: a2uiCategory,
         impact: news.impact,
     }
 }
