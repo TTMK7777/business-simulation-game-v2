@@ -81,11 +81,17 @@ export function onThemeChange(cb: (mode: ThemeMode) => void): () => void {
   return () => listeners.delete(cb)
 }
 
+let themeInitialized = false
+
 /**
  * 起動時に一度だけ呼ぶ。保存値 or システム設定からテーマを決定して適用し、
  * ユーザーが明示選択していない間は prefers-color-scheme の変更にも追従する。
+ * 冪等: 2回目以降の呼び出しは no-op（matchMedia リスナーの多重登録を防ぐ。
+ * 社外取締役レビュー指摘 2026-07-16）
  */
 export function initTheme(): void {
+  if (themeInitialized) return
+  themeInitialized = true
   const stored = readStoredTheme()
   const prefersDark =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'
