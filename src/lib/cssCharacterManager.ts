@@ -1,25 +1,41 @@
 // CSS-based Character Animation Manager
 // Lightweight alternative to Phaser
+//
+// v1 日課システム: 出勤（歩いて入場）→ デスクで稼働/休憩 → 退勤（歩いて退場）
+// 状態機械・座席割当・デスク位置計算は characterRoutine.ts（DOM非依存）に分離。
+// このファイルはその計算結果をDOMへ反映する層のみを担当する。
 
-export type AnimationState = 'idle' | 'working' | 'stressed'
-export type JobType = 'developer' | 'sales' | 'marketing' | 'manager'
+import {
+  JOB_EMOJIS,
+  JOB_BADGES,
+  ENTRANCE_X_RATIO,
+  BREAK_CORNER,
+  BREAK_EMOJI,
+  allocateSeat,
+  getDeskPosition,
+  createInitialRoutineState,
+  advanceRoutineTick,
+  type JobType,
+  type AnimationState,
+  type DeskPosition,
+  type RoutineState
+} from './characterRoutine'
+
+export type { AnimationState, JobType }
 export type EffectType = 'levelUp' | 'money' | 'happy' | 'sad' | 'sparkle'
 
 interface Character {
   id: string
   element: HTMLElement
+  deskElement: HTMLElement
   jobType: JobType
   state: AnimationState
   x: number
   y: number
   clickHandler?: () => void
-}
-
-const JOB_EMOJIS: Record<JobType, string> = {
-  developer: '🧑‍💻',
-  sales: '🧑‍💼',
-  marketing: '🧑‍🎨',
-  manager: '🧑‍💼'
+  seatIndex: number
+  deskPosition: DeskPosition
+  routineState: RoutineState
 }
 
 const EFFECT_EMOJIS: Record<EffectType, string> = {
@@ -33,6 +49,7 @@ const EFFECT_EMOJIS: Record<EffectType, string> = {
 class CSSCharacterManager {
   private container: HTMLElement | null = null
   private characters: Map<string, Character> = new Map()
+  private occupiedSeats: Set<number> = new Set()
   private isInitialized = false
 
   init(containerId: string): void {
@@ -61,21 +78,34 @@ class CSSCharacterManager {
   ): void {
     if (!this.container || !this.isInitialized) return
 
-    // Remove existing character with same ID
+    // Remove existing character with same ID (instant, no exit animation —
+    // this is an internal replace, not a real employee departure)
     if (this.characters.has(employeeId)) {
-      this.removeCharacter(employeeId)
+      this.hardRemoveCharacter(employeeId)
     }
 
-    // Random position within office
-    const x = 50 + Math.random() * (this.container.clientWidth - 100)
-    const y = 80 + Math.random() * 150
+    const seatIndex = allocateSeat(this.occupiedSeats)
+    this.occupiedSeats.add(seatIndex)
+    const deskPosition = getDeskPosition(jobType, seatIndex)
+
+    const containerWidth = this.container.clientWidth
+    const deskLeftPx = deskPosition.xRatio * containerWidth
+    const entranceLeftPx = ENTRANCE_X_RATIO * containerWidth
+
+    // デスクの装飾要素（キャラクターより先にappendして背面に表示）
+    const deskElement = document.createElement('div')
+    deskElement.className = 'office-desk'
+    deskElement.dataset.job = jobType
+    deskElement.style.left = `${deskLeftPx - 5}px`
+    deskElement.style.bottom = `${Math.max(0, deskPosition.bottomPx - 20)}px`
+    this.container.appendChild(deskElement)
 
     const element = document.createElement('div')
     element.className = 'character idle'
     element.dataset.job = jobType
     element.dataset.employeeId = employeeId
-    element.style.left = `${x}px`
-    element.style.bottom = `${y}px`
+    element.style.left = `${entranceLeftPx}px`
+    element.style.bottom = `${deskPosition.bottomPx}px`
 
     // Safe DOM construction (XSS prevention)
     const emojiDiv = document.createElement('div')
@@ -95,14 +125,23 @@ class CSSCharacterManager {
 
     this.container.appendChild(element)
 
+    // entrance位置を一度描画確定させてから desk位置へ変更することで
+    // 「歩いて入場」の transition を確実に発火させる（reflow強制）
+    void element.offsetWidth
+    element.style.left = `${deskLeftPx}px`
+
     this.characters.set(employeeId, {
       id: employeeId,
       element,
+      deskElement,
       jobType,
       state: 'idle',
-      x,
-      y,
-      clickHandler: onClick
+      x: deskLeftPx,
+      y: deskPosition.bottomPx,
+      clickHandler: onClick,
+      seatIndex,
+      deskPosition,
+      routineState: createInitialRoutineState()
     })
   }
 
@@ -132,16 +171,61 @@ class CSSCharacterManager {
       default:
         statusEl.textContent = ''
     }
+
+    // 日課ステートマシンを1tick進める（呼び出し頻度 = ターン送り頻度に一致するため
+    // GameManager 側の追加フックは不要。休憩中は desk 位置ではなく休憩コーナーへ移動する）
+    character.routineState = advanceRoutineTick(character.routineState, state)
+
+    const containerWidth = this.container?.clientWidth ?? 0
+    if (character.routineState.phase === 'on_break') {
+      character.element.classList.add('on-break')
+      character.element.style.left = `${BREAK_CORNER.xRatio * containerWidth}px`
+      character.element.style.bottom = `${BREAK_CORNER.bottomPx}px`
+      statusEl.textContent = BREAK_EMOJI
+    } else {
+      character.element.classList.remove('on-break')
+      character.element.style.left = `${character.deskPosition.xRatio * containerWidth}px`
+      character.element.style.bottom = `${character.deskPosition.bottomPx}px`
+    }
   }
 
   removeCharacter(employeeId: string): void {
     const character = this.characters.get(employeeId)
+    if (!character) return
+
+    // Clean up event listener to prevent memory leak
+    if (character.clickHandler) {
+      character.element.removeEventListener('click', character.clickHandler)
+    }
+    this.occupiedSeats.delete(character.seatIndex)
+    this.characters.delete(employeeId)
+
+    // 残留アニメーション中の要素と新規追加キャラのID衝突を避ける
+    delete character.element.dataset.employeeId
+
+    // 退勤（歩いて退場）してからDOMを除去
+    const containerWidth = this.container?.clientWidth ?? 0
+    character.element.style.left = `${ENTRANCE_X_RATIO * containerWidth}px`
+
+    const cleanup = () => {
+      character.element.remove()
+      character.deskElement.remove()
+    }
+    character.element.addEventListener('transitionend', cleanup, { once: true })
+    // Fallback timeout in case transition doesn't fire
+    setTimeout(cleanup, 900)
+  }
+
+  // addCharacter の重複除去専用。退勤アニメーションを伴わない即時削除。
+  private hardRemoveCharacter(employeeId: string): void {
+    const character = this.characters.get(employeeId)
     if (character) {
-      // Clean up event listener to prevent memory leak
       if (character.clickHandler) {
         character.element.removeEventListener('click', character.clickHandler)
       }
+      this.occupiedSeats.delete(character.seatIndex)
       character.element.remove()
+      character.deskElement.remove()
       this.characters.delete(employeeId)
     }
   }
@@ -152,8 +236,10 @@ class CSSCharacterManager {
         character.element.removeEventListener('click', character.clickHandler)
       }
       character.element.remove()
+      character.deskElement.remove()
     })
     this.characters.clear()
+    this.occupiedSeats.clear()
   }
 
   getCharacter(employeeId: string): Character | undefined {
@@ -201,3 +287,6 @@ export function initCharacterRenderer(containerId: string): void {
 export function getCharacterManager(): CSSCharacterManager {
   return characterManager
 }
+
+// JOB_BADGES は main.css 側の ::after バッジと対応（テスト・将来のJS側描画用に再エクスポート）
+export { JOB_BADGES }
