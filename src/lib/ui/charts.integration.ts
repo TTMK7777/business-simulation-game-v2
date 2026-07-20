@@ -140,7 +140,7 @@ export function initFinanceCharts(): void {
 
 export function updateFinanceCharts(): void {
     const game = getGame()
-    const history: FinanceSnapshot[] = game.financeHistory ?? []
+    const history: FinanceSnapshot[] = game.financeHistory
     updateFinancePlChart(history)
     updateFinanceCfChart(history)
     updateFinanceBsChart(history)

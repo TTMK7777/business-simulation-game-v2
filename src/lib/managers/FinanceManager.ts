@@ -191,11 +191,9 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     }
 
     // 財務3表: 月次決算スナップショットを記録する。
-    // 旧セーブ (financeHistory 未定義) でも落ちないよう自前で配列初期化する
-    // (gameStore.normalizeGameState 側のデフォルト化に依存しない自己完結ガード)
-    const financeHistory: FinanceSnapshot[] = Array.isArray(game.financeHistory)
-        ? game.financeHistory
-        : (game.financeHistory = [])
+    // 旧セーブ (financeHistory 未定義) はロード時に gameStore.normalizeGameState() が
+    // 空配列へ正規化する (正規化責務は store 層に一元化)
+    const financeHistory = game.financeHistory
     const cash = game.money
     const netWorth = cash - game.debt
     const previousDebt = financeHistory.length > 0

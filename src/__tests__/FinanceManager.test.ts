@@ -9,13 +9,13 @@
  * - 売上ドライバー分解（revenueDrivers）
  *   - 寄与額の合計が実売上に近似する（floor丸め誤差の範囲内）
  *   - カリスマ社員・Tier3スキル・市場シェア・ブランド力それぞれの寄与額が正しい
- * - 後方互換: financeHistory が未定義の旧セーブでも例外を投げず自己初期化する
+ * - 後方互換: financeHistory が未定義の旧セーブはロード時の normalizeGameState() が空配列へ正規化する
  * - financeHistory は60件（5年分）でキャップされる
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calculateMonthlyRevenue, getLoan, repayLoan } from '../lib/managers/FinanceManager'
-import { getGame, overwriteGameState, cloneDefaults, resetGameState } from '../lib/store/gameStore'
+import { getGame, overwriteGameState, cloneDefaults, resetGameState, normalizeGameState } from '../lib/store/gameStore'
 import type { Employee, Product } from '../lib/types/index'
 
 beforeEach(() => {
@@ -158,7 +158,7 @@ describe('calculateMonthlyRevenue: 月次決算スナップショット記録', 
     expect(history.length).toBe(60)
   })
 
-  it('旧セーブ相当（financeHistory 未定義）でも例外を投げず自己初期化する', () => {
+  it('旧セーブ相当（financeHistory 未定義）はロード時の normalizeGameState() が空配列へ正規化する', () => {
     const oldSave: any = cloneDefaults()
     delete oldSave.financeHistory
     overwriteGameState({
@@ -167,9 +167,11 @@ describe('calculateMonthlyRevenue: 月次決算スナップショット記録', 
       employees: [],
     })
 
-    expect(getGame().financeHistory).toBeUndefined()
+    // ロード経路 (GameManager.loadGame) は overwriteGameState → normalizeGameState を必ず通る
+    normalizeGameState()
+    expect(getGame().financeHistory).toEqual([])
     expect(() => calculateMonthlyRevenue()).not.toThrow()
-    expect(getGame().financeHistory?.length).toBe(1)
+    expect(getGame().financeHistory.length).toBe(1)
   })
 })
 

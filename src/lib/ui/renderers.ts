@@ -815,7 +815,7 @@ function renderFinanceDrivers(): void {
     const mount = document.getElementById('financeDrivers')
     if (!mount) return
 
-    const history = game.financeHistory ?? []
+    const history = game.financeHistory
     const latest = history[history.length - 1]
 
     if (!latest) {

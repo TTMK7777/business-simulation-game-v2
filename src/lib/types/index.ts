@@ -150,12 +150,10 @@ export interface GameState {
     revenueHistory: number[]
     /**
      * 月次決算スナップショット履歴（財務3表グラフ用、最大60件）。
-     * gameStore.ts の defaultGameState / normalizeGameState は所有権外のため
-     * 更新を依頼中（Lead 報告済み）。それまでは optional とし、
-     * FinanceManager.calculateMonthlyRevenue() 側の自己防御ガードで
-     * 未定義時も安全に配列初期化する。
+     * 旧セーブ (v2.3.0 以前) の欠落はロード時に gameStore.normalizeGameState() が
+     * 空配列へ正規化する（正規化責務は store 層に一元化）。
      */
-    financeHistory?: FinanceSnapshot[]
+    financeHistory: FinanceSnapshot[]
     officeLevel: number
     difficulty: DifficultyLevel
     competitorAttacks: string[]
