@@ -1,6 +1,6 @@
 {
   "name": "business-simulation-game",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "IT業界で成功を目指す本格的な経営シミュレーションゲーム",
   "type": "module",
   "scripts": {
