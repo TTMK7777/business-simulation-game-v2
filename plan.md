@@ -1,13 +1,12 @@
 # Business Simulation Game v2 — 計画
 
 ## 現在のステータス
-**v2.2.0 リリース済み (2026-07-07)** — Sprint E 完了 + 全面レビュー・バランス修正。
-- Sprint E (Coachmark チュートリアル) T1-T7 完了、取締役会 Go (PR #21)
-- ゲーム詰みバグ根治: 候補者給与の年収/月給スケール混在 (PR #20)
-- tsc --noEmit 89件→0 (types.d.ts と types/ の同名衝突が真因、PR #22)
-- バランス構造欠陥5件修正 + Tier3スキル実接続 + UX3件 (PR #23)
-- レガシー一掃: v1残骸20ファイル + Phaser死コード約1,900行 + ProductManager二重実装
-次: Phase 7 (Android/Capacitor) または管理モードのテンポ・深化 (下記バックログ)
+**v2.4.0 リリース済み (2026-07-20)** — Phase 1 見える化スプリント完了 (specs/001)。
+- 財務3表 / ドライバー分解 / 従業員の日課演出 / ダークモード (PR #32, #34)
+- financeHistory 必須型化 + E2E スクリプト scripts/ 恒久化 (PR #35)
+- v2.3.0: 経営理論図鑑 Phase B — CEO 決裁に理論タグ + 意思決定理論3本 (PR #29)
+- v2.2.0: Sprint E (Coachmark チュートリアル) + 給与スケール混在バグ根治 + レガシー一掃 (PR #20-24)
+次: Phase 2 遊びの骨格 Wave 1 — 退職・モチベ + 固定費 (specs/002, PR #36 で設計確定)
 
 ## フェーズ
 ### Phase 0: 基盤レイヤー (完了)

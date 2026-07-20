@@ -19,7 +19,7 @@
 - 既存 toast（実績/理論解禁）と二重通知にならないよう役割分担を整理
 
 ### D. キャラクター日課 v1（担当: characters）
-- `docs/CHARACTER_DAILY_ROUTINE_RESEARCH.md` 構想の最小実装: 出勤→デスク→働く/休憩→退勤 のサイクル（ターン進行連動）
+- `CHARACTER_DAILY_ROUTINE_RESEARCH.md` (現在は archive/ 退避済) 構想の最小実装: 出勤→デスク→働く/休憩→退勤 のサイクル（ターン進行連動）
 - 職種別の見た目差別化（現状 sales/manager が同一絵文字）、状態（idle/working/stressed）をモチベーション連動に
 
 ### E. デザイントークン + ダークモード（Wave 2、A-D 統合後に実施）
