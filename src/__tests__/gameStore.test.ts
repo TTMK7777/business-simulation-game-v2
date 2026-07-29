@@ -127,3 +127,69 @@ describe('CEO mode フィールドの正規化', () => {
     expect(getGame().gameMode).toBe('ceo')
   })
 })
+
+describe('Wave 1: 定着フィールドと財務スナップショットの正規化', () => {
+  it('旧セーブの従業員は stress / lastTrainingTurn / performanceMultiplier が既定値で補完される', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      turn: 20,
+      employees: [
+        {
+          id: 1,
+          name: '旧 太郎',
+          personalityKey: 'logical',
+          abilities: { technical: 50, sales: 50, planning: 50, management: 50 },
+          subTraits: [],
+          hiddenTrait: 'late_bloomer',
+          hiddenTraitRevealed: false,
+          joinedTurn: 5,
+          motivation: 60,
+          salary: 300_000,
+          department: 'development',
+          position: 'staff',
+          qualification: null,
+          skillPoints: 0,
+          unlockedSkills: [],
+          growthHistory: [],
+        },
+      ] as any,
+    })
+
+    normalizeGameState()
+    const emp = getGame().employees[0]
+
+    expect(emp.stress).toBe(0)
+    // 放置判定の起点は入社ターン（研修履歴が無いため）
+    expect(emp.lastTrainingTurn).toBe(5)
+    expect(emp.performanceMultiplier).toBe(1)
+  })
+
+  it('旧セーブの財務スナップショットは fixedCost / attritionCost が 0 で補完される', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      financeHistory: [
+        {
+          turn: 4,
+          year: 2025,
+          month: 2,
+          revenue: 1_000_000,
+          salaryTotal: 400_000,
+          interest: 0,
+          profit: 600_000,
+          cash: 5_000_000,
+          debt: 0,
+          netWorth: 5_000_000,
+          operatingCF: 600_000,
+          financingCF: 0,
+          revenueDrivers: { contributions: [], total: 1_000_000 },
+        },
+      ] as any,
+    })
+
+    normalizeGameState()
+    const snapshot = getGame().financeHistory[0]
+
+    expect(snapshot.fixedCost).toBe(0)
+    expect(snapshot.attritionCost).toBe(0)
+  })
+})

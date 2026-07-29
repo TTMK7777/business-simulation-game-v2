@@ -5,6 +5,7 @@ import { getGame } from '../store/gameStore'
 import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { SKILL_TREE, SKILL_EFFECTS } from '../config/skills'
+import { BALANCE_CONFIG } from '../gameConfig'
 import type {
     Employee,
     HireResult,
@@ -548,6 +549,14 @@ export function executeTraining(focusType: string): TrainingResult {
         if (earnedPoints > 0) {
             bonusMessages.push(`${emp.name}はスキルポイント+${earnedPoints}を獲得！`)
         }
+
+        // Wave 1-B: 研修はモチベーションの変動源のひとつ。
+        // lastTrainingTurn は「放置」判定 (RetentionManager.calculateMotivationDelta) の起点になる
+        emp.motivation = Math.min(
+            BALANCE_CONFIG.motivation.maxMotivation,
+            (emp.motivation ?? 50) + BALANCE_CONFIG.retention.trainingBonus
+        )
+        emp.lastTrainingTurn = game.turn
 
         growthDetails.push({ name: emp.name, growth: avgGrowth })
     })

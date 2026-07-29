@@ -30,6 +30,7 @@ import * as VisitorManager from './VisitorManager'
 import * as CEOManager from './CEOManager'
 import * as FinanceManager from './FinanceManager'
 import { updateMonthlyStress } from './HRManager'
+import { processMonthlyRetention } from './RetentionManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { applyTabVisibilityForMode } from '../ui/renderers'
@@ -42,6 +43,7 @@ import {
     isFinanceDanger,
     shouldFireDangerAdvisor,
     buildDangerAdvisorMessage,
+    buildRetentionAdvisorMessage,
     buildFinanceSummaryData,
     type GeneratedNews,
     type CompetitorAttackLike,
@@ -470,6 +472,13 @@ export function nextTurn(): void {
         // B-1: 月次ストレス更新 (稼働中は蓄積、待機中は回復。>70 で stressed アニメ)
         updateMonthlyStress()
 
+        // Wave 1-B: モチベーション更新 → 退職判定。
+        // 月次決算より前に行い、退職による人員減と再採用コストを同じ月の P/L へ反映させる
+        const retention = processMonthlyRetention()
+        if (retention.resignations.length > 0) {
+            syncEmployeeAnimations()
+        }
+
         // 製品駆動のシェア成長: 製品1本につき月+0.2% (上限60)。
         // 従来はマーケ (上限15) 以外にシェア加算源がなく、オフィスLv5 (22%) や
         // 上位実績 (30/50%) が構造的に到達不能だった
@@ -480,8 +489,8 @@ export function nextTurn(): void {
         // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一
         // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
         //   他方に反映されないリスクがあった）
-        const monthly = FinanceManager.calculateMonthlyRevenue()
-        const { revenue, salaryTotal, interest, profit, isBankrupt } = monthly
+        const monthly = FinanceManager.calculateMonthlyRevenue(retention.attritionCost)
+        const { revenue, salaryTotal, interest, fixedCost, attritionCost, profit, isBankrupt } = monthly
 
         if (isBankrupt) {
             // game.isBankrupt は calculateMonthlyRevenue 内で設定済み
@@ -494,10 +503,15 @@ export function nextTurn(): void {
 
         const summaryLines = [
             `📊 売上: ${Math.floor(revenue / 10000)}万円`,
-            `👥 人件費: ${Math.floor(salaryTotal / 10000)}万円`
+            `👥 人件費: ${Math.floor(salaryTotal / 10000)}万円`,
+            // Wave 1-E: オフィス維持費は売上ゼロでも出ていく固定費なので常に表示する
+            `🏢 オフィス維持費: ${Math.floor(fixedCost / 10000)}万円`
         ]
         if (interest > 0) {
             summaryLines.push(`📈 利息: ${Math.floor(interest / 10000)}万円`)
+        }
+        if (attritionCost > 0) {
+            summaryLines.push(`🚪 再採用コスト: ${Math.floor(attritionCost / 10000)}万円`)
         }
         const profitColor = profit >= 0 ? '#4caf50' : '#f44336'
         summaryLines.push(`<div style="margin-top: 8px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
@@ -515,11 +529,33 @@ export function nextTurn(): void {
 
         // a2ui: 月次決算 → 財務ダッシュボードカード更新
         getA2UIManager().showFinanceSummary(
-            buildFinanceSummaryData({ revenue, salaryTotal, interest, profit, cash: game.money, debt: game.debt })
+            buildFinanceSummaryData({ revenue, salaryTotal, interest, fixedCost, attritionCost, profit, cash: game.money, debt: game.debt })
         )
 
+        // Wave 1-B: 退職の発生を数字とセットで通知する (人員減 + 再採用コスト)
+        if (retention.resignations.length > 0) {
+            setTimeout(() => {
+                const msgs = retention.resignations.map(r =>
+                    `<div style="margin:8px 0;padding:10px;background:rgba(231,76,60,0.08);border-radius:8px;">
+                        🚪 <strong>${escapeHtml(r.name)}</strong> が退職しました（モチベーション ${Math.round(r.motivation)}）<br>
+                        <span style="font-size:13px;color:#666;">再採用コスト ${Math.floor(r.salary * 2 / 10000)}万円 / 残り ${game.employees.length}名</span>
+                    </div>`
+                ).join('')
+                ;(window as any).showModal?.('🚪 退職の報告', msgs, true)
+            }, 900)
+        }
+
+        // Wave 1-B: 退職の予兆をアドバイザーカードで可視化する (Phase 1 の a2ui 資産を転用)。
+        // 実際に退職が出た月はモーダルで伝わるので予兆カードは出さない (通知の重複を避ける)
+        if (retention.resignations.length === 0) {
+            const retentionAdvisor = buildRetentionAdvisorMessage(retention.atRisk)
+            if (retentionAdvisor) {
+                getA2UIManager().showDangerAdvisor(retentionAdvisor)
+            }
+        }
+
         // a2ui: 資金危険水域への新規突入時のみアドバイザーカード (継続中は再発火しない)
-        const monthlyCost = salaryTotal + interest
+        const monthlyCost = salaryTotal + interest + fixedCost
         const isDanger = isFinanceDanger(game.money, monthlyCost)
         if (shouldFireDangerAdvisor(_wasFinanceDanger, isDanger)) {
             getA2UIManager().showDangerAdvisor(buildDangerAdvisorMessage(game.money, monthlyCost))

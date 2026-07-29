@@ -15,6 +15,7 @@ import {
     isFinanceDanger,
     shouldFireDangerAdvisor,
     buildDangerAdvisorMessage,
+    buildRetentionAdvisorMessage,
     buildFinanceSummaryData,
     type CompetitorAttackLike,
 } from '../lib/a2ui/eventMapping'
@@ -173,6 +174,34 @@ describe('buildDangerAdvisorMessage', () => {
     })
 })
 
+describe('buildRetentionAdvisorMessage (Wave 1-B)', () => {
+    it('退職予備軍がいなければ null (カードを出さない)', () => {
+        expect(buildRetentionAdvisorMessage([])).toBeNull()
+    })
+
+    it('最もモチベーションが低い1名を取り上げる', () => {
+        const msg = buildRetentionAdvisorMessage([
+            { name: '佐藤', motivation: 55 },
+            { name: '鈴木', motivation: 32 },
+            { name: '高橋', motivation: 48 },
+        ])!
+        expect(msg.message).toContain('鈴木')
+        expect(msg.message).toContain('32')
+        expect(msg.message).toContain('他2名')
+        expect(msg.category).toBe('hr')
+    })
+
+    it('1名だけなら「他N名」を付けない', () => {
+        const msg = buildRetentionAdvisorMessage([{ name: '佐藤', motivation: 55 }])!
+        expect(msg.message).not.toContain('他')
+    })
+
+    it('モチベーション30未満は critical、3 0以上は warning', () => {
+        expect(buildRetentionAdvisorMessage([{ name: 'A', motivation: 29 }])!.sentiment).toBe('critical')
+        expect(buildRetentionAdvisorMessage([{ name: 'A', motivation: 30 }])!.sentiment).toBe('warning')
+    })
+})
+
 describe('buildFinanceSummaryData', () => {
     it('expenses は salaryTotal + interest の合算になる', () => {
         const data = buildFinanceSummaryData({
@@ -188,5 +217,19 @@ describe('buildFinanceSummaryData', () => {
         expect(data.profit).toBe(2_900_000)
         expect(data.cash).toBe(12_000_000)
         expect(data.debt).toBe(5_000_000)
+    })
+
+    it('Wave 1: expenses にオフィス維持費と再採用コストも含める', () => {
+        const data = buildFinanceSummaryData({
+            revenue: 5_000_000,
+            salaryTotal: 2_000_000,
+            interest: 100_000,
+            fixedCost: 250_000,
+            attritionCost: 600_000,
+            profit: 2_050_000,
+            cash: 12_000_000,
+            debt: 5_000_000,
+        })
+        expect(data.expenses).toBe(2_950_000)
     })
 })

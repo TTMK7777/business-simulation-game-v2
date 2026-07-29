@@ -12,6 +12,7 @@ import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalitie
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
 import { calculateTeamCompatibility } from '../managers/HRManager'
+import { getMonthlyFixedCost } from '../managers/FinanceManager'
 import {
     ACHIEVEMENTS,
     ACHIEVEMENT_RARITIES,
@@ -497,11 +498,13 @@ export function updateDisplay(): void {
     // 資金: カウントアップ + 増減フラッシュ
     animateMoneyTo(game.money)
 
-    // 資金危険水域の警告 (表示のみ): 月間コスト (人件費+利息見込) を基準に
+    // 資金危険水域の警告 (表示のみ): 月間コスト (人件費+利息見込+オフィス維持費) を基準に
     //   2ヶ月分未満 → warning / 1ヶ月分未満 → danger
     const salaryTotalForWarn = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
     const interestForWarn = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE_DISPLAY) : 0
-    const monthlyCost = salaryTotalForWarn + interestForWarn
+    // Wave 1-E: オフィス維持費も毎月出ていくため月間コストに含める
+    const fixedCostForWarn = getMonthlyFixedCost(game.officeLevel)
+    const monthlyCost = salaryTotalForWarn + interestForWarn + fixedCostForWarn
     const moneyStatEl = document.getElementById('money')?.closest('.stat') as HTMLElement | null
     if (moneyStatEl && monthlyCost > 0) {
         const isDanger = game.money < monthlyCost
@@ -509,7 +512,7 @@ export function updateDisplay(): void {
         moneyStatEl.classList.toggle('stat-danger', isDanger)
         moneyStatEl.classList.toggle('stat-warning', isWarning)
         if (isDanger) {
-            moneyStatEl.title = '資金が月間コスト(人件費+利息)を下回っています。倒産注意！'
+            moneyStatEl.title = '資金が月間コスト(人件費+利息+オフィス維持費)を下回っています。倒産注意！'
         } else if (isWarning) {
             moneyStatEl.title = '資金が月間コスト2ヶ月分を下回っています'
         } else {
@@ -523,10 +526,10 @@ export function updateDisplay(): void {
     const revenueEl = document.getElementById('revenue')
     if (revenueEl) revenueEl.textContent = `${Math.floor(game.monthlyRevenue / 10000)}万`
 
-    // 概要タブ: 今月の収支見込み (前月売上実績 − 人件費 − 利息見込。財務タブの純利益と同じ表示式)
+    // 概要タブ: 今月の収支見込み (前月売上実績 − 人件費 − 利息見込 − オフィス維持費。財務タブの純利益と同じ表示式)
     const forecastEl = document.getElementById('profitForecast') as HTMLElement | null
     if (forecastEl) {
-        const forecast = game.monthlyRevenue - salaryTotalForWarn - interestForWarn
+        const forecast = game.monthlyRevenue - salaryTotalForWarn - interestForWarn - fixedCostForWarn
         forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
         forecastEl.style.color = forecast >= 0 ? '#4caf50' : '#f44336'
         forecastEl.style.fontWeight = '700'
@@ -775,6 +778,9 @@ export function renderFinance(): void {
 
     const salaryTotal = game.employees.reduce((sum: number, emp: any) => sum + emp.salary, 0)
     const interestPreview = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
+    // Wave 1-E: オフィス維持費も月次の固定費として純利益から差し引く
+    const fixedCostPreview = getMonthlyFixedCost(game.officeLevel)
+    const netProfitPreview = game.monthlyRevenue - salaryTotal - interestPreview - fixedCostPreview
     const template = litHtml`
         <div class="info-box">
             <div>
@@ -785,10 +791,14 @@ export function renderFinance(): void {
                 <span>👥 人件費</span>
                 <strong>${Math.floor(salaryTotal / 10000)}万円</strong>
             </div>
+            <div>
+                <span>🏢 オフィス維持費</span>
+                <strong>${Math.floor(fixedCostPreview / 10000)}万円</strong>
+            </div>
             <div style="border-top: 2px solid #667eea; padding-top: 8px; margin-top: 8px;">
                 <span>💰 純利益</span>
-                <strong style="color: ${(game.monthlyRevenue - salaryTotal - interestPreview) >= 0 ? '#4caf50' : '#f44336'}">
-                    ${Math.floor((game.monthlyRevenue - salaryTotal - interestPreview) / 10000)}万円
+                <strong style="color: ${netProfitPreview >= 0 ? '#4caf50' : '#f44336'}">
+                    ${Math.floor(netProfitPreview / 10000)}万円
                 </strong>
             </div>
             ${game.debt ? litHtml`<div style="margin-top: 8px;">

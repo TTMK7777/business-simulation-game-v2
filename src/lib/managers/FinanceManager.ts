@@ -4,6 +4,8 @@
 import { getGame } from '../store/gameStore'
 import { GAME_CONSTANTS, BALANCE_CONFIG, debugLog } from '../gameConfig'
 import { SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from '../config/skills'
+import { OFFICE_LEVELS } from '../config/offices'
+import { calculateWorkforceMultiplier } from './RetentionManager'
 import type { FinanceSnapshot, RevenueDriverBreakdown } from '../types'
 
 /** financeHistory の最大保持件数（5年分の月次決算） */
@@ -33,6 +35,10 @@ export interface MonthlyRevenueResult {
     revenue: number
     salaryTotal: number
     interest: number
+    /** Wave 1-E: オフィス維持費（officeLevel 連動の月次固定費） */
+    fixedCost: number
+    /** Wave 1-B: 今月の退職に伴う再採用コスト */
+    attritionCost: number
     profit: number
     isBankrupt: boolean
     productRevenues: { name: string; revenue: number }[]
@@ -90,9 +96,28 @@ export function repayLoan(): RepayResult {
 }
 
 // ============================================
+// Wave 1-E: オフィス維持費（月次固定費）
+// ============================================
+
+/**
+ * officeLevel に対応する月次のオフィス維持費を返す。
+ *
+ * 難易度の costMultiplier は掛けない（人件費と同じ扱い）。難易度は売上側で調整済みで、
+ * ここに重ねると規模拡大のコストだけが二重に効いてバランス意図がぶれるため。
+ */
+export function getMonthlyFixedCost(officeLevel: number): number {
+    const level = OFFICE_LEVELS[officeLevel] ?? OFFICE_LEVELS[1]
+    return level.monthlyMaintenance
+}
+
+// ============================================
 // 月次収益計算
 // ============================================
-export function calculateMonthlyRevenue(): MonthlyRevenueResult {
+/**
+ * @param attritionCost Wave 1-B: 今月の退職に伴う再採用コスト。
+ *   RetentionManager.processMonthlyRetention() の結果を呼び出し側が渡す。
+ */
+export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult {
     const game = getGame()
     let revenue = 0
     const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
@@ -111,7 +136,12 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     let driverAfterSkill = 0
     let driverAfterShare = 0
     let driverAfterBrand = 0
+    let driverAfterWorkforce = 0
     let driverAfterDifficulty = 0
+
+    // Wave 1-B: 平均実効モチベーション（inconsistent の performanceMultiplier 込み）を売上に反映する。
+    // 基準モチベーションちょうどで 1.0 になるため、既存バランスの基準点は動かない。
+    const workforceMultiplier = calculateWorkforceMultiplier(game.employees)
 
     game.products.forEach((product: any) => {
         let salesMultiplier = 1.0
@@ -133,6 +163,9 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         const brandMultiplier = (1 + game.brandPower * BALANCE_CONFIG.economy.brandPowerRevenueBonus)
         salesMultiplier *= brandMultiplier
 
+        // Wave 1-B: 労働力（平均実効モチベーション）
+        salesMultiplier *= workforceMultiplier
+
         // 難易度調整
         salesMultiplier *= difficultyMultiplier.revenueMultiplier
 
@@ -153,6 +186,7 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         driverAfterSkill += preMultiplier * charismaMultiplier * skillMultiplier
         driverAfterShare += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier
         driverAfterBrand += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier
+        driverAfterWorkforce += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier * workforceMultiplier
         driverAfterDifficulty += preMultiplier * salesMultiplier
 
         debugLog('balance', `製品売上計算: ${product.name}`, {
@@ -170,7 +204,8 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
             { key: 'skillBonus', label: 'スキル効果(売上+)', amount: Math.round(driverAfterSkill - driverAfterCharisma) },
             { key: 'marketShare', label: '市場シェアボーナス', amount: Math.round(driverAfterShare - driverAfterSkill) },
             { key: 'brandPower', label: 'ブランド力ボーナス', amount: Math.round(driverAfterBrand - driverAfterShare) },
-            { key: 'difficulty', label: '難易度調整', amount: Math.round(driverAfterDifficulty - driverAfterBrand) }
+            { key: 'workforce', label: '社員のモチベーション', amount: Math.round(driverAfterWorkforce - driverAfterBrand) },
+            { key: 'difficulty', label: '難易度調整', amount: Math.round(driverAfterDifficulty - driverAfterWorkforce) }
         ],
         total: Math.round(driverAfterDifficulty)
     }
@@ -180,9 +215,11 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
     const costCut = Math.min(0.3, SKILL_EFFECTS.cost_reduction.value * costReductionHolders)
     const salaryTotal = Math.floor(rawSalaryTotal * (1 - costCut))
     const interest = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
+    // Wave 1-E: オフィス維持費。規模を上げるほど損益分岐点が上がるトレードオフ
+    const fixedCost = getMonthlyFixedCost(game.officeLevel)
     game.monthlyRevenue = revenue
     game.revenueHistory.push(revenue)
-    const profit = revenue - salaryTotal - interest
+    const profit = revenue - salaryTotal - interest - fixedCost - attritionCost
     game.money += profit
 
     const isBankrupt = game.money < 0
@@ -209,6 +246,8 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         revenue,
         salaryTotal,
         interest,
+        fixedCost,
+        attritionCost,
         profit,
         cash,
         debt: game.debt,
@@ -226,6 +265,8 @@ export function calculateMonthlyRevenue(): MonthlyRevenueResult {
         revenue,
         salaryTotal,
         interest,
+        fixedCost,
+        attritionCost,
         profit,
         isBankrupt,
         productRevenues,
