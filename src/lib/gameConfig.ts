@@ -413,6 +413,57 @@ export const BALANCE_CONFIG = {
         overworkPenalty: 5,                   // 残業時のモチベーション低下
         promotionBonus: 15,                   // 昇進時のモチベーション上昇
         praiseBonus: 10,                      // 称賛時のモチベーション上昇
+    },
+
+    // === Wave 1-B: 定着（モチベーション変動と退職） ===
+    // motivation の変動源を「過重労働 / 放置 / 研修 / 決裁結果」に整理し、
+    // employeeResignChance をモチベーション連動で接続するための係数群。
+    // 決裁結果は DocumentManager.processVerdict が既に motivation を直接動かすため
+    // ここには持たない（二重適用の防止）。
+    retention: {
+        // 過重労働: stress がこの閾値以上でモチベーションが下がる
+        highStressThreshold: 70,
+        highStressPenalty: 6,
+        midStressThreshold: 50,
+        midStressPenalty: 3,
+        // 回復: stress がこの閾値以下なら持ち直す
+        lowStressThreshold: 20,
+        lowStressRecovery: 4,
+        // 放置: 最後の研修（未経験なら入社）からこのターン数が経つと下がる
+        neglectTurns: 12,
+        neglectPenalty: 4,
+        // 研修を受けた月のモチベーション上昇
+        trainingBonus: 8,
+        // burnout_prone（判明済み）が高ストレス時に追加で受けるペナルティ
+        burnoutExtraPenalty: 4,
+
+        // 退職判定: employeeResignChance への倍率（モチベーション帯別）
+        safeMotivation: 70,                   // これ以上は退職しない
+        resignMultiplierNormal: 1,            // 50以上70未満
+        resignMultiplierLow: 3,               // 30以上50未満
+        resignMultiplierCritical: 6,          // 30未満
+        // 隠れ特性による倍率（判明済みのみ）
+        burnoutResignMultiplier: 2,
+        burnoutHighStressMultiplier: 2,
+        inconsistentResignMultiplier: 1.5,
+        maxResignChance: 0.5,
+        // 1ヶ月に退職するのは最大1名（読み取り可能性のため）。
+        // 全員退職すると合法手が消えるため最低1名は必ず残す
+        maxResignationsPerMonth: 1,
+        minRemainingEmployees: 1,
+        // 再採用コスト = 退職者の月給 × この倍率（採用〜立ち上げの実費を数字で見せる）
+        rehireCostSalaryMultiplier: 2,
+
+        // inconsistent（判明済み）の月次パフォーマンス変動レンジ
+        inconsistentMinPerformance: 0.2,
+        inconsistentMaxPerformance: 1.2,
+
+        // 売上ドライバー: 平均実効モチベーションの売上への反映
+        // neutralMotivation で係数 1.0（既存バランスを動かさない基準点）
+        neutralMotivation: 70,
+        workforceUpsideAtMax: 0.10,           // 平均100で +10%
+        workforceDownsideAtMin: 0.30,         // 平均10で -30%
+        workforceMinMotivation: 10,
     }
 };
 

@@ -55,3 +55,30 @@
 - Wave ごとに Vitest（新規ロジックはテスト先書き）+ tsc 0 を維持
 - UI 変更は実ブラウザ E2E 必須: `scripts/e2e-wave1.mjs` を Phase 2 チェック（週次イベント発火 / 退職発生 / シナリオクリア）へ拡張
 - バランス検証: 起業1年目を実プレイ相当の自動進行で N 回走らせ、クリア率が極端（<10% / >90%）でないことを確認
+
+---
+
+## 実装状況
+
+### Wave 1（B + E）— 実装済み（2026-07-30）
+
+| 項目 | 実装 |
+|---|---|
+| B. モチベーション変動源 | `managers/RetentionManager.ts` `calculateMotivationDelta()`。過重労働（stress 連動）/ 休息 / 放置（`lastTrainingTurn` 起点）/ 研修（`HRManager.executeTraining` で加算）。決裁結果は `DocumentManager.processVerdict` が従来どおり直接反映（二重適用を避けるため RetentionManager では扱わない） |
+| B. `employeeResignChance` 接続 | `calculateResignChance()`。モチベーション帯別の倍率で増幅し `maxResignChance` でクランプ。安全圏（70以上）は 0 |
+| B. `burnout_prone` 実効化 | 判明済み＋高ストレスでモチベーション追加低下、退職確率も上乗せ |
+| B. `inconsistent` 実効化 | 判明済みのみ月次で `performanceMultiplier`（0.2〜1.2）を振り直し、売上ドライバーの労働力寄与に反映 |
+| B. 予兆の可視化 | 退職ゼロの月に限り a2ui アドバイザーカード（`buildRetentionAdvisorMessage`）。stressed アニメは既存 `updateMonthlyStress` のまま |
+| B. 数字で見える損失 | 退職時に再採用コスト（月給×2）を当月 P/L へ計上 + 人員減が労働力ドライバー経由で売上に反映 |
+| E. オフィス維持費 | `config/offices.ts` の `monthlyMaintenance`（L1 10万 〜 L5 350万）を `FinanceManager.getMonthlyFixedCost()` 経由で月次 P/L に計上 |
+
+**設計上の決定**
+
+- 売上ドライバーに `workforce`（社員のモチベーション）を追加した。基準モチベーション（`retention.neutralMotivation` = 70）ちょうどで係数 1.0 になるため、既存バランスの基準点は動かない。
+- オフィス維持費に難易度 `costMultiplier` は掛けない（人件費と同じ扱い）。難易度は売上側で調整済みで、重ねると規模拡大コストだけが二重に効く。
+- 退職は 1ヶ月最大1名・在籍1名は必ず維持（合法手が消えるのを防ぐ）。
+- 旧セーブ互換は `gameStore.normalizeGameState()` に集約（`stress` / `lastTrainingTurn` / `performanceMultiplier` と、財務スナップショットの `fixedCost` / `attritionCost` を既定値で補完）。
+
+**検証**: tsc 0 / Vitest 237 緑（Wave 1 で +45）/ `scripts/e2e-wave1.mjs` 13 チェック全 PASS（固定費の P/L 計上・労働力ドライバー・退職発生を追加。退職は確率判定のため決算ターンのみ `Math.random` を固定して決定的にしている）。
+
+### Wave 2（A + C）/ Wave 3（D）— 未着手

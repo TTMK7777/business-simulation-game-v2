@@ -66,6 +66,16 @@ export interface Employee {
     growthHistory: GrowthEvent[]
     jobType?: string
     stress?: number
+    /**
+     * Wave 1-B: 最後に研修を受けたターン。未設定なら joinedTurn を起点に「放置」を判定する。
+     */
+    lastTrainingTurn?: number
+    /**
+     * Wave 1-B: 今月の実効パフォーマンス倍率（0.2〜1.2）。
+     * 隠れ特性 inconsistent が判明した従業員のみ月次で振り直され、それ以外は常に 1。
+     * 売上ドライバーの workforce 寄与に効く。
+     */
+    performanceMultiplier?: number
 }
 
 // ============================================
@@ -99,7 +109,7 @@ export interface Product {
 
 /** 売上乗算チェーンの1要素が生んだ寄与額（円）。合計は概算で今月売上に近似する */
 export interface RevenueDriverContribution {
-    key: 'base' | 'charisma' | 'skillBonus' | 'marketShare' | 'brandPower' | 'difficulty'
+    key: 'base' | 'charisma' | 'skillBonus' | 'marketShare' | 'brandPower' | 'workforce' | 'difficulty'
     label: string
     amount: number
 }
@@ -119,6 +129,10 @@ export interface FinanceSnapshot {
     revenue: number
     salaryTotal: number
     interest: number
+    /** Wave 1-E: オフィス維持費（officeLevel 連動の月次固定費） */
+    fixedCost: number
+    /** Wave 1-B: 今月の退職に伴う再採用コスト（退職ゼロなら 0） */
+    attritionCost: number
     profit: number
     // 簡易B/S
     cash: number
@@ -333,6 +347,11 @@ export interface OfficeLevelDef {
     emoji: string
     maxEmployees: number
     description: string
+    /**
+     * Wave 1-E: 月次のオフィス維持費（円）。売上・人件費と独立して毎月出ていく固定費で、
+     * 「規模を上げる＝損益分岐点が上がる」というトレードオフの最小実装。
+     */
+    monthlyMaintenance: number
     unlockConditions: {
         employees: number
         money: number

@@ -206,6 +206,24 @@ export function normalizeGameState(): void {
         if (typeof emp.qualification !== 'string' && emp.qualification !== null) {
             emp.qualification = null
         }
+        // Wave 1-B: 定着フィールド。旧セーブは未定義のため既定値を入れる
+        // （stress は updateMonthlyStress が || 0 で自己防衛するが、
+        //   lastTrainingTurn は「放置」判定の起点なので未定義だと NaN 比較になる）
+        if (typeof emp.stress !== 'number') {
+            emp.stress = 0
+        }
+        if (typeof emp.lastTrainingTurn !== 'number') {
+            emp.lastTrainingTurn = emp.joinedTurn
+        }
+        if (typeof emp.performanceMultiplier !== 'number') {
+            emp.performanceMultiplier = 1
+        }
+    })
+    // Wave 1-B/E: 旧セーブの財務スナップショットには固定費・退職コストが無い。
+    // グラフ側で undefined 演算にならないよう 0 で埋める（正規化責務は store 層に一元化）
+    game.financeHistory.forEach((snapshot: any) => {
+        if (typeof snapshot.fixedCost !== 'number') snapshot.fixedCost = 0
+        if (typeof snapshot.attritionCost !== 'number') snapshot.attritionCost = 0
     })
     game.products.forEach((product: any) => {
         product.sales = Number(product.sales) || 0

@@ -1,4 +1,5 @@
 // Wave 1 実ブラウザ E2E: 財務3表グラフ / キャラ日課 / a2ui カード
+//   + Phase 2 Wave 1 (オフィス固定費 / 労働力ドライバー / 退職発生)
 // Chrome headless + CDP 直叩き (Node 22 組込 WebSocket/fetch、追加依存なし)
 //
 // 実行手順:
@@ -185,6 +186,76 @@ await evaljs(`document.getElementById('financePlChart')?.scrollIntoView({ block:
 await sleep(400)
 await shot('04-finance-with-data')
 await shot('05-finance-fullpage', true)
+
+// --- 7.1 Wave 1-E: オフィス維持費が P/L に計上され、UI にも出ている ---
+const fixedCostInfo = await evaljs(`(() => {
+  const snapshot = ((window.game || {}).financeHistory || []).slice(-1)[0] || {}
+  const infoText = document.getElementById('financeInfo')?.textContent || ''
+  return {
+    snapshotFixedCost: snapshot.fixedCost,
+    profitMatchesFormula: snapshot.profit ===
+      snapshot.revenue - snapshot.salaryTotal - snapshot.interest - snapshot.fixedCost - snapshot.attritionCost,
+    infoShowsFixedCost: infoText.includes('オフィス維持費')
+  }
+})()`)
+record('wave1-fixed-cost-in-pl',
+  fixedCostInfo.snapshotFixedCost > 0 && fixedCostInfo.profitMatchesFormula && fixedCostInfo.infoShowsFixedCost,
+  JSON.stringify(fixedCostInfo))
+
+// --- 7.2 Wave 1-B: 売上ドライバーに労働力（モチベーション）寄与が出ている ---
+const workforceDriver = await evaljs(`(() => {
+  const snapshot = ((window.game || {}).financeHistory || []).slice(-1)[0] || {}
+  const keys = (snapshot.revenueDrivers?.contributions || []).map(c => c.key)
+  const driversText = document.getElementById('financeDrivers')?.textContent || ''
+  return { keys, uiShowsLabel: driversText.includes('モチベーション') }
+})()`)
+record('wave1-workforce-driver',
+  workforceDriver.keys.includes('workforce') && workforceDriver.uiShowsLabel,
+  JSON.stringify(workforceDriver))
+
+// --- 7.3 Wave 1-B: モチベーションを枯らすと退職が発生し、人員と資金に反映される ---
+const beforeAttrition = await evaljs(`(() => {
+  const g = window.game
+  // 全員を退職圏まで追い込む (最低1名は残る仕様なので採用も行わず2名構成にする)
+  g.employees.forEach(e => { e.motivation = 10; e.stress = 100; e.lastTrainingTurn = 1 })
+  if (g.employees.length < 2) {
+    const clone = JSON.parse(JSON.stringify(g.employees[0]))
+    clone.id = 9001; clone.name = 'E2E 退職候補'
+    g.employees.push(clone)
+  }
+  return { count: g.employees.length, money: g.money }
+})()`)
+// 決算週まで進める (退職判定は月次)。
+// 退職はモチベーション連動の確率判定 (最悪でも月12%) のため、決算ターンだけ
+// Math.random を固定して決定的にする。確率そのものはユニットテスト側で検証済み。
+for (let i = 0; i < 4; i++) {
+  if (i === 3) {
+    await evaljs(`(() => { window.__origRandom = Math.random; Math.random = () => 0; return true })()`)
+  }
+  await evaljs(`document.querySelector('#turnFab').click()`)
+  await sleep(900)
+  if (i === 3) {
+    await evaljs(`(() => { if (window.__origRandom) Math.random = window.__origRandom; return true })()`)
+  }
+  await evaljs(`(() => {
+    const m = document.getElementById('modal')
+    if (m && getComputedStyle(m).display !== 'none') {
+      const btn = m.querySelector('button, .close, .modal-close')
+      if (btn) btn.click(); else m.style.display = 'none'
+    }
+    return true
+  })()`)
+  await sleep(300)
+}
+const afterAttrition = await evaljs(`(() => {
+  const g = window.game
+  const snapshot = (g.financeHistory || []).slice(-1)[0] || {}
+  return { count: g.employees.length, attritionCost: snapshot.attritionCost }
+})()`)
+record('wave1-resignation-occurs',
+  afterAttrition.count < beforeAttrition.count && afterAttrition.attritionCost > 0,
+  JSON.stringify({ before: beforeAttrition.count, after: afterAttrition.count, attritionCost: afterAttrition.attritionCost }))
+await shot('09-after-resignation')
 
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {

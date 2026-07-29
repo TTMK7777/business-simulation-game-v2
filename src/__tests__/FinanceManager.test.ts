@@ -16,6 +16,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { calculateMonthlyRevenue, getLoan, repayLoan } from '../lib/managers/FinanceManager'
 import { getGame, overwriteGameState, cloneDefaults, resetGameState, normalizeGameState } from '../lib/store/gameStore'
+import { BALANCE_CONFIG } from '../lib/gameConfig'
+import { OFFICE_LEVELS } from '../lib/config/offices'
 import type { Employee, Product } from '../lib/types/index'
 
 beforeEach(() => {
@@ -275,5 +277,173 @@ describe('売上ドライバー分解 (revenueDrivers)', () => {
     const result = calculateMonthlyRevenue()
     const diff = Math.abs(result.revenueDrivers.total - result.revenue)
     expect(diff).toBeLessThanOrEqual(1)
+  })
+})
+
+// ============================================================
+// Wave 1-E: オフィス維持費（月次固定費）
+// ============================================================
+describe('calculateMonthlyRevenue: オフィス維持費（Wave 1-E）', () => {
+  it('officeLevel に応じた固定費が計上され、純利益から差し引かれる', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [],
+      marketShare: 0,
+      brandPower: 0,
+      difficulty: 'normal',
+      debt: 0,
+      money: 10_000_000,
+      officeLevel: 1,
+    })
+
+    const result = calculateMonthlyRevenue()
+
+    expect(result.fixedCost).toBe(OFFICE_LEVELS[1].monthlyMaintenance)
+    expect(result.profit).toBe(result.revenue - result.salaryTotal - result.interest - result.fixedCost)
+  })
+
+  it('オフィスの規模が上がるほど固定費が増える（損益分岐点が上がる）', () => {
+    const fixedCostAt = (officeLevel: number) => {
+      overwriteGameState({
+        ...cloneDefaults(),
+        products: [makeProduct()],
+        employees: [],
+        difficulty: 'normal',
+        debt: 0,
+        money: 50_000_000,
+        officeLevel,
+      })
+      return calculateMonthlyRevenue().fixedCost
+    }
+
+    expect(fixedCostAt(1)).toBeLessThan(fixedCostAt(3))
+    expect(fixedCostAt(3)).toBeLessThan(fixedCostAt(5))
+    expect(fixedCostAt(5)).toBe(OFFICE_LEVELS[5].monthlyMaintenance)
+  })
+
+  it('固定費は財務スナップショットにも記録される', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [],
+      money: 10_000_000,
+      officeLevel: 2,
+    })
+
+    calculateMonthlyRevenue()
+    const snapshot = getGame().financeHistory[0]
+
+    expect(snapshot.fixedCost).toBe(OFFICE_LEVELS[2].monthlyMaintenance)
+    expect(snapshot.profit).toBe(
+      snapshot.revenue - snapshot.salaryTotal - snapshot.interest - snapshot.fixedCost - snapshot.attritionCost
+    )
+  })
+
+  it('固定費で資金がマイナスになれば倒産する（売上ゼロ・現金僅少）', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [],
+      employees: [],
+      money: 10_000,
+      officeLevel: 1,
+      debt: 0,
+    })
+
+    const result = calculateMonthlyRevenue()
+
+    expect(result.isBankrupt).toBe(true)
+    expect(getGame().isBankrupt).toBe(true)
+  })
+})
+
+// ============================================================
+// Wave 1-B 連携: 再採用コストと労働力ドライバー
+// ============================================================
+describe('calculateMonthlyRevenue: 退職コストと労働力ドライバー（Wave 1-B）', () => {
+  it('引数で渡した再採用コストが P/L に計上される', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [],
+      money: 10_000_000,
+      officeLevel: 1,
+    })
+
+    const result = calculateMonthlyRevenue(600_000)
+
+    expect(result.attritionCost).toBe(600_000)
+    expect(result.profit).toBe(
+      result.revenue - result.salaryTotal - result.interest - result.fixedCost - 600_000
+    )
+    expect(getGame().financeHistory[0].attritionCost).toBe(600_000)
+  })
+
+  it('再採用コスト未指定なら 0（既存呼び出しの後方互換）', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [],
+      money: 10_000_000,
+    })
+
+    expect(calculateMonthlyRevenue().attritionCost).toBe(0)
+  })
+
+  it('基準モチベーションの従業員だけなら labor 係数は中立（既存バランスを動かさない）', () => {
+    const neutral = BALANCE_CONFIG.retention.neutralMotivation
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [makeEmployee({ id: 1, motivation: neutral })],
+      marketShare: 0,
+      brandPower: 0,
+      difficulty: 'normal',
+      money: 10_000_000,
+    })
+
+    const result = calculateMonthlyRevenue()
+    const workforce = result.revenueDrivers.contributions.find(c => c.key === 'workforce')
+
+    expect(workforce).toBeDefined()
+    expect(workforce!.amount).toBe(0)
+    expect(result.revenue).toBe(BASE_REVENUE)
+  })
+
+  it('モチベーション低下は売上ドライバーにマイナス寄与として現れる', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [makeEmployee({ id: 1, motivation: 20 })],
+      marketShare: 0,
+      brandPower: 0,
+      difficulty: 'normal',
+      money: 10_000_000,
+    })
+
+    const result = calculateMonthlyRevenue()
+    const workforce = result.revenueDrivers.contributions.find(c => c.key === 'workforce')!
+
+    expect(workforce.amount).toBeLessThan(0)
+    expect(result.revenue).toBeLessThan(BASE_REVENUE)
+    expect(Math.abs(result.revenueDrivers.total - result.revenue)).toBeLessThanOrEqual(1)
+  })
+
+  it('モチベーション上昇は売上ドライバーにプラス寄与として現れる', () => {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct()],
+      employees: [makeEmployee({ id: 1, motivation: 100 })],
+      marketShare: 0,
+      brandPower: 0,
+      difficulty: 'normal',
+      money: 10_000_000,
+    })
+
+    const result = calculateMonthlyRevenue()
+    const workforce = result.revenueDrivers.contributions.find(c => c.key === 'workforce')!
+
+    expect(workforce.amount).toBeGreaterThan(0)
+    expect(result.revenue).toBeGreaterThan(BASE_REVENUE)
   })
 })

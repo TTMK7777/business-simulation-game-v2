@@ -10,6 +10,7 @@ export const OFFICE_LEVELS: Record<number, OfficeLevelDef> = {
         emoji: '🏠',
         maxEmployees: 6,
         description: '小さなアパートの一室からスタート',
+        monthlyMaintenance: 100000,
         unlockConditions: { employees: 1, money: 0, marketShare: 0 }
     },
     2: {
@@ -17,6 +18,7 @@ export const OFFICE_LEVELS: Record<number, OfficeLevelDef> = {
         emoji: '☕',
         maxEmployees: 12,
         description: '共用オフィスで成長の兆し',
+        monthlyMaintenance: 250000,
         unlockConditions: { employees: 6, money: 1500000, marketShare: 3 }
     },
     3: {
@@ -24,6 +26,7 @@ export const OFFICE_LEVELS: Record<number, OfficeLevelDef> = {
         emoji: '🏢',
         maxEmployees: 24,
         description: '独立した小さなオフィス',
+        monthlyMaintenance: 600000,
         unlockConditions: { employees: 12, money: 4000000, marketShare: 6 }
     },
     4: {
@@ -31,6 +34,7 @@ export const OFFICE_LEVELS: Record<number, OfficeLevelDef> = {
         emoji: '🏛️',
         maxEmployees: 40,
         description: 'フロア全体を占める立派なオフィス',
+        monthlyMaintenance: 1500000,
         unlockConditions: { employees: 24, money: 9000000, marketShare: 12 }
     },
     5: {
@@ -38,6 +42,7 @@ export const OFFICE_LEVELS: Record<number, OfficeLevelDef> = {
         emoji: '🏰',
         maxEmployees: 70,
         description: '念願の自社ビル！業界のリーダーへ',
+        monthlyMaintenance: 3500000,
         unlockConditions: { employees: 40, money: 18000000, marketShare: 22 }
     }
 }

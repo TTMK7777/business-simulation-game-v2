@@ -113,11 +113,41 @@ export function buildDangerAdvisorMessage(cash: number, monthlyCost: number): Ad
     return {
         category: 'finance',
         sentiment: 'critical',
-        message: `資金が来月の人件費・利息(合計${Math.floor(monthlyCost / 10000)}万円)を下回りました。あと${Math.floor(shortfall / 10000)}万円不足しています。`,
+        message: `資金が来月の固定費(人件費・利息・オフィス維持費 合計${Math.floor(monthlyCost / 10000)}万円)を下回りました。あと${Math.floor(shortfall / 10000)}万円不足しています。`,
         suggestions: [
             '銀行融資を検討する',
             '不採算製品を整理する',
             '採用を一時見合わせる',
+        ],
+    }
+}
+
+// ============================================
+// Wave 1-B: 離職リスクの予兆 → アドバイザーカード
+// ============================================
+export interface AtRiskEmployeeLike {
+    name: string
+    motivation: number
+}
+
+/**
+ * 退職予備軍のうち最もモチベーションが低い1名を取り上げて警告メッセージを組み立てる。
+ * 予備軍が空なら null（＝カードを出さない）。
+ */
+export function buildRetentionAdvisorMessage(atRisk: AtRiskEmployeeLike[]): AdvisorMessage | null {
+    if (atRisk.length === 0) return null
+
+    const worst = atRisk.reduce((a, b) => (a.motivation <= b.motivation ? a : b))
+    const others = atRisk.length - 1
+
+    return {
+        category: 'hr',
+        sentiment: worst.motivation < 30 ? 'critical' : 'warning',
+        message: `${worst.name}のモチベーションが${Math.round(worst.motivation)}まで低下しています${others > 0 ? `（他${others}名も低下中）` : ''}。このままだと退職のおそれがあります。`,
+        suggestions: [
+            '研修を実施してモチベーションを回復する',
+            '製品数を絞って負荷（ストレス）を下げる',
+            '昇進で処遇に応える',
         ],
     }
 }
@@ -129,6 +159,10 @@ export interface MonthlySettlement {
     revenue: number
     salaryTotal: number
     interest: number
+    /** Wave 1-E: オフィス維持費（旧呼び出し互換のため任意） */
+    fixedCost?: number
+    /** Wave 1-B: 再採用コスト（旧呼び出し互換のため任意） */
+    attritionCost?: number
     profit: number
     cash: number
     debt: number
@@ -137,7 +171,7 @@ export interface MonthlySettlement {
 export function buildFinanceSummaryData(input: MonthlySettlement): FinanceData {
     return {
         revenue: input.revenue,
-        expenses: input.salaryTotal + input.interest,
+        expenses: input.salaryTotal + input.interest + (input.fixedCost ?? 0) + (input.attritionCost ?? 0),
         profit: input.profit,
         cash: input.cash,
         debt: input.debt,
