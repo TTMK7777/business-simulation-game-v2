@@ -106,7 +106,7 @@ export function showAchievementUnlocked(achievement: any): void {
     const game = getGame()
     const rarity = ACHIEVEMENT_RARITIES[achievement.rarity as keyof typeof ACHIEVEMENT_RARITIES]
     const rewardText = achievement.reward
-        ? `<div style="margin-top: 12px; font-size: 13px; color: #28a745;">\u{1F381} 報酬: ${
+        ? `<div style="margin-top: 12px; font-size: 13px; color: var(--color-success-text);">\u{1F381} 報酬: ${
             achievement.reward.type === 'money' ? `${(achievement.reward.value / 10000).toFixed(0)}万円` :
             achievement.reward.type === 'brandPower' ? `ブランド力+${achievement.reward.value}` :
             `モチベーション+${achievement.reward.value}`
@@ -272,7 +272,7 @@ export function showHiringForDepartment(departmentKey: string): void {
             <div style="margin-bottom: 16px; text-align: center; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 12px;">
                 <div style="font-size: 14px; color: #333; font-weight: 600;">\u{1F4BC} 3名の候補者から選んでください</div>
                 <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                    \u{1F4CB} 採用募集費: ${recruitmentCost / 10000}万円 <span style="color: #4caf50;">\u2713 支払済</span>
+                    \u{1F4CB} 採用募集費: ${recruitmentCost / 10000}万円 <span style="color: var(--color-success-text);">\u2713 支払済</span>
                 </div>
                 <div style="font-size: 11px; color: #999; margin-top: 4px;">
                     ※ 採用時に追加で給与3ヶ月分が必要です
@@ -329,7 +329,7 @@ export function restoreHiringModal(): void {
             <div style="margin-bottom: 16px; text-align: center; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 12px;">
                 <div style="font-size: 14px; color: #333; font-weight: 600;">\u{1F4BC} 3名の候補者から選んでください</div>
                 <div style="font-size: 12px; color: #666; margin-top: 6px;">
-                    \u{1F4CB} 採用募集費: ${recruitmentCost / 10000}万円 <span style="color: #4caf50;">\u2713 支払済</span>
+                    \u{1F4CB} 採用募集費: ${recruitmentCost / 10000}万円 <span style="color: var(--color-success-text);">\u2713 支払済</span>
                 </div>
                 <div style="font-size: 11px; color: #999; margin-top: 4px;">
                     ※ 採用時に追加で給与3ヶ月分が必要です
@@ -512,11 +512,11 @@ export function showPersonalityDetail(personalityKey: string, fromHiring: boolea
                 </div>
             ` : ''}
             <div style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 8px; text-align: left;">
-                <div style="font-weight: 600; font-size: 11px; color: #4caf50; margin-bottom: 4px;">\u2705 相性良い:</div>
+                <div style="font-weight: 600; font-size: 11px; color: var(--color-success-text); margin-bottom: 4px;">\u2705 相性良い:</div>
                 <div style="font-size: 12px;">${compatibleList}</div>
             </div>
             <div style="background: rgba(244, 67, 54, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 16px; text-align: left;">
-                <div style="font-weight: 600; font-size: 11px; color: #f44336; margin-bottom: 4px;">\u274C 相性悪い:</div>
+                <div style="font-weight: 600; font-size: 11px; color: var(--color-danger-text); margin-bottom: 4px;">\u274C 相性悪い:</div>
                 <div style="font-size: 12px;">${incompatibleList}</div>
             </div>
             <button class="btn-primary" onclick="${closeAction}" style="width: 100%;">
@@ -612,12 +612,12 @@ export function showEmployeeDetail(employee: any): void {
                 }).join('')}
             </div>
             ${personality.compatible ? `
-                <div style="font-size: 12px; color: #4caf50; margin-top: 8px;">
+                <div style="font-size: 12px; color: var(--color-success-text); margin-top: 8px;">
                     \u2705 相性良好: ${personality.compatible.map((k: string) => PERSONALITIES[k]?.name || k).join(', ')}
                 </div>
             ` : ''}
             ${personality.incompatible ? `
-                <div style="font-size: 12px; color: #f44336; margin-top: 4px;">
+                <div style="font-size: 12px; color: var(--color-danger-text); margin-top: 4px;">
                     \u274C 相性悪い: ${personality.incompatible.map((k: string) => PERSONALITIES[k]?.name || k).join(', ')}
                 </div>
             ` : ''}

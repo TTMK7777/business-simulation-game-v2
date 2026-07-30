@@ -31,3 +31,11 @@
 - 型チェック: `node ./node_modules/typescript/bin/tsc --noEmit` (npx は環境 deny のため不使用)
 - ビルド: `npm run build`
 - UI 変更は実ブラウザ検証必須 (Chrome headless + CDP。HTTP テスト緑だけでは不可)
+- 配色に触れたら: `node scripts/contrast-audit.mjs` (ダーク/ライト両テーマ・全パネルのコントラスト実測。違反0で exit 0)
+
+## 配色ルール
+- **色をハードコードしない**。`src/styles/main.css` の `:root` トークンを使う
+- **背景色と文字色は必ずペアで指定する**。片方だけ固定すると逆テーマで「白背景に白文字」になる
+  (2026-07-30 に競合企業カードで実際に発生。32要素が読めない状態だった)
+- サーフェス上の文字には `--color-brand-text` / `--color-success-text` / `--color-danger-text` /
+  `--color-warning-text` を使う。`--color-brand` 等は背景・ボーダー用で、文字に使うと AA を割る

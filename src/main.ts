@@ -252,7 +252,7 @@ const gameHTML = `
 
                 <button id="endTurnBtn" class="btn" data-requires-active="true" onclick="nextTurn()">⏭️ 次のターンへ</button>
                 <button class="btn" data-requires-active="true" onclick="saveGame()">💾 ゲーム保存</button>
-                <button class="btn" onclick="returnToMenu()" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: #333;">🏠 メニューに戻る</button>
+                <button class="btn" onclick="returnToMenu()" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--color-text-primary);">🏠 メニューに戻る</button>
                 <button class="btn" id="restartButton" onclick="restartGame()">🔄 ゲーム再スタート</button>
             </div>
 
@@ -304,7 +304,7 @@ const gameHTML = `
             <div id="departments" class="panel">
                 <h3>🏢 部署管理</h3>
                 <div style="margin-bottom: 20px; padding: 14px; background: rgba(102, 126, 234, 0.1); border-radius: 12px;">
-                    <div style="font-size: 13px; color: #666;">
+                    <div style="font-size: 13px; color: var(--color-text-secondary);">
                         📊 各部署の状況を確認し、効率的な人員配置を行いましょう
                     </div>
                 </div>
