@@ -104,6 +104,8 @@ import * as CEOManager from './managers/CEOManager'
 import { createDefaultCEOStatus } from './config/ceo'
 import { renderDocumentStack, renderStatusTab, renderEmployeesForDesk } from './ui/deskView'
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
+import { renderWeeklyEvent, renderWeeklyEventResult } from './ui/weeklyEvent'
+import * as WeeklyEventManager from './managers/WeeklyEventManager'
 import { renderVisitorResult } from './ui/visitorDialog'
 import { renderDirectivePanel } from './ui/ceoStatus'
 import type { CEOTrait, PolicyFocus, DocumentVerdict, Abilities } from './types/index'
@@ -607,6 +609,23 @@ function verdictDocument(docId: string, verdict: string) {
     renderActivePanel()
 }
 
+// ======= Wave 2-A: 週次ミニイベント =======
+// 概要タブのバナーからの復帰口。実績解除などのモーダルに上書きされても
+// state にイベントが残っている限りここから開き直せる
+function openWeeklyEvent() {
+    const event = game.currentWeeklyEvent
+    if (!event) return
+    showModal(`${event.emoji} 今週の出来事`, renderWeeklyEvent(event), true)
+}
+
+function resolveWeeklyEventAction(optionId: string) {
+    const resolution = WeeklyEventManager.resolveWeeklyEvent(optionId)
+    if (!resolution) return
+    showModal('📝 今週の結果', renderWeeklyEventResult(resolution), true)
+    updateDisplay()
+    renderActivePanel()
+}
+
 function respondToVisitor(eventId: string, responseId: string) {
     const result = VisitorManager.processResponse(game, eventId, responseId)
     if (!result) return
@@ -792,6 +811,8 @@ function selectCEOTrait(trait: string) {
 // ======= 社長モード =======
 ;(window as any).openDocument = openDocument
 ;(window as any).verdictDocument = verdictDocument
+;(window as any).openWeeklyEvent = openWeeklyEvent
+;(window as any).resolveWeeklyEventAction = resolveWeeklyEventAction
 ;(window as any).respondToVisitor = respondToVisitor
 ;(window as any).switchDeskTab = switchDeskTab
 ;(window as any).issueDirectiveAction = issueDirectiveAction

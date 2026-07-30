@@ -63,7 +63,9 @@ const defaultGameState: GameState = {
     scandalRisk: 0,
     isGameOver: false,
     gameOverReason: null as string | null,
-    _pendingCausalEffects: [] as any[]
+    _pendingCausalEffects: [] as any[],
+    // Wave 2-A: 週次ミニイベント（提示中の1件。週あたり最大1件）
+    currentWeeklyEvent: null as import('../types').WeeklyEventState | null
 }
 
 // ============================================
@@ -263,6 +265,8 @@ export function normalizeGameState(): void {
     if (typeof game.scandalRisk !== 'number') game.scandalRisk = 0
     if (typeof game.isGameOver !== 'boolean') game.isGameOver = false
     if (!Array.isArray(game._pendingCausalEffects)) game._pendingCausalEffects = []
+    // Wave 2-A: 旧セーブは currentWeeklyEvent を持たない（未提示扱い）
+    if (game.currentWeeklyEvent === undefined) game.currentWeeklyEvent = null
 }
 
 export function resetGameState(): void {

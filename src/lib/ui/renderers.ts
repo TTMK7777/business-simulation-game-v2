@@ -13,6 +13,7 @@ import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
 import { calculateTeamCompatibility } from '../managers/HRManager'
 import { getMonthlyFixedCost } from '../managers/FinanceManager'
+import { escapeHtml as escapeHtmlForUi } from './escape'
 import {
     ACHIEVEMENTS,
     ACHIEVEMENT_RARITIES,
@@ -533,6 +534,24 @@ export function updateDisplay(): void {
         forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
         forecastEl.style.color = forecast >= 0 ? '#4caf50' : '#f44336'
         forecastEl.style.fontWeight = '700'
+    }
+
+    // Wave 2-A: 未対応の週次ミニイベントがあれば概要タブに復帰口を出す。
+    // モーダルは実績解除などに上書きされうるため、state にイベントが残っている限り
+    // ここから開き直せるようにして「選択機会が黙って消える」のを防ぐ
+    const weeklyBannerEl = document.getElementById('weeklyEventBanner') as HTMLElement | null
+    if (weeklyBannerEl) {
+        const pending = game.currentWeeklyEvent
+        if (pending) {
+            weeklyBannerEl.innerHTML = `
+                <button class="weekly-event-banner" onclick="openWeeklyEvent()">
+                    <span class="weekly-event-banner-title">${escapeHtmlForUi(pending.emoji)} 今週の出来事: ${escapeHtmlForUi(pending.title)}</span>
+                    <span class="weekly-event-banner-cta">対応する →</span>
+                </button>
+            `
+        } else {
+            weeklyBannerEl.innerHTML = ''
+        }
     }
 
     // ターン送りFAB: 週表示 + 決算週 (第4週) の強調
