@@ -22,10 +22,20 @@
             --color-warning: #ff9800;
             --color-gold: #ffd700;
 
+            /* サーフェス上の「文字」として使う色。
+               ブランド色や状態色をそのまま文字に使うとコントラストが AA を割るため、
+               背景色用 (--color-brand 等) と文字用 (--color-*-text) を分ける。
+               値は WCAG AA (4.5:1) を満たすよう実測して決めた
+               (scripts/contrast-audit.mjs で検証)。 */
+            --color-brand-text: #5566d8;      /* 白背景で 4.91:1 */
+            --color-success-text: #2e7d32;    /* 白背景で 5.13:1 */
+            --color-danger-text: #c62828;     /* 白背景で 5.62:1 */
+            --color-warning-text: #a04a00;    /* 白背景で 6.04:1 */
+
             /* テキスト階層 */
             --color-text-primary: #333;
             --color-text-secondary: #666;
-            --color-text-tertiary: #888;
+            --color-text-tertiary: #6b6b6b;   /* 白背景で 5.34:1 (旧 #888 は 3.54 で AA 未達) */
 
             /* サーフェス（パネル・モーダル・カード背景） */
             --color-surface: #ffffff;
@@ -48,6 +58,10 @@
 
         @media (prefers-color-scheme: dark) {
             :root {
+                --color-brand-text: #8fa0f5;      /* ダーク面で 6.68:1 */
+                --color-success-text: #81c784;    /* ダーク面で 8.19:1 */
+                --color-danger-text: #ef9a9a;     /* ダーク面で 7.66:1 */
+                --color-warning-text: #ffb74d;    /* ダーク面で 9.52:1 */
                 --color-text-primary: #e8e8ec;
                 --color-text-secondary: #b0b0ba;
                 --color-text-tertiary: #8a8a96;
@@ -65,9 +79,13 @@
            OS 設定に追従し続け、data-theme="light" でも白文字のまま残る退行が起きる。 */
         :root[data-theme="light"] {
             color-scheme: light;
+            --color-brand-text: #5566d8;
+            --color-success-text: #2e7d32;
+            --color-danger-text: #c62828;
+            --color-warning-text: #a04a00;
             --color-text-primary: #333;
             --color-text-secondary: #666;
-            --color-text-tertiary: #888;
+            --color-text-tertiary: #6b6b6b;   /* 白背景で 5.34:1 (旧 #888 は 3.54 で AA 未達) */
             --color-surface: #ffffff;
             --color-surface-rgb: 255, 255, 255;
             --color-surface-alt: #f8f9fa;
@@ -78,6 +96,10 @@
 
         :root[data-theme="dark"] {
             color-scheme: dark;
+            --color-brand-text: #8fa0f5;
+            --color-success-text: #81c784;
+            --color-danger-text: #ef9a9a;
+            --color-warning-text: #ffb74d;
             --color-text-primary: #e8e8ec;
             --color-text-secondary: #b0b0ba;
             --color-text-tertiary: #8a8a96;
@@ -662,7 +684,7 @@
 
         .btn-secondary {
             background: rgba(var(--color-surface-rgb), 0.9);
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             border: 1px solid rgba(var(--color-brand-rgb), 0.3);
             box-shadow: 0 6px 16px rgba(var(--color-brand-rgb), 0.2);
         }
@@ -757,7 +779,7 @@
 
         .department-badge {
             background: rgba(var(--color-brand-rgb), 0.15);
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             border: 1px solid rgba(var(--color-brand-rgb), 0.3);
         }
 
@@ -922,7 +944,7 @@
 
         .department-badge {
             background: rgba(var(--color-brand-rgb), 0.15);
-            color: var(--color-brand);
+            color: var(--color-brand-text);
         }
 
         .position-badge {
@@ -1080,7 +1102,7 @@
 
         .empty {
             text-align: center;
-            color: var(--color-text-tertiary);
+            color: var(--color-text-secondary);
             padding: 50px 20px;
             font-size: 14px;
         }
@@ -1160,7 +1182,7 @@
         .chart-title {
             font-size: 14px;
             font-weight: 600;
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             margin-bottom: 12px;
         }
 
@@ -1262,7 +1284,7 @@
         .office-name {
             font-size: 20px;
             font-weight: bold;
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             margin: 12px 0 8px 0;
         }
 
@@ -1303,7 +1325,7 @@
         }
 
         .office-stat strong {
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             font-size: 16px;
             display: block;
             margin-top: 4px;
@@ -1353,7 +1375,7 @@
         .timeline-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             margin-bottom: 16px;
             display: flex;
             align-items: center;
@@ -1388,7 +1410,7 @@
 
         .timeline-turn {
             font-size: 11px;
-            color: var(--color-text-tertiary);
+            color: var(--color-text-secondary);
             font-weight: 600;
             margin-bottom: 4px;
         }
@@ -1500,7 +1522,7 @@
 
         .candidate-personality {
             font-size: 12px;
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             font-weight: 600;
             background: rgba(var(--color-brand-rgb), 0.1);
             padding: 4px 12px;
@@ -1658,7 +1680,7 @@
 
         .detail-section h4 {
             font-size: 13px;
-            color: var(--color-brand);
+            color: var(--color-brand-text);
             margin-bottom: 10px;
         }
 
@@ -2327,7 +2349,7 @@
 .difficulty-money {
     font-size: 14px;
     font-weight: bold;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     margin-top: 4px;
 }
 
@@ -2399,11 +2421,13 @@
     margin-bottom: 12px;
 }
 
+/* 薄いブランド背景の上ではブランド文字色が AA を割る (実測 4.40)。
+   背景を無彩色にして本文色で見せる */
 .achievement-progress {
     font-size: 13px;
     font-weight: 600;
-    color: var(--color-brand);
-    background: rgba(var(--color-brand-rgb), 0.1);
+    color: var(--color-text-primary);
+    background: var(--color-surface-alt);
     padding: 4px 10px;
     border-radius: 12px;
 }
@@ -2723,7 +2747,7 @@
 
 .current-indicator {
     font-size: 10px;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     margin-top: 2px;
 }
 
@@ -2742,7 +2766,7 @@
     padding: 12px 16px;
     border-radius: 12px;
     font-size: 14px;
-    color: #555;
+    color: var(--color-text-secondary);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -2789,7 +2813,7 @@
 }
 
 .condition-label .complete {
-    color: #28a745;
+    color: var(--color-success-text);
     font-weight: 600;
 }
 
@@ -2891,7 +2915,7 @@
 }
 
 .capacity-dot.filled {
-    color: var(--color-brand);
+    color: var(--color-brand-text);
 }
 
 .capacity-text {
@@ -3355,7 +3379,7 @@
 .theory-detail-label {
     font-size: 12px;
     font-weight: bold;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     margin-bottom: 6px;
 }
 
@@ -3490,7 +3514,7 @@
 
 .verdict-theory-cta {
     font-size: 11px;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     font-weight: bold;
     margin-top: 6px;
 }
@@ -3503,7 +3527,7 @@
     display: inline-block;
     padding: 3px 10px;
     background: rgba(var(--color-brand-rgb), 0.12);
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     font-size: 11px;
     font-weight: bold;
     border-radius: 10px;
@@ -3563,7 +3587,7 @@
 .weekly-event-option-impact {
     font-size: 11px;
     line-height: 1.4;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     font-weight: 600;
 }
 
@@ -3621,7 +3645,7 @@
     flex-shrink: 0;
     font-size: 12px;
     font-weight: bold;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
 }
 
 /* ============================================
@@ -3809,7 +3833,7 @@
     padding: 1px 7px;
     font-size: 10px;
     font-weight: bold;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     background: rgba(var(--color-brand-rgb), 0.14);
     border-radius: 9px;
 }
@@ -3824,7 +3848,7 @@
 .segment-option-stats {
     font-size: 11px;
     font-weight: 600;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
 }
 
 /* ============================================
@@ -3838,7 +3862,7 @@
 .ppm-title {
     margin: 0 0 6px;
     font-size: 14px;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
 }
 
 .ppm-lead {
@@ -3914,13 +3938,15 @@
     color: var(--color-text-primary);
 }
 
+/* 薄いブランド色の上にブランド文字色を載せると AA を割る (実測 3.73)。
+   背景を無彩色にして文字色で情報を持たせる */
 .ppm-cell-count {
     margin-left: auto;
     padding: 0 6px;
     font-size: 10px;
     font-weight: bold;
-    color: var(--color-brand);
-    background: rgba(var(--color-brand-rgb), 0.16);
+    color: var(--color-text-primary);
+    background: var(--color-surface);
     border-radius: 8px;
 }
 
@@ -3954,6 +3980,6 @@
 
 .ppm-item-stats {
     font-size: 9px;
-    color: var(--color-brand);
+    color: var(--color-brand-text);
     font-weight: 600;
 }

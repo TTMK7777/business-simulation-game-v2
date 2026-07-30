@@ -84,7 +84,7 @@ export function renderAchievements(): void {
                     </div>
                 `
             }) : litHtml`
-                <div style="color: #999; font-size: 12px; text-align: center; width: 100%;">
+                <div style="color: var(--color-text-secondary); font-size: 12px; text-align: center; width: 100%;">
                     まだ実績がありません
                 </div>
             `}
@@ -120,7 +120,7 @@ export function showAllAchievements(): void {
     let html = `
         <div style="margin-bottom: 16px; text-align: center;">
             <div style="font-size: 24px; margin-bottom: 8px;">🏆 実績コレクション</div>
-            <div style="font-size: 14px; color: #666;">
+            <div style="font-size: 14px; color: var(--color-text-secondary);">
                 解除済み: <strong>${progress.unlocked}</strong> / ${progress.total}
                 (<strong>${progress.percentage}%</strong>)
             </div>
@@ -150,7 +150,7 @@ export function showAllAchievements(): void {
                                         <div style="font-size: 11px; color: ${ach.rarity.color};">${ach.rarity.name}</div>
                                     </div>
                                 </div>
-                                <div style="font-size: 11px; color: #666; margin-top: 6px;">
+                                <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 6px;">
                                     ${ach.unlocked ? ach.description : (ach.hidden ? '???' : ach.description)}
                                 </div>
                             </div>
@@ -536,7 +536,7 @@ export function updateDisplay(): void {
     if (forecastEl) {
         const forecast = game.monthlyRevenue - salaryTotalForWarn - interestForWarn - fixedCostForWarn
         forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
-        forecastEl.style.color = forecast >= 0 ? '#4caf50' : '#f44336'
+        forecastEl.style.color = forecast >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)'
         forecastEl.style.fontWeight = '700'
     }
 
@@ -650,7 +650,7 @@ export function renderEmployees(): void {
             <div class="info-box" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span style="font-weight: 600;">🤝 チーム相性</span>
-                    <span style="font-weight: bold; color: ${teamCompatibility >= 1.0 ? '#4caf50' : '#ff9800'};">
+                    <span style="font-weight: bold; color: ${teamCompatibility >= 1.0 ? 'var(--color-success-text)' : 'var(--color-warning-text)'};">
                         ${(teamCompatibility * 100).toFixed(0)}%
                     </span>
                 </div>
@@ -677,7 +677,7 @@ export function renderEmployees(): void {
                                 const trait = SUB_TRAITS[traitKey]
                                 if (!trait) return nothing
                                 return litHtml`<span style="background: ${trait.negative ? 'rgba(244, 67, 54, 0.15)' : 'rgba(76, 175, 80, 0.15)'};
-                                               color: ${trait.negative ? '#f44336' : '#4caf50'};
+                                               color: ${trait.negative ? 'var(--color-danger-text)' : 'var(--color-success-text)'};
                                                padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
                                     ${trait.emoji} ${trait.name}
                                 </span>`
@@ -687,7 +687,7 @@ export function renderEmployees(): void {
                     ${emp.hiddenTraitRevealed ? litHtml`
                         <div style="margin: 8px 0;">
                             <span style="background: linear-gradient(135deg, #ffd700, #ffed4e);
-                                   padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: #333;">
+                                   padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: var(--color-text-primary);">
                                 ✨ ${HIDDEN_TRAITS[emp.hiddenTrait].emoji} ${HIDDEN_TRAITS[emp.hiddenTrait].name}
                             </span>
                         </div>
@@ -718,7 +718,7 @@ export function renderEmployees(): void {
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top: 8px; color: #667eea; font-weight: 600;">💰 月給: ${Math.floor(emp.salary / 10000)}万円</div>
+                    <div style="margin-top: 8px; color: var(--color-brand-text); font-weight: 600;">💰 月給: ${Math.floor(emp.salary / 10000)}万円</div>
                 </div>
             `
         })}
@@ -762,22 +762,24 @@ export function renderMarket(): void {
     const difficultyConfig = DIFFICULTY_SETTINGS[(game.difficulty || 'normal') as keyof typeof DIFFICULTY_SETTINGS]
 
     const template = litHtml`
-        <div style="background: linear-gradient(135deg, #f8f9ff, #e8ecff); padding: 12px; border-radius: 12px; margin-bottom: 16px;">
+        <div style="background: var(--color-surface-alt); padding: 12px; border-radius: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                 <span style="font-size: 20px;">${difficultyConfig.emoji}</span>
-                <span style="font-weight: bold; color: #667eea;">難易度: ${difficultyConfig.name}</span>
+                <span style="font-weight: bold; color: var(--color-brand-text);">難易度: ${difficultyConfig.name}</span>
             </div>
-            <div style="font-size: 12px; color: #666;">${difficultyConfig.description}</div>
+            <div style="font-size: 12px; color: var(--color-text-secondary);">${difficultyConfig.description}</div>
         </div>
 
-        <h4 style="margin-top: 20px; margin-bottom: 12px; color: #667eea;">🏆 競合企業</h4>
+        <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--color-brand-text);">🏆 競合企業</h4>
         ${competitors.map(comp => {
             const share = comp.share ?? comp.initialShare
             const strategyConfig = COMPETITOR_STRATEGIES[comp.strategy]
-            const alertColor = comp.alertLevel > 70 ? '#f44336' : comp.alertLevel > 40 ? '#ff9800' : '#4caf50'
+            // 白文字を載せるバッジ背景。#f44336/#ff9800/#4caf50 は白文字とのコントラストが
+            // AA (4.5:1) を割るため、濃いトーンを使う (scripts/contrast-audit.mjs で実測)
+            const alertColor = comp.alertLevel > 70 ? '#c62828' : comp.alertLevel > 40 ? '#a04a00' : '#2e7d32'
 
             return litHtml`
-            <div class="competitor" style="border-left: 4px solid ${comp.color}; padding: 12px; margin-bottom: 16px; background: #f9f9f9; border-radius: 8px;">
+            <div class="competitor" style="border-left: 4px solid ${comp.color}; padding: 12px; margin-bottom: 16px; background: var(--color-surface-alt); color: var(--color-text-primary); border-radius: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <strong style="font-size: 15px;">🏢 ${comp.name}</strong>
                     <span style="font-size: 12px; background: ${alertColor}; color: white; padding: 2px 8px; border-radius: 10px;">
@@ -788,7 +790,7 @@ export function renderMarket(): void {
                     <span style="font-size: 20px;">${comp.ceo.emoji}</span>
                     <div>
                         <div style="font-size: 13px; font-weight: bold;">${comp.ceo.name}</div>
-                        <div style="font-size: 11px; color: #666; font-style: italic;">"${comp.ceo.quote}"</div>
+                        <div style="font-size: 11px; color: var(--color-text-secondary); font-style: italic;">"${comp.ceo.quote}"</div>
                     </div>
                 </div>
                 <div style="margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
@@ -798,7 +800,7 @@ export function renderMarket(): void {
                     <div>🎯 ${comp.speciality}</div>
                 </div>
                 ${comp.lastAction ? litHtml`
-                    <div style="margin-top: 8px; font-size: 12px; color: #e74c3c; background: #fff5f5; padding: 6px 10px; border-radius: 6px;">
+                    <div style="margin-top: 8px; font-size: 12px; color: var(--color-danger-text); background: var(--color-surface-alt); padding: 6px 10px; border-radius: 6px;">
                         ⚠️ 最近の動き: ${COMPETITOR_ACTIONS[comp.lastAction as keyof typeof COMPETITOR_ACTIONS]?.name || comp.lastAction}
                     </div>
                 ` : nothing}
@@ -806,8 +808,8 @@ export function renderMarket(): void {
         `})}
 
         ${game.competitorAttacks && game.competitorAttacks.length > 0 ? litHtml`
-            <h4 style="margin-top: 20px; margin-bottom: 12px; color: #e74c3c;">⚔️ 最近の競合動向</h4>
-            <div style="background: #fff5f5; padding: 12px; border-radius: 8px; font-size: 13px;">
+            <h4 style="margin-top: 20px; margin-bottom: 12px; color: var(--color-danger-text);">⚔️ 最近の競合動向</h4>
+            <div style="background: var(--color-surface-alt); color: var(--color-text-primary); padding: 12px; border-radius: 8px; font-size: 13px;">
                 ${game.competitorAttacks.map((attack: string) => litHtml`<div style="margin-bottom: 4px;">• ${attack}</div>`)}
             </div>
         ` : nothing}
@@ -850,13 +852,13 @@ export function renderFinance(): void {
             </div>
             <div style="border-top: 2px solid #667eea; padding-top: 8px; margin-top: 8px;">
                 <span>💰 純利益</span>
-                <strong style="color: ${netProfitPreview >= 0 ? '#4caf50' : '#f44336'}">
+                <strong style="color: ${netProfitPreview >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)'}">
                     ${Math.floor(netProfitPreview / 10000)}万円
                 </strong>
             </div>
             ${game.debt ? litHtml`<div style="margin-top: 8px;">
                 <span>🏦 借金残高</span>
-                <strong style="color: #ff9800;">${Math.floor(game.debt / 10000)}万円</strong>
+                <strong style="color: var(--color-warning-text);">${Math.floor(game.debt / 10000)}万円</strong>
             </div>` : nothing}
             ${interestPreview ? litHtml`<div>
                 <span>📈 次月利息見込</span>
@@ -966,14 +968,14 @@ export function renderDepartments(): void {
                 const avgAbility = empCount > 0 ? Math.round(stats.totalAbility / empCount) : 0
 
                 const efficiency = Math.min(100, avgAbility * 1.2)
-                const efficiencyColor = efficiency >= 80 ? '#4caf50' : efficiency >= 50 ? '#ff9800' : '#f44336'
+                const efficiencyColor = efficiency >= 80 ? 'var(--color-success-text)' : efficiency >= 50 ? 'var(--color-warning-text)' : 'var(--color-danger-text)'
 
                 return litHtml`
                     <div class="department-card">
                         <div class="department-card-header">
                             <div style="font-size: 32px; margin-bottom: 8px;">${dept.emoji}</div>
-                            <div style="font-size: 18px; font-weight: 700; color: #333;">${dept.name}</div>
-                            <div style="font-size: 12px; color: #999; margin-top: 4px;">${dept.description}</div>
+                            <div style="font-size: 18px; font-weight: 700; color: var(--color-text-primary);">${dept.name}</div>
+                            <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 4px;">${dept.description}</div>
                         </div>
 
                         <div class="department-stats">
@@ -988,23 +990,23 @@ export function renderDepartments(): void {
                         </div>
 
                         <div class="department-manager">
-                            <div style="font-size: 12px; font-weight: 600; color: #667eea; margin-bottom: 6px;">👔 責任者</div>
+                            <div style="font-size: 12px; font-weight: 600; color: var(--color-brand-text); margin-bottom: 6px;">👔 責任者</div>
                             ${stats.manager ? litHtml`
                                 <div style="display: flex; align-items: center; gap: 8px;">
                                     <span style="font-size: 20px;">${PERSONALITIES[stats.manager.personalityKey]?.emoji || '👤'}</span>
                                     <div>
                                         <div style="font-size: 13px; font-weight: 600;">${stats.manager.name}</div>
-                                        <div style="font-size: 11px; color: #999;">
+                                        <div style="font-size: 11px; color: var(--color-text-secondary);">
                                             ${POSITIONS[stats.manager.position]?.emoji || '👤'} ${POSITIONS[stats.manager.position]?.name || 'スタッフ'}
                                         </div>
                                     </div>
                                 </div>
-                            ` : litHtml`<div style="font-size: 12px; color: #999;">未配置</div>`}
+                            ` : litHtml`<div style="font-size: 12px; color: var(--color-text-secondary);">未配置</div>`}
                         </div>
 
                         <div class="department-efficiency">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <span style="font-size: 12px; font-weight: 600; color: #667eea;">📊 効率性</span>
+                                <span style="font-size: 12px; font-weight: 600; color: var(--color-brand-text);">📊 効率性</span>
                                 <span style="font-size: 14px; font-weight: 700; color: ${efficiencyColor};">${Math.round(efficiency)}%</span>
                             </div>
                             <div style="background: rgba(0,0,0,0.05); height: 8px; border-radius: 4px; overflow: hidden;">
@@ -1015,14 +1017,14 @@ export function renderDepartments(): void {
 
                         ${empCount > 0 ? litHtml`
                             <div class="department-employees">
-                                <div style="font-size: 11px; color: #999; margin-bottom: 6px;">所属メンバー</div>
+                                <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px;">所属メンバー</div>
                                 <div style="display: flex; flex-wrap: wrap; gap: 4px;">
                                     ${stats.employees.slice(0, 8).map((emp: any) =>
                                         litHtml`<span style="font-size: 16px;" title="${emp.name}">
                                             ${PERSONALITIES[emp.personalityKey]?.emoji || '👤'}
                                         </span>`
                                     )}
-                                    ${empCount > 8 ? litHtml`<span style="font-size: 11px; color: #999; align-self: center;">+${empCount - 8}</span>` : nothing}
+                                    ${empCount > 8 ? litHtml`<span style="font-size: 11px; color: var(--color-text-secondary); align-self: center;">+${empCount - 8}</span>` : nothing}
                                 </div>
                             </div>
                         ` : nothing}
@@ -1064,7 +1066,7 @@ export function renderCertifications(): void {
             <div class="certification-empty-state">
                 <div class="empty-icon">🎓</div>
                 <h3>まだ資格保有者がいません</h3>
-                <p style="color: #666; font-size: 13px; line-height: 1.7; margin: 12px 0 4px;">
+                <p style="color: var(--color-text-secondary); font-size: 13px; line-height: 1.7; margin: 12px 0 4px;">
                     採用活動では約5%の確率で資格を持つ候補者が現れます。<br>
                     資格保有者は能力が高く、会社の成長を加速させます。
                 </p>
@@ -1081,16 +1083,16 @@ export function renderCertifications(): void {
                                 <span class="icon-badge">👤</span>
                                 ${emp.name}
                             </div>
-                            <span style="font-size: 11px; color: #999;">タップで詳細</span>
+                            <span style="font-size: 11px; color: var(--color-text-secondary);">タップで詳細</span>
                         </div>
                         ${unsafeHTML(renderQualificationBadge(emp.qualification))}
-                        <div style="font-size: 12px; color: #666; margin-top: 6px;">
+                        <div style="font-size: 12px; color: var(--color-text-secondary); margin-top: 6px;">
                             ${QUALIFICATIONS_30[emp.qualification]?.description || ''}
                         </div>
                     </div>
                 `)}
             </div>
-            <div style="margin-top: 16px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 12px; font-size: 12px; color: #666;">
+            <div style="margin-top: 16px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 12px; font-size: 12px; color: var(--color-text-secondary);">
                 💡 資格は採用時に保有している場合があります。高能力の候補者ほど上位資格を持ちやすくなります。
             </div>
         `}

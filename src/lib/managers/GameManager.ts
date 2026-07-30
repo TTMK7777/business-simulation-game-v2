@@ -556,7 +556,7 @@ export function nextTurn(): void {
         if (attritionCost > 0) {
             summaryLines.push(`🚪 再採用コスト: ${Math.floor(attritionCost / 10000)}万円`)
         }
-        const profitColor = profit >= 0 ? '#4caf50' : '#f44336'
+        const profitColor = profit >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)'
         summaryLines.push(`<div style="margin-top: 8px; padding: 12px; background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
             💰 最終利益: <strong style="color: ${profitColor}">${Math.floor(profit / 10000)}万円</strong>
         </div>`)
