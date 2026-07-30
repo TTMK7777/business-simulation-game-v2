@@ -14,6 +14,8 @@ import { OFFICE_LEVELS } from '../config/offices'
 import { calculateTeamCompatibility } from '../managers/HRManager'
 import { getMonthlyFixedCost } from '../managers/FinanceManager'
 import { escapeHtml as escapeHtmlForUi } from './escape'
+import { getScenario } from '../config/scenarios'
+import { getSurvivedMonths } from '../managers/ScenarioManager'
 import {
     ACHIEVEMENTS,
     ACHIEVEMENT_RARITIES,
@@ -534,6 +536,33 @@ export function updateDisplay(): void {
         forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
         forecastEl.style.color = forecast >= 0 ? '#4caf50' : '#f44336'
         forecastEl.style.fontWeight = '700'
+    }
+
+    // Wave 3-D: シナリオ中は残り月数を常時表示する (期限があることを忘れさせない)
+    const scenarioEl = document.getElementById('scenarioProgress') as HTMLElement | null
+    if (scenarioEl) {
+        const scenario = getScenario(game.scenarioId)
+        if (scenario && !game.scenarioResult) {
+            const survived = getSurvivedMonths(game)
+            const remaining = Math.max(0, scenario.survivalMonths - survived)
+            scenarioEl.innerHTML = `
+                <div class="scenario-progress">
+                    <span class="scenario-progress-label">${escapeHtmlForUi(scenario.emoji)} ${escapeHtmlForUi(scenario.name)}</span>
+                    <span class="scenario-progress-value">残り ${remaining}ヶ月</span>
+                </div>
+            `
+        } else if (scenario && game.scenarioResult) {
+            // 決着済み: 結果画面への復帰口。他のモーダルに上書きされても失われない
+            const isClear = game.scenarioResult === 'clear'
+            scenarioEl.innerHTML = `
+                <button class="scenario-progress" onclick="openScenarioResult()" style="width:100%;cursor:pointer;">
+                    <span class="scenario-progress-label">${isClear ? '🎉' : '😔'} ${escapeHtmlForUi(scenario.name)} ${isClear ? 'クリア' : '終了'}</span>
+                    <span class="scenario-progress-value">結果を見る →</span>
+                </button>
+            `
+        } else {
+            scenarioEl.innerHTML = ''
+        }
     }
 
     // Wave 2-A: 未対応の週次ミニイベントがあれば概要タブに復帰口を出す。

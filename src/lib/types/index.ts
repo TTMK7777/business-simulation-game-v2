@@ -205,6 +205,31 @@ export interface GameState {
     // ======= Wave 2-A: 週次ミニイベント =======
     /** 今週提示中のミニイベント（週あたり最大1件。未提示・解決済みは null） */
     currentWeeklyEvent: WeeklyEventState | null
+    // ======= Wave 3-D: シナリオ =======
+    /** プレイ中のシナリオ id（config/scenarios.ts）。サンドボックスは null */
+    scenarioId: string | null
+    /** シナリオ開始時点の年月（生存month数の起点） */
+    scenarioStartYear: number
+    scenarioStartMonth: number
+    /** 決着（クリア/ゲームオーバー）。決着済みなら再判定しない */
+    scenarioResult: ScenarioResult | null
+}
+
+export type ScenarioResult = 'clear' | 'gameover'
+
+/** 事後講評（バックログ「経営を理論で振り返る」の v1） */
+export interface ScenarioDebrief {
+    result: ScenarioResult
+    scenarioName: string
+    /** 生き延びた月数 */
+    survivedMonths: number
+    requiredMonths: number
+    /** 主要指標サマリ */
+    metrics: Array<{ label: string; value: string }>
+    /** このプレイで体験した経営理論 */
+    theories: Array<{ emoji: string; name: string; summary: string }>
+    /** 講評の本文（数字から導いた一言） */
+    comment: string
 }
 
 // ============================================
