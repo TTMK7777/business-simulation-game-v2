@@ -6,6 +6,7 @@ import { GAME_CONSTANTS, BALANCE_CONFIG, debugLog } from '../gameConfig'
 import { SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from '../config/skills'
 import { OFFICE_LEVELS } from '../config/offices'
 import { calculateWorkforceMultiplier } from './RetentionManager'
+import { getSegmentSalesMultiplier } from './SegmentManager'
 import type { FinanceSnapshot, RevenueDriverBreakdown } from '../types'
 
 /** financeHistory の最大保持件数（5年分の月次決算） */
@@ -137,6 +138,7 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
     let driverAfterShare = 0
     let driverAfterBrand = 0
     let driverAfterWorkforce = 0
+    let driverAfterSegment = 0
     let driverAfterDifficulty = 0
 
     // Wave 1-B: 平均実効モチベーション（inconsistent の performanceMultiplier 込み）を売上に反映する。
@@ -166,6 +168,10 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
         // Wave 1-B: 労働力（平均実効モチベーション）
         salesMultiplier *= workforceMultiplier
 
+        // Phase 3: 市場セグメント（市場規模 × そのセグメントで取れているシェア）
+        const segmentMultiplier = getSegmentSalesMultiplier(game, product)
+        salesMultiplier *= segmentMultiplier
+
         // 難易度調整
         salesMultiplier *= difficultyMultiplier.revenueMultiplier
 
@@ -187,6 +193,7 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
         driverAfterShare += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier
         driverAfterBrand += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier
         driverAfterWorkforce += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier * workforceMultiplier
+        driverAfterSegment += preMultiplier * charismaMultiplier * skillMultiplier * shareMultiplier * brandMultiplier * workforceMultiplier * segmentMultiplier
         driverAfterDifficulty += preMultiplier * salesMultiplier
 
         debugLog('balance', `製品売上計算: ${product.name}`, {
@@ -205,7 +212,8 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
             { key: 'marketShare', label: '市場シェアボーナス', amount: Math.round(driverAfterShare - driverAfterSkill) },
             { key: 'brandPower', label: 'ブランド力ボーナス', amount: Math.round(driverAfterBrand - driverAfterShare) },
             { key: 'workforce', label: '社員のモチベーション', amount: Math.round(driverAfterWorkforce - driverAfterBrand) },
-            { key: 'difficulty', label: '難易度調整', amount: Math.round(driverAfterDifficulty - driverAfterWorkforce) }
+            { key: 'segment', label: '市場セグメント', amount: Math.round(driverAfterSegment - driverAfterWorkforce) },
+            { key: 'difficulty', label: '難易度調整', amount: Math.round(driverAfterDifficulty - driverAfterSegment) }
         ],
         total: Math.round(driverAfterDifficulty)
     }
