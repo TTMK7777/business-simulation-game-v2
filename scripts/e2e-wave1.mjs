@@ -601,6 +601,74 @@ record('phase3-ppm-quadrant-shifts-over-time',
   ppmMatured.cowItems === 1 && ppmMatured.starItems === 0,
   JSON.stringify(ppmMatured))
 
+// --- 7.9 Phase 3 Wave 3: PPM から撤退できる ---
+await evaljs(`(() => {
+  const g = window.game
+  g.year = 2025; g.month = 1
+  g.segmentShares = { enterprise: 0, smb: 0, consumer: 0.1, ai: 20 }
+  g.products = [
+    { id: 501, name: 'PPM花形', quality: 60, sales: 0, segmentId: 'ai' },
+    { id: 502, name: 'PPM問題児', quality: 40, sales: 0, segmentId: 'consumer' }
+  ]
+  g.employees.forEach(e => { e.department = 'development'; e.stress = 60 })
+  window.showPanel(document.querySelector('button[data-panel="market"]'), 'market')
+  return true
+})()`)
+await sleep(700)
+const retireUi = await evaljs(`(() => {
+  const btns = [...document.querySelectorAll('.ppm-item-retire')]
+  return {
+    count: btns.length,
+    visible: btns.length > 0 && btns[0].getBoundingClientRect().height > 0 && !!btns[0].offsetParent
+  }
+})()`)
+record('phase3-retire-button-present',
+  retireUi.count === 2 && retireUi.visible, JSON.stringify(retireUi))
+
+// 問題児(consumer)を撤退 → 確認モーダル → 実行
+await evaljs(`(() => {
+  const items = [...document.querySelectorAll('.ppm-item')]
+  const target = items.find(i => (i.textContent || '').includes('PPM問題児'))
+  target?.querySelector('.ppm-item-retire')?.click()
+  return true
+})()`)
+await sleep(600)
+const confirmShown = await evaljs(`(() => {
+  const el = document.querySelector('.retire-confirm')
+  return {
+    shown: !!el && el.getBoundingClientRect().height > 0 && !!el.offsetParent,
+    hasWarning: !!document.querySelector('.retire-warning')
+  }
+})()`)
+record('phase3-retire-confirm-shown', confirmShown.shown && confirmShown.hasWarning, JSON.stringify(confirmShown))
+
+const stressBefore = await evaljs(`window.game.employees[0].stress`)
+await evaljs(`document.querySelector('.retire-confirm-btn')?.click()`)
+await sleep(700)
+const retired = await evaljs(`(() => {
+  const g = window.game
+  return {
+    products: g.products.map(p => p.name),
+    stress: g.employees[0].stress,
+    resultShown: !!document.querySelector('.retire-result')
+  }
+})()`)
+record('phase3-retire-applied',
+  retired.products.length === 1 && retired.products[0] === 'PPM花形' &&
+  retired.stress < stressBefore && retired.resultShown,
+  JSON.stringify({ ...retired, stressBefore }))
+await shot('16-after-retire')
+
+// 撤退したセグメントのシェアは月次で減衰する
+await evaljs(`(() => { window.closeModal?.(); window.game.week = 4; return true })()`)
+const consumerBefore = await evaljs(`window.game.segmentShares.consumer`)
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1500)
+await evaljs(`(() => { window.closeModal?.(); return true })()`)
+const decayed = await evaljs(`window.game.segmentShares.consumer`)
+record('phase3-retired-segment-decays',
+  decayed < consumerBefore, JSON.stringify({ before: consumerBefore, after: decayed }))
+
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {
   const clickToggle = `(() => {

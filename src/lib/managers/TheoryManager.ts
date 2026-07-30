@@ -2,6 +2,7 @@
 // AchievementManager と同型のパターン: check → 新規解禁分を返し、UI 通知は呼び出し元が行う
 
 import { getGame } from '../store/gameStore'
+import { MARKET_SEGMENTS, DEFAULT_SEGMENT_ID } from '../config/marketSegments'
 import {
     THEORY_LIST, THEORIES,
     DOCUMENT_NATURE_THEORY_RULES, DOCUMENT_CATEGORY_THEORY_RULES, INVESTIGATED_THEORY_RULE,
@@ -40,6 +41,16 @@ export function checkTheoryCondition(condition: TheoryCondition): boolean {
                 (sum: number, p: any) => sum + (Number(p.sales) || 0), 0)
             return total >= condition.value
         }
+        case 'segments': {
+            // Phase 3: 製品が展開されている異なる市場セグメントの数
+            const ids = new Set(
+                game.products.map((p: any) => {
+                    const id = p.segmentId
+                    return id && MARKET_SEGMENTS[id] ? id : DEFAULT_SEGMENT_ID
+                })
+            )
+            return ids.size >= condition.value
+        }
         case 'event':
             // イベント経路 (CEO 決裁の理論タグ等) からのみ解禁される。
             // 状態評価の checkTheories では常に false
@@ -67,7 +78,10 @@ export function checkTheories(): TheoryDef[] {
         if (game.unlockedTheories.includes(theory.id)) {
             return
         }
-        if (checkTheoryCondition(theory.condition)) {
+        // alsoUnlockIf は「追加ルート」。既存条件を満たさなくても解禁されうるが、
+        // 既存条件だけで解禁されていた挙動は一切変わらない
+        if (checkTheoryCondition(theory.condition) ||
+            (theory.alsoUnlockIf ? checkTheoryCondition(theory.alsoUnlockIf) : false)) {
             game.unlockedTheories.push(theory.id)
             newlyUnlocked.push(theory)
             debugLog('event', `経営理論 解禁: ${theory.name}`, { id: theory.id })

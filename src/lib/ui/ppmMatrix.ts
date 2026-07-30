@@ -12,12 +12,14 @@ import { HIGH_GROWTH_THRESHOLD } from '../config/marketSegments'
 const QUADRANT_LAYOUT: PpmQuadrant[] = ['question_mark', 'star', 'dog', 'cash_cow']
 
 function renderEntry(entry: PpmEntry): string {
+    // 「見える」だけで終わらせないため、各製品からそのまま撤退できるようにする
     return `
         <div class="ppm-item" title="${escapeHtml(entry.segmentName)}">
             <span class="ppm-item-name">${escapeHtml(entry.productName)}</span>
             <span class="ppm-item-stats">
                 ${escapeHtml(entry.segmentEmoji)} 成長 ${entry.growthRate.toFixed(1)}% ／ 相対シェア ${entry.relativeShare.toFixed(2)}
             </span>
+            <button class="ppm-item-retire" onclick="confirmRetireProduct(${entry.productId})">撤退する</button>
         </div>
     `
 }

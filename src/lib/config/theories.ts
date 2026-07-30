@@ -12,6 +12,7 @@ export interface TheoryCondition {
      *  イベント経路 (DocumentManager) からのみ解禁される */
     type: 'products' | 'employees' | 'marketShare' | 'brandPower' | 'turn'
         | 'money_low' | 'monthly_profit' | 'total_sales' | 'event'
+        | 'segments'
     value: number
 }
 
@@ -42,6 +43,11 @@ export interface TheoryDef {
     /** 未解禁時に図鑑へ表示するヒント */
     hintText: string
     condition: TheoryCondition
+    /**
+     * 追加の解禁条件（OR）。既存の condition はそのままに、別ルートでも解禁したいときに使う。
+     * 既存条件を差し替えると過去セーブの体験が変わるため、必ず「追加」で表現すること。
+     */
+    alsoUnlockIf?: TheoryCondition
 }
 
 /** 図鑑の表示順 (解禁されやすい順に並べる) */
@@ -134,8 +140,11 @@ export const THEORY_LIST: TheoryDef[] = [
         example: 'ボストン・コンサルティングが考案し GE などが実践。花王は事業ポートフォリオの入れ替え判断に活用してきた。',
         gameHint: '製品が3つを超えたら「どれに注力しどれを見切るか」— それが PPM の問いそのもの。',
         unlockMessage: '製品3つ — ポートフォリオ管理 (PPM) を考える段階に入りました。',
-        hintText: '製品を3つ開発すると解禁',
+        hintText: '製品を3つ開発する、または2つ以上の市場に展開すると解禁',
         condition: { type: 'products', value: 3 },
+        // Phase 3: 複数セグメントへの展開そのものが PPM の問いの発生条件。
+        // 既存の「製品3本」は残したまま追加ルートにする（過去セーブの体験を変えない）
+        alsoUnlockIf: { type: 'segments', value: 2 },
     },
     {
         id: 'cash_flow',
