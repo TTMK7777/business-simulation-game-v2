@@ -202,6 +202,38 @@ export interface GameState {
     isGameOver: boolean
     gameOverReason: string | null
     _pendingCausalEffects: any[]
+    // ======= Wave 2-A: 週次ミニイベント =======
+    /** 今週提示中のミニイベント（週あたり最大1件。未提示・解決済みは null） */
+    currentWeeklyEvent: WeeklyEventState | null
+}
+
+// ============================================
+// Wave 2-A: 週次ミニイベント
+// ============================================
+
+export type WeeklyEventKind = 'decision' | 'hr' | 'market'
+
+/** 選択肢の表示用ビュー。impact は「数字への影響」の明示（設計制約） */
+export interface WeeklyEventOptionView {
+    id: string
+    label: string
+    impact: string
+}
+
+/** セーブに載る提示中イベント（ロードしても同じ選択を継続できる） */
+export interface WeeklyEventState {
+    kind: WeeklyEventKind
+    /** config のイベント id。kind==='decision' では書類 id と同じ */
+    defId: string
+    emoji: string
+    title: string
+    description: string
+    options: WeeklyEventOptionView[]
+    /** kind==='hr' の対象従業員 */
+    targetEmployeeId?: number
+    /** kind==='decision' の対象書類 */
+    documentId?: string
+    turn: number
 }
 
 // ============================================

@@ -225,6 +225,10 @@ const gameHTML = `
                     </div>
                 </div>
 
+                <!-- Wave 2-A: 未対応の週次ミニイベントへの復帰口。
+                     実績解除などのモーダルに上書きされても選択機会を失わせない -->
+                <div id="weeklyEventBanner"></div>
+
                 <div id="officeDisplay"></div>
 
                 <div id="achievementDisplay" class="achievement-panel"></div>

@@ -31,8 +31,10 @@ import * as CEOManager from './CEOManager'
 import * as FinanceManager from './FinanceManager'
 import { updateMonthlyStress } from './HRManager'
 import { processMonthlyRetention } from './RetentionManager'
+import { generateWeeklyEvent, expireWeeklyEvent } from './WeeklyEventManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
+import { renderWeeklyEvent } from '../ui/weeklyEvent'
 import { applyTabVisibilityForMode } from '../ui/renderers'
 import { escapeHtml } from '../ui/escape'
 
@@ -603,6 +605,21 @@ export function nextTurn(): void {
 
     // フェーズ2: チュートリアル進行
     ;(window as any).advanceTutorialByAction?.('end_turn')
+
+    // ======= Wave 2-A: 週次ミニイベント (管理モードの決算週以外) =======
+    // 先週提示したまま未対応のものは失効させてから今週の1件を抽選する
+    // (放置＝意思決定の放棄。決裁カードなら提出者のモチベーションが下がる)
+    const expired = expireWeeklyEvent()
+    const weeklyEvent = generateWeeklyEvent()
+    if (weeklyEvent) {
+        setTimeout(() => {
+            ;(window as any).showModal?.(
+                `${weeklyEvent.emoji} 今週の出来事`,
+                renderWeeklyEvent(weeklyEvent),
+                true
+            )
+        }, expired ? 700 : 400)
+    }
 
     // ======= 社長モード: 月次・四半期後処理 =======
     if (game.gameMode === 'ceo' && game.ceo) {

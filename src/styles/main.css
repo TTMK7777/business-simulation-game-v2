@@ -3494,3 +3494,132 @@
     font-weight: bold;
     margin-top: 6px;
 }
+
+/* ============================================
+   Wave 2-A: 週次ミニイベント モーダル
+   ============================================ */
+
+.weekly-event-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    background: rgba(var(--color-brand-rgb), 0.12);
+    color: var(--color-brand);
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+.weekly-event-title {
+    margin: 8px 0 4px;
+    font-size: 17px;
+    color: var(--color-text-primary);
+}
+
+/* 狭い画面でも選択肢が折り返しの外に出ないよう本文は詰める
+   (選択肢が1つしか見えないと「選ばせる」設計が成立しないため) */
+.weekly-event-desc {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+}
+
+.weekly-event-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 選択肢は「ラベル + 数字への影響」の2段構成。影響の明示は仕様上の制約 (specs/002 A) */
+.weekly-event-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    width: 100%;
+    padding: 9px 12px;
+    text-align: left;
+    background: var(--color-surface);
+    border: 1px solid rgba(var(--color-brand-rgb), 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.weekly-event-option:hover {
+    border-color: var(--color-brand);
+}
+
+.weekly-event-option:active {
+    transform: scale(0.98);
+}
+
+.weekly-event-option-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.weekly-event-option-impact {
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--color-brand);
+    font-weight: 600;
+}
+
+.weekly-event-result-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--color-text-primary);
+}
+
+.weekly-event-impacts {
+    margin: 12px 0 0;
+    padding-left: 20px;
+}
+
+.weekly-event-impacts li {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    line-height: 1.8;
+}
+
+.weekly-event-impacts-empty {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+/* 概要タブ: 未対応の週次ミニイベントへの復帰口 */
+.weekly-event-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    margin: 10px 0;
+    padding: 11px 14px;
+    background: linear-gradient(135deg, rgba(var(--color-brand-rgb), 0.14), rgba(var(--color-brand-dark-rgb), 0.14));
+    border: 1px solid rgba(var(--color-brand-rgb), 0.45);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.15s ease;
+}
+
+.weekly-event-banner:active {
+    transform: scale(0.99);
+}
+
+.weekly-event-banner-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.weekly-event-banner-cta {
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--color-brand);
+}

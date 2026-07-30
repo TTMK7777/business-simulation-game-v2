@@ -257,6 +257,112 @@ record('wave1-resignation-occurs',
   JSON.stringify({ before: beforeAttrition.count, after: afterAttrition.count, attritionCost: afterAttrition.attritionCost }))
 await shot('09-after-resignation')
 
+// --- 7.4 Wave 2-A/C: 週次ミニイベント (決算週以外に1件) + 決裁カード注入 ---
+// 種別抽選も乱数なので、決裁カード (Wave 2-C の主眼) が出るよう Math.random を固定する
+await evaljs(`(() => {
+  const g = window.game
+  // 直前までのターン送りで積み残した書類ごとリセットする
+  // (currentWeeklyEvent だけ null にすると書類がキューに残り件数の期待値がずれる)
+  g.currentWeeklyEvent = null
+  g.documentQueue = []
+  g.money = 20000000
+  window.__origRandom = Math.random
+  Math.random = () => 0
+  return true
+})()`)
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1200)
+const weeklyEventInfo = await evaljs(`(() => {
+  const g = window.game
+  const modal = document.getElementById('modal')
+  const el = document.querySelector('.weekly-event')
+  const opts = [...document.querySelectorAll('.weekly-event-option')]
+  return {
+    stateKind: g.currentWeeklyEvent?.kind ?? null,
+    queuedDocs: g.documentQueue.length,
+    modalOpen: !!modal && getComputedStyle(modal).display !== 'none',
+    cardRendered: !!el,
+    optionCount: opts.length,
+    // 設計制約: 全選択肢に「数字への影響」が併記されていること
+    allOptionsHaveImpact: opts.length > 0 && opts.every(o =>
+      (o.querySelector('.weekly-event-option-impact')?.textContent || '').trim().length > 0)
+  }
+})()`)
+record('wave2-weekly-event-offered',
+  weeklyEventInfo.stateKind === 'decision' && weeklyEventInfo.queuedDocs === 1 &&
+  weeklyEventInfo.modalOpen && weeklyEventInfo.cardRendered &&
+  weeklyEventInfo.optionCount === 2 && weeklyEventInfo.allOptionsHaveImpact,
+  JSON.stringify(weeklyEventInfo))
+await shot('10-weekly-event-decision')
+
+// モーダルが他の通知（実績解除など）に上書きされても、概要タブのバナーから復帰できること
+const bannerInfo = await evaljs(`(() => {
+  // 実績モーダル等に奪われた状況を再現する
+  window.showModal('🏆 実績解除！', '<p>横取りモーダル</p>', true)
+  window.renderActivePanel()
+  const banner = document.querySelector('.weekly-event-banner')
+  const bannerVisible = !!banner
+  if (banner) banner.click()
+  return {
+    bannerVisible,
+    reopened: !!document.querySelector('.weekly-event'),
+    optionCount: document.querySelectorAll('.weekly-event-option').length
+  }
+})()`)
+record('wave2-event-recoverable-from-banner',
+  bannerInfo.bannerVisible && bannerInfo.reopened && bannerInfo.optionCount === 2,
+  JSON.stringify(bannerInfo))
+
+// 承認して決裁が処理されること + 結果に数字が出ること
+const historyBefore = await evaljs(`(window.game.documentHistory || []).length`)
+await evaljs(`[...document.querySelectorAll('.weekly-event-option')][0].click()`)
+await sleep(900)
+const resolveInfo = await evaljs(`(() => {
+  const g = window.game
+  return {
+    historyLen: (g.documentHistory || []).length,
+    queuedDocs: g.documentQueue.length,
+    eventCleared: g.currentWeeklyEvent === null,
+    resultRendered: !!document.querySelector('.weekly-event-result'),
+    impactsShown: (document.querySelector('.weekly-event-impacts')?.textContent || '').trim().length > 0,
+    unlockedTheories: (g.unlockedTheories || []).length
+  }
+})()`)
+record('wave2-decision-resolved',
+  resolveInfo.historyLen === historyBefore + 1 && resolveInfo.queuedDocs === 0 &&
+  resolveInfo.eventCleared && resolveInfo.resultRendered && resolveInfo.impactsShown,
+  JSON.stringify(resolveInfo))
+await shot('11-weekly-event-result')
+
+// 決算週にはミニイベントを出さない (月次決算に集中させる)
+await evaljs(`(() => {
+  const g = window.game
+  const m = document.getElementById('modal')
+  if (m) m.style.display = 'none'
+  g.currentWeeklyEvent = null
+  g.week = 3
+  return true
+})()`)
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1200)
+const settlementWeekInfo = await evaljs(`(() => ({
+  week: window.game.week,
+  weeklyEvent: window.game.currentWeeklyEvent
+}))()`)
+record('wave2-no-event-on-settlement-week',
+  settlementWeekInfo.week === 4 && settlementWeekInfo.weeklyEvent === null,
+  JSON.stringify(settlementWeekInfo))
+await evaljs(`(() => { if (window.__origRandom) Math.random = window.__origRandom; return true })()`)
+await evaljs(`(() => {
+  const m = document.getElementById('modal')
+  if (m && getComputedStyle(m).display !== 'none') {
+    const btn = m.querySelector('button, .close, .modal-close')
+    if (btn) btn.click(); else m.style.display = 'none'
+  }
+  return true
+})()`)
+await sleep(400)
+
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {
   const clickToggle = `(() => {

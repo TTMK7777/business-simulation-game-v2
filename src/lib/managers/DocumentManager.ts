@@ -308,10 +308,10 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
 
   // 差し戻し制限チェック
   if (verdict === 'remand') {
-    if (state.ceo.remandsThisWeek >= CEO_BALANCE.maxRemandsPerWeek) {
+    if ((state.ceo?.remandsThisWeek ?? 0) >= CEO_BALANCE.maxRemandsPerWeek) {
       return { moneyChange: 0, marketShareChange: 0, brandPowerChange: 0, ceoApprovalChange: 0, employeeMoraleChange: 0, description: '今週の差し戻しは既に上限に達しています。' }
     }
-    state.ceo.remandsThisWeek++
+    if (state.ceo) state.ceo.remandsThisWeek++
     doc.verdict = 'remand'
     // 書類はキューに残る（再提出扱い）
     return {
@@ -331,7 +331,7 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
     doc.verdict = 'investigate'
     if (doc.deadline) doc.deadline += CEO_BALANCE.investigationDeadlineExtension
     state.money -= CEO_BALANCE.investigationCost
-    state.ceo.investigationBudget += CEO_BALANCE.investigationCost
+    if (state.ceo) state.ceo.investigationBudget += CEO_BALANCE.investigationCost
     return {
       moneyChange: -CEO_BALANCE.investigationCost, marketShareChange: 0, brandPowerChange: 0,
       ceoApprovalChange: 0, employeeMoraleChange: 0,
@@ -388,7 +388,7 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
   state.money += outcome.moneyChange
   state.marketShare = Math.max(0, Math.min(60, state.marketShare + outcome.marketShareChange))
   state.brandPower = Math.max(0, Math.min(100, state.brandPower + outcome.brandPowerChange))
-  state.ceo.approvalRating = Math.max(0, Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange))
+  if (state.ceo) state.ceo.approvalRating = Math.max(0, Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange))
 
   // submitterのモチベーション更新
   if (doc.submitter.employeeId) {
@@ -401,10 +401,10 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
   // 罠統計
   if (doc.nature === 'clear_bad') {
     if (verdict === 'reject') {
-      state.ceo.trapsDetected++
+      if (state.ceo) state.ceo.trapsDetected++
       state.documentStats.trapsDetected++
     } else {
-      state.ceo.trapsMissed++
+      if (state.ceo) state.ceo.trapsMissed++
       state.documentStats.trapsMissed++
       state.scandalRisk = Math.min(100, (state.scandalRisk || 0) + 15)
     }
@@ -412,14 +412,14 @@ export function processVerdict(state: any, docId: string, verdict: DocumentVerdi
 
   // 正解/不正解カウント
   if ((doc.nature === 'clear_good' && verdict === 'approve') || (doc.nature === 'clear_bad' && verdict === 'reject')) {
-    state.ceo.decisionsCorrect++
+    if (state.ceo) state.ceo.decisionsCorrect++
   } else if ((doc.nature === 'clear_good' && verdict === 'reject') || (doc.nature === 'clear_bad' && verdict === 'approve')) {
-    state.ceo.decisionsWrong++
+    if (state.ceo) state.ceo.decisionsWrong++
   }
 
   // gamble却下の蓄積
   if (doc.nature === 'gamble' && verdict === 'reject') {
-    state.ceo.gamblesRejected++
+    if (state.ceo) state.ceo.gamblesRejected++
   }
 
   // 因果チェーン: 後続イベント登録
@@ -583,7 +583,7 @@ export function processExpiredDocuments(state: any): DocumentOutcome[] {
     state.money += outcome.moneyChange
     state.marketShare = Math.max(0, Math.min(60, state.marketShare + outcome.marketShareChange))
     state.brandPower = Math.max(0, Math.min(100, state.brandPower + outcome.brandPowerChange))
-    state.ceo.approvalRating = Math.max(0, Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange))
+    if (state.ceo) state.ceo.approvalRating = Math.max(0, Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange))
     if (doc.submitter.employeeId) {
       const emp = state.employees.find((e: any) => e.id === doc.submitter.employeeId)
       if (emp) {
@@ -657,7 +657,7 @@ export function processLongTermEffects(state: any): DocumentOutcome[] {
         state.money += outcome.moneyChange
         state.marketShare = Math.min(60, state.marketShare + outcome.marketShareChange)
         state.brandPower = Math.min(100, state.brandPower + outcome.brandPowerChange)
-        state.ceo.approvalRating = Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange)
+        if (state.ceo) state.ceo.approvalRating = Math.min(100, state.ceo.approvalRating + outcome.ceoApprovalChange)
         outcomes.push(outcome)
       }
     }
