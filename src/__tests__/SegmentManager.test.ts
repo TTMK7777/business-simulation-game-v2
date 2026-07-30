@@ -291,3 +291,51 @@ describe('getSegmentShare', () => {
     expect(getSegmentShare(game, 'ai')).toBe(0)
   })
 })
+
+// ============================================================
+// Wave 3-C: 撤退後のシェア減衰
+// ============================================================
+describe('growSegmentShares: 製品のないセグメントの減衰', () => {
+  it('製品が無いセグメントのシェアは月次で減る（撤退のコスト）', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.segmentShares.ai = 12
+    game.products = []
+
+    growSegmentShares(game)
+
+    expect(game.segmentShares.ai).toBeLessThan(12)
+  })
+
+  it('シェア0のセグメントは負にならない', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = []
+
+    for (let i = 0; i < 10; i++) growSegmentShares(game)
+
+    for (const id of SEGMENT_IDS) {
+      expect(game.segmentShares[id]).toBe(0)
+    }
+  })
+
+  it('製品があるセグメントは減衰しない', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.segmentShares.ai = 12
+    game.products = [makeProduct({ id: 1, segmentId: 'ai' })]
+
+    growSegmentShares(game)
+
+    expect(game.segmentShares.ai).toBeGreaterThan(12)
+  })
+
+  it('減衰は全体シェア換算の戻り値にも反映される（負の値になりうる）', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.segmentShares.ai = 12
+    game.products = []
+
+    expect(growSegmentShares(game)).toBeLessThan(0)
+  })
+})

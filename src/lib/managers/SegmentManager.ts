@@ -29,6 +29,13 @@ const MAX_SEGMENT_SHARE = 100
 /** 競合シェアの下限（%）。相対シェアの分母が0にならないようにする */
 const MIN_COMPETITOR_SHARE = 1
 
+/**
+ * 製品を持たないセグメントのシェアが月次で失われる量（%）。
+ * 撤退したら市場での存在感はゆっくり消える＝再参入にコストがかかる、を表す。
+ * 撤退を「ノーリスクの最適解」にしないための重り。
+ */
+const SEGMENT_SHARE_DECAY = 0.25
+
 // ============================================
 // 基本アクセサ
 // ============================================
@@ -80,7 +87,9 @@ export function getSegmentGrowthRate(state: GameState, segmentId: string): numbe
  * 伸び幅は「製品数 × セグメントの現在成長率」で決まる。
  * 高成長セグメントほど速く食い込めるが、成熟すると伸びが鈍る＝入れ替え判断が生まれる。
  *
- * @returns 全体シェア換算の増加分（%）。既存の game.marketShare に加算するための値。
+ * 製品を持たないセグメントは逆に減衰する（撤退のコスト）。
+ *
+ * @returns 全体シェア換算の増減（%）。減衰が上回れば負になる。既存の game.marketShare に加算する。
  *   marketShare をセグメントからの導出値にはしない — マーケ実行・決裁・競合攻撃など
  *   9箇所が marketShare を直接動かしており、導出にするとそれらの効果を黙って消すため。
  */
@@ -99,15 +108,21 @@ export function growSegmentShares(state: GameState): number {
         totalWeight += MARKET_SEGMENTS[id].sizeFactor
     }
 
-    for (const [segmentId, count] of Object.entries(productCountBySegment)) {
-        const growthRate = getSegmentGrowthRate(state, segmentId)
-        const gain = BASE_SHARE_GAIN * count * (1 + growthRate / 5)
-        const before = getSegmentShare(state, segmentId)
-        const after = Math.min(MAX_SEGMENT_SHARE, before + gain)
-        state.segmentShares[segmentId] = after
+    for (const id of SEGMENT_IDS) {
+        const count = productCountBySegment[id] ?? 0
+        const before = getSegmentShare(state, id)
+        let after: number
 
-        const segment = getSegment(segmentId) ?? MARKET_SEGMENTS[DEFAULT_SEGMENT_ID]
-        weightedGain += (after - before) * segment.sizeFactor
+        if (count > 0) {
+            const growthRate = getSegmentGrowthRate(state, id)
+            after = Math.min(MAX_SEGMENT_SHARE, before + BASE_SHARE_GAIN * count * (1 + growthRate / 5))
+        } else {
+            // 撤退済み（または未参入）: 存在感はゆっくり失われる
+            after = Math.max(0, before - SEGMENT_SHARE_DECAY)
+        }
+
+        state.segmentShares[id] = after
+        weightedGain += (after - before) * MARKET_SEGMENTS[id].sizeFactor
     }
 
     return totalWeight > 0 ? weightedGain / totalWeight : 0

@@ -108,6 +108,7 @@ import { renderWeeklyEvent, renderWeeklyEventResult } from './ui/weeklyEvent'
 import { renderScenarioResult } from './ui/scenarioResult'
 import { renderSegmentSelection } from './ui/segmentSelection'
 import { getSegment } from './config/marketSegments'
+import * as PpmManagerBridge from './managers/PpmManager'
 import * as ScenarioManagerBridge from './managers/ScenarioManager'
 import * as WeeklyEventManager from './managers/WeeklyEventManager'
 import { renderVisitorResult } from './ui/visitorDialog'
@@ -625,6 +626,49 @@ function verdictDocument(docId: string, verdict: string) {
     renderActivePanel()
 }
 
+// ======= Phase 3 Wave 3-C: 製品の撤退 =======
+// PPM で「負け犬」と見えたものを実際に畳めるようにする。不可逆なので必ず確認を挟む
+function confirmRetireProduct(productId: number) {
+    const product = game.products.find((p: any) => p.id === productId)
+    if (!product) return
+    const segment = getSegment(product.segmentId)
+    showModal(
+        '🚪 撤退の確認',
+        `<div class="retire-confirm">
+            <p><strong>${escapeHtml(product.name)}</strong>${segment ? `（${escapeHtml(segment.name)}）` : ''} から撤退します。</p>
+            <ul class="retire-effects">
+                <li>この製品の売上が無くなります</li>
+                <li>開発部の保守負荷（ストレス）が下がります</li>
+                <li>その市場でのシェアは月ごとに失われていきます</li>
+            </ul>
+            <p class="retire-warning">撤退した製品は元に戻せません。</p>
+            <div class="retire-actions">
+                <button class="btn retire-confirm-btn" onclick="retireProductAction(${productId})">撤退する</button>
+                <button class="btn retire-cancel-btn" onclick="closeModal()">やめる</button>
+            </div>
+        </div>`,
+        true
+    )
+}
+
+function retireProductAction(productId: number) {
+    const result = PpmManagerBridge.retireProduct(productId)
+    if (!result.success) {
+        showModal('撤退できません', result.message)
+        return
+    }
+    showModal(
+        '🚪 撤退しました',
+        `<div class="retire-result">
+            <p>${escapeHtml(result.message)}</p>
+            ${result.relievedEmployees ? `<p class="retire-result-note">開発部 ${result.relievedEmployees}名の保守負荷が下がりました。</p>` : ''}
+        </div>`,
+        true
+    )
+    updateDisplay()
+    renderActivePanel()
+}
+
 // ======= Wave 3-D: シナリオ結果の再表示 =======
 // 決着画面が他のモーダルに上書きされても、概要タブのバナーから開き直せる
 function openScenarioResult() {
@@ -840,6 +884,8 @@ function selectCEOTrait(trait: string) {
 // ======= 社長モード =======
 ;(window as any).openDocument = openDocument
 ;(window as any).verdictDocument = verdictDocument
+;(window as any).confirmRetireProduct = confirmRetireProduct
+;(window as any).retireProductAction = retireProductAction
 ;(window as any).openScenarioResult = openScenarioResult
 ;(window as any).openWeeklyEvent = openWeeklyEvent
 ;(window as any).resolveWeeklyEventAction = resolveWeeklyEventAction

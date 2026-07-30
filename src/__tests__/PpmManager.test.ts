@@ -14,6 +14,7 @@ import {
   classifyProduct,
   buildPpmView,
   PPM_QUADRANTS,
+  retireProduct,
 } from '../lib/managers/PpmManager'
 import { ensureSegmentShares } from '../lib/managers/SegmentManager'
 import { HIGH_GROWTH_THRESHOLD, MARKET_SEGMENTS } from '../lib/config/marketSegments'
@@ -219,5 +220,103 @@ describe('buildPpmView', () => {
     const view = buildPpmView(game)
 
     expect(view.byQuadrant.star).toHaveLength(2)
+  })
+})
+
+// ============================================================
+// Wave 3-C: 撤退
+// ============================================================
+describe('retireProduct', () => {
+  it('製品を畳むと products から消える', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = [
+      makeProduct({ id: 1, name: '負け犬A' }),
+      makeProduct({ id: 2, name: '主力B' }),
+    ]
+
+    const result = retireProduct(1)
+
+    expect(result.success).toBe(true)
+    expect(result.productName).toBe('負け犬A')
+    expect(game.products.map(p => p.id)).toEqual([2])
+  })
+
+  it('開発部の従業員のストレスが下がる（保守負荷の解放）', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = [makeProduct({ id: 1 })]
+    game.employees = [
+      {
+        id: 1, name: '開発 太郎', personalityKey: 'logical',
+        abilities: { technical: 50, sales: 50, planning: 50, management: 50 },
+        temperament: {
+          boldness: 50, bravery: 50, cooperation: 50, creativity: 50,
+          conscientiousness: 50, emotionalStability: 50, sociability: 50, cautiousness: 50,
+        },
+        subTraits: [], hiddenTrait: 'none', hiddenTraitRevealed: false, joinedTurn: 1,
+        motivation: 60, salary: 300_000, department: 'development', position: 'staff',
+        qualification: null, skillPoints: 0, unlockedSkills: [], growthHistory: [], stress: 60,
+      },
+      {
+        id: 2, name: '営業 花子', personalityKey: 'logical',
+        abilities: { technical: 50, sales: 50, planning: 50, management: 50 },
+        temperament: {
+          boldness: 50, bravery: 50, cooperation: 50, creativity: 50,
+          conscientiousness: 50, emotionalStability: 50, sociability: 50, cautiousness: 50,
+        },
+        subTraits: [], hiddenTrait: 'none', hiddenTraitRevealed: false, joinedTurn: 1,
+        motivation: 60, salary: 300_000, department: 'sales', position: 'staff',
+        qualification: null, skillPoints: 0, unlockedSkills: [], growthHistory: [], stress: 60,
+      },
+    ] as any
+
+    retireProduct(1)
+
+    expect(game.employees[0].stress).toBeLessThan(60)
+    // 開発部以外は変わらない（保守負荷を負っていない）
+    expect(game.employees[1].stress).toBe(60)
+  })
+
+  it('ストレスは0未満にならない', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = [makeProduct({ id: 1 })]
+    game.employees = [{ id: 1, name: 'A', department: 'development', stress: 3, motivation: 50 }] as any
+
+    retireProduct(1)
+
+    expect(game.employees[0].stress).toBe(0)
+  })
+
+  it('存在しない製品IDなら失敗し、状態を変えない', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = [makeProduct({ id: 1 })]
+
+    const result = retireProduct(999)
+
+    expect(result.success).toBe(false)
+    expect(game.products).toHaveLength(1)
+  })
+
+  it('最後の1本でも撤退できる（禁止しない）', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.products = [makeProduct({ id: 1 })]
+
+    expect(retireProduct(1).success).toBe(true)
+    expect(game.products).toHaveLength(0)
+  })
+
+  it('撤退してもそのセグメントのシェアは即座には消えない（月次で減衰する）', () => {
+    const game = getGame()
+    ensureSegmentShares(game)
+    game.segmentShares.ai = 12
+    game.products = [makeProduct({ id: 1, segmentId: 'ai' })]
+
+    retireProduct(1)
+
+    expect(game.segmentShares.ai).toBe(12)
   })
 })

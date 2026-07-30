@@ -7,6 +7,7 @@
 // 図鑑の theories.ts に定義だけあった PPM を、実データで問われる判断に変える層。
 // DOM 非依存の manager 層。
 
+import { getGame } from '../store/gameStore'
 import { HIGH_GROWTH_THRESHOLD, getSegment, MARKET_SEGMENTS, DEFAULT_SEGMENT_ID } from '../config/marketSegments'
 import {
     getProductSegmentId,
@@ -142,5 +143,64 @@ export function buildPpmView(state: GameState): PpmView {
         hasProducts: entries.length > 0,
         entries,
         byQuadrant
+    }
+}
+
+
+// ============================================
+// Wave 3-C: 撤退（PPM の「見切る」側の打ち手）
+// ============================================
+
+/** 製品を1本畳んだときに開発部の従業員から抜ける保守負荷（ストレス） */
+const RETIRE_STRESS_RELIEF = 12
+
+export interface RetireResult {
+    success: boolean
+    message: string
+    productName?: string
+    segmentId?: string
+    /** 実際にストレスが下がった人数 */
+    relievedEmployees?: number
+}
+
+/**
+ * 製品を撤退（畳む）させる。
+ *
+ * PPM は「どれに注ぎ、どれを見切るか」の枠組みだが、Wave 2 まではマトリクスが
+ * 見えるだけで見切る手段が無かった。ここで「見える → 動かせる」を閉じる。
+ *
+ * 効果:
+ * - 製品を失う（その売上も消える）
+ * - 開発部の従業員のストレスが下がる（保守負荷の解放）
+ * - セグメントのシェアは即座には消えず、月次で減衰する（SegmentManager 側）
+ *
+ * 最後の1本でも撤退できる。詰みは資金ショートで既に表現されており、
+ * ここで禁止すると「畳んで立て直す」判断そのものを奪ってしまうため。
+ */
+export function retireProduct(productId: number): RetireResult {
+    const game = getGame()
+    const product = game.products.find(p => p.id === productId)
+    if (!product) {
+        return { success: false, message: '対象の製品が見つかりません' }
+    }
+
+    const segmentId = getProductSegmentId(product)
+    game.products = game.products.filter(p => p.id !== productId)
+
+    let relievedEmployees = 0
+    for (const emp of game.employees) {
+        if (emp.department !== 'development') continue
+        const before = emp.stress ?? 0
+        if (before <= 0) continue
+        emp.stress = Math.max(0, before - RETIRE_STRESS_RELIEF)
+        relievedEmployees++
+    }
+
+    return {
+        success: true,
+        message: `${product.name} から撤退しました`,
+        productName: product.name,
+        segmentId,
+        relievedEmployees
     }
 }

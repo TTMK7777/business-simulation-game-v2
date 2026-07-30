@@ -521,10 +521,9 @@ export function nextTurn(): void {
         // 上位実績 (30/50%) が構造的に到達不能だった。
         // Phase 3 からは製品が属するセグメントのシェアを伸ばし、その全体換算分を
         // marketShare に加算する = 高成長セグメントを選ぶほど速く伸びる
-        if (game.products.length > 0) {
-            const overallGain = growSegmentShares(game)
-            game.marketShare = Math.min(60, game.marketShare + overallGain)
-        }
+        // 製品ゼロでも呼ぶ: 撤退済みセグメントのシェア減衰を進めるため
+        const overallGain = growSegmentShares(game)
+        game.marketShare = Math.max(0, Math.min(60, game.marketShare + overallGain))
 
         // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一
         // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
