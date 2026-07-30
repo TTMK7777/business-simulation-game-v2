@@ -3623,3 +3623,137 @@
     font-weight: bold;
     color: var(--color-brand);
 }
+
+/* ============================================
+   Wave 3-D: シナリオ結果画面 + 事後講評
+   ============================================ */
+
+.scenario-result-head {
+    text-align: center;
+    padding: 16px 12px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+}
+
+.scenario-result-head.is-clear {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.18), rgba(139, 195, 74, 0.18));
+    border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.scenario-result-head.is-gameover {
+    background: linear-gradient(135deg, rgba(244, 67, 54, 0.14), rgba(255, 87, 34, 0.14));
+    border: 1px solid rgba(244, 67, 54, 0.45);
+}
+
+.scenario-result-emoji {
+    font-size: 42px;
+    line-height: 1.2;
+}
+
+.scenario-result-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+    margin-top: 4px;
+}
+
+.scenario-result-sub {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-top: 4px;
+}
+
+.scenario-section-title {
+    margin: 16px 0 8px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+}
+
+.scenario-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.scenario-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 9px 11px;
+    background: var(--color-surface-alt);
+    border-radius: 10px;
+}
+
+.scenario-metric-label {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+
+.scenario-metric-value {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.scenario-comment {
+    margin-top: 14px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+    background: rgba(var(--color-brand-rgb), 0.08);
+    border-left: 3px solid var(--color-brand);
+    border-radius: 8px;
+}
+
+.scenario-theory {
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: var(--color-surface-alt);
+    border-radius: 10px;
+}
+
+.scenario-theory-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.scenario-theory-summary {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+}
+
+.scenario-theories-empty {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    line-height: 1.7;
+}
+
+/* 概要タブ: シナリオ進行状況 */
+.scenario-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 10px 0;
+    padding: 10px 14px;
+    background: rgba(76, 175, 80, 0.12);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    border-radius: 12px;
+}
+
+.scenario-progress-label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.scenario-progress-value {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: bold;
+    color: #4caf50;
+}

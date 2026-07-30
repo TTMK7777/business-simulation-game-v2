@@ -8,6 +8,7 @@ import './styles/finance.css'
 import './lib/game.ts'
 import { getAllSlotsMetadata, slotHasData } from './lib/storage'
 import { type DifficultyLevel } from './lib/gameConfig'
+import * as ScenarioManager from './lib/managers/ScenarioManager'
 
 // A2UI Integration - Google A2UI inspired rich UI components
 import { getA2UIManager } from './lib/a2ui/index'
@@ -53,7 +54,7 @@ function bindThemeToggleButtons(): void {
 
 // フェーズ1: 難易度選択を保持
 let selectedDifficulty: DifficultyLevel = 'normal'
-let selectedGameMode: 'management' | 'ceo' = 'management'
+let selectedGameMode: 'management' | 'ceo' | 'scenario' = 'management'
 
 // メニュー画面HTMLテンプレート
 const menuHTML = `
@@ -142,6 +143,12 @@ const menuHTML = `
                     <div class="difficulty-name">社長モード</div>
                     <div class="difficulty-desc">決裁書類と部下対応で経営</div>
                 </div>
+                <!-- Wave 3-D: シナリオ。管理モードの操作系のまま勝利条件を付ける -->
+                <div class="difficulty-option" data-mode="scenario" id="modeScenario" style="flex:1;max-width:220px;">
+                    <div class="difficulty-emoji">🌱</div>
+                    <div class="difficulty-name">起業1年目</div>
+                    <div class="difficulty-desc">資金を絞った12ヶ月生存チャレンジ</div>
+                </div>
             </div>
             <div style="text-align: center; margin-top: 24px;">
                 <button id="confirmModeBtn" class="start-game-btn">次へ ➡️</button>
@@ -227,6 +234,9 @@ const gameHTML = `
 
                 <!-- Wave 2-A: 未対応の週次ミニイベントへの復帰口。
                      実績解除などのモーダルに上書きされても選択機会を失わせない -->
+                <!-- Wave 3-D: シナリオ進行状況 (残り月数) -->
+                <div id="scenarioProgress"></div>
+
                 <div id="weeklyEventBanner"></div>
 
                 <div id="officeDisplay"></div>
@@ -409,7 +419,7 @@ function showDifficultyModal(slotNumber: number) {
       option.addEventListener('click', () => {
         modeOptions.forEach(o => o.classList.remove('selected'))
         option.classList.add('selected')
-        selectedGameMode = (option as HTMLElement).dataset.mode as 'management' | 'ceo'
+        selectedGameMode = (option as HTMLElement).dataset.mode as 'management' | 'ceo' | 'scenario'
       })
     })
 
@@ -456,6 +466,27 @@ function showDifficultySelection() {
         modal.style.display = 'none'
         if (pendingSlotNumber !== null) {
           await startGameWithSlot(pendingSlotNumber, selectedDifficulty)
+          // Wave 3-D: シナリオは管理モードの操作系のまま、開始資金と勝利条件だけ差し替える
+          if (selectedGameMode === 'scenario') {
+            const scenario = ScenarioManager.startScenario('startup_year_one')
+            if (scenario) {
+              ;(window as any).updateDisplay?.()
+              ;(window as any).renderActivePanel?.()
+              setTimeout(() => {
+                ;(window as any).showModal?.(
+                  `${scenario.emoji} ${scenario.name}`,
+                  `<div style="padding:4px 0;">
+                     <p style="font-size:14px;line-height:1.7;">${scenario.goalText}</p>
+                     <p style="margin-top:12px;font-size:13px;color:var(--color-text-secondary);">
+                       開始資金: <strong>${Math.floor(scenario.startingMoney / 10000)}万円</strong> ／
+                       目標: <strong>${scenario.survivalMonths}ヶ月の生存</strong>
+                     </p>
+                   </div>`,
+                  true
+                )
+              }, 600)
+            }
+          }
           // 社長モードの場合はCEO特性選択を表示
           if (selectedGameMode === 'ceo') {
             if (typeof (window as any).game !== 'undefined') {

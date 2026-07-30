@@ -65,7 +65,12 @@ const defaultGameState: GameState = {
     gameOverReason: null as string | null,
     _pendingCausalEffects: [] as any[],
     // Wave 2-A: 週次ミニイベント（提示中の1件。週あたり最大1件）
-    currentWeeklyEvent: null as import('../types').WeeklyEventState | null
+    currentWeeklyEvent: null as import('../types').WeeklyEventState | null,
+    // Wave 3-D: シナリオ（サンドボックスは scenarioId=null）
+    scenarioId: null as string | null,
+    scenarioStartYear: 2025,
+    scenarioStartMonth: 1,
+    scenarioResult: null as import('../types').ScenarioResult | null
 }
 
 // ============================================
@@ -267,6 +272,11 @@ export function normalizeGameState(): void {
     if (!Array.isArray(game._pendingCausalEffects)) game._pendingCausalEffects = []
     // Wave 2-A: 旧セーブは currentWeeklyEvent を持たない（未提示扱い）
     if (game.currentWeeklyEvent === undefined) game.currentWeeklyEvent = null
+    // Wave 3-D: 旧セーブはシナリオ情報を持たない（サンドボックス扱い）
+    if (typeof game.scenarioId !== 'string') game.scenarioId = null
+    if (typeof game.scenarioStartYear !== 'number') game.scenarioStartYear = game.year || 2025
+    if (typeof game.scenarioStartMonth !== 'number') game.scenarioStartMonth = game.month || 1
+    if (game.scenarioResult !== 'clear' && game.scenarioResult !== 'gameover') game.scenarioResult = null
 }
 
 export function resetGameState(): void {

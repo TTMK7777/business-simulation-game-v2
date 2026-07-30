@@ -151,11 +151,9 @@ for (let i = 0; i < 4; i++) {
   await sleep(900)
   // 決算モーダル等が開いていたら閉じる (汎用 #modal)
   await evaljs(`(() => {
-    const m = document.getElementById('modal')
-    if (m && getComputedStyle(m).display !== 'none') {
-      const btn = m.querySelector('button, .close, .modal-close')
-      if (btn) btn.click(); else m.style.display = 'none'
-    }
+    // showModal は .active クラスで表示する。インライン display:none を付けると
+    // 以降 showModal しても表示されなくなるため必ず closeModal() を使う
+    window.closeModal?.()
     return true
   })()`)
   await sleep(300)
@@ -238,11 +236,9 @@ for (let i = 0; i < 4; i++) {
     await evaljs(`(() => { if (window.__origRandom) Math.random = window.__origRandom; return true })()`)
   }
   await evaljs(`(() => {
-    const m = document.getElementById('modal')
-    if (m && getComputedStyle(m).display !== 'none') {
-      const btn = m.querySelector('button, .close, .modal-close')
-      if (btn) btn.click(); else m.style.display = 'none'
-    }
+    // showModal は .active クラスで表示する。インライン display:none を付けると
+    // 以降 showModal しても表示されなくなるため必ず closeModal() を使う
+    window.closeModal?.()
     return true
   })()`)
   await sleep(300)
@@ -337,8 +333,7 @@ await shot('11-weekly-event-result')
 // 決算週にはミニイベントを出さない (月次決算に集中させる)
 await evaljs(`(() => {
   const g = window.game
-  const m = document.getElementById('modal')
-  if (m) m.style.display = 'none'
+  window.closeModal?.()
   g.currentWeeklyEvent = null
   g.week = 3
   return true
@@ -353,15 +348,123 @@ record('wave2-no-event-on-settlement-week',
   settlementWeekInfo.week === 4 && settlementWeekInfo.weeklyEvent === null,
   JSON.stringify(settlementWeekInfo))
 await evaljs(`(() => { if (window.__origRandom) Math.random = window.__origRandom; return true })()`)
+await evaljs(`(() => { window.closeModal?.(); return true })()`)
+await sleep(400)
+
+// --- 7.6 Wave 3-D: シナリオ「起業1年目」のクリア / ゲームオーバー + 事後講評 ---
+// 12ヶ月を実プレイで進めるのは E2E として長すぎるため、シナリオ状態を注入して
+// 決着判定と結果画面 (指標 + 体験した理論) が実ブラウザで出ることを確認する。
+// 判定ロジックそのものはユニットテストで網羅済み。
 await evaljs(`(() => {
-  const m = document.getElementById('modal')
-  if (m && getComputedStyle(m).display !== 'none') {
-    const btn = m.querySelector('button, .close, .modal-close')
-    if (btn) btn.click(); else m.style.display = 'none'
-  }
+  const g = window.game
+  g.scenarioId = 'startup_year_one'
+  g.scenarioStartYear = 2025
+  g.scenarioStartMonth = 1
+  g.scenarioResult = null
+  g.isBankrupt = false
+  g.isGameOver = false
+  g.money = 8000000
+  g.year = 2025
+  g.month = 12
+  g.week = 4
+  g.currentWeeklyEvent = null
+  g.documentQueue = []
+  window.updateDisplay()
   return true
 })()`)
-await sleep(400)
+const scenarioProgress = await evaljs(`(document.querySelector('.scenario-progress-value')?.textContent || '').trim()`)
+record('wave3-scenario-progress-visible', scenarioProgress.includes('残り 1ヶ月'), scenarioProgress)
+
+// 決算週を1回送る → 12ヶ月到達でクリア
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1600)
+const clearInfo = await evaljs(`(() => {
+  const g = window.game
+  const el = document.querySelector('.scenario-result')
+  return {
+    scenarioResult: g.scenarioResult,
+    year: g.year, month: g.month,
+    isClear: !!document.querySelector('.scenario-result-head.is-clear'),
+    metricCount: document.querySelectorAll('.scenario-metric').length,
+    hasComment: (document.querySelector('.scenario-comment')?.textContent || '').trim().length > 0,
+    hasTheorySection: !!document.querySelector('.scenario-theories'),
+    rendered: !!el,
+    // DOM に在るだけでは不十分 (非表示でも querySelector は当たる)。実際に見えているかを見る
+    visible: !!el && el.getBoundingClientRect().height > 0 && !!el.offsetParent
+  }
+})()`)
+record('wave3-scenario-clear',
+  clearInfo.scenarioResult === 'clear' && clearInfo.rendered && clearInfo.visible && clearInfo.isClear &&
+  clearInfo.metricCount >= 4 && clearInfo.hasComment && clearInfo.hasTheorySection,
+  JSON.stringify(clearInfo))
+await shot('12-scenario-clear')
+
+// 決着画面が他のモーダル (実績解除など) に奪われても概要タブから復帰できること
+const scenarioBannerInfo = await evaljs(`(() => {
+  window.showModal('横取りモーダル', '<p>実績解除など</p>', true)
+  window.updateDisplay()
+  const banner = document.querySelector('#scenarioProgress button')
+  const bannerVisible = !!banner
+  if (banner) banner.click()
+  const el = document.querySelector('.scenario-result')
+  return {
+    bannerVisible,
+    reopened: !!el && el.getBoundingClientRect().height > 0 && !!el.offsetParent,
+    stillClear: !!document.querySelector('.scenario-result-head.is-clear')
+  }
+})()`)
+record('wave3-result-recoverable-from-banner',
+  scenarioBannerInfo.bannerVisible && scenarioBannerInfo.reopened && scenarioBannerInfo.stillClear,
+  JSON.stringify(scenarioBannerInfo))
+
+// ゲームオーバー: 資金ショートで決着し、講評が敗因に触れること
+await evaljs(`(() => {
+  window.closeModal?.()
+  const g = window.game
+  g.scenarioResult = null
+  g.isBankrupt = false
+  g.isGameOver = false
+  g.year = 2025
+  g.month = 4
+  g.week = 4
+  g.money = 100000
+  g.debt = 0
+  g.products = []
+  g.currentWeeklyEvent = null
+  g.documentQueue = []
+  return true
+})()`)
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1600)
+const overInfo = await evaljs(`(() => {
+  const g = window.game
+  return {
+    scenarioResult: g.scenarioResult,
+    isGameOver: g.isGameOver,
+    isGameoverCard: !!document.querySelector('.scenario-result-head.is-gameover'),
+    visible: (() => { const el = document.querySelector('.scenario-result'); return !!el && el.getBoundingClientRect().height > 0 && !!el.offsetParent })(),
+    comment: (document.querySelector('.scenario-comment')?.textContent || '').trim()
+  }
+})()`)
+record('wave3-scenario-gameover',
+  overInfo.scenarioResult === 'gameover' && overInfo.isGameOver && overInfo.visible &&
+  overInfo.isGameoverCard && overInfo.comment.includes('資金'),
+  JSON.stringify({ ...overInfo, comment: overInfo.comment.slice(0, 40) }))
+await shot('13-scenario-gameover')
+
+// 後片付け: 以降のチェック (テーマ) にシナリオ状態を持ち込まない
+await evaljs(`(() => {
+  window.closeModal?.()
+  const g = window.game
+  g.scenarioId = null
+  g.scenarioResult = null
+  g.isBankrupt = false
+  g.isGameOver = false
+  g.money = 10000000
+  window.renderActivePanel()
+  return true
+})()`)
+await sleep(300)
 
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {

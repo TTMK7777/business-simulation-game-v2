@@ -105,6 +105,8 @@ import { createDefaultCEOStatus } from './config/ceo'
 import { renderDocumentStack, renderStatusTab, renderEmployeesForDesk } from './ui/deskView'
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
 import { renderWeeklyEvent, renderWeeklyEventResult } from './ui/weeklyEvent'
+import { renderScenarioResult } from './ui/scenarioResult'
+import * as ScenarioManagerBridge from './managers/ScenarioManager'
 import * as WeeklyEventManager from './managers/WeeklyEventManager'
 import { renderVisitorResult } from './ui/visitorDialog'
 import { renderDirectivePanel } from './ui/ceoStatus'
@@ -609,6 +611,19 @@ function verdictDocument(docId: string, verdict: string) {
     renderActivePanel()
 }
 
+// ======= Wave 3-D: シナリオ結果の再表示 =======
+// 決着画面が他のモーダルに上書きされても、概要タブのバナーから開き直せる
+function openScenarioResult() {
+    if (!game.scenarioResult) return
+    const debrief = ScenarioManagerBridge.buildDebrief(game, game.scenarioResult)
+    if (!debrief) return
+    showModal(
+        game.scenarioResult === 'clear' ? '🎉 シナリオクリア' : '📉 シナリオ終了',
+        renderScenarioResult(debrief),
+        true
+    )
+}
+
 // ======= Wave 2-A: 週次ミニイベント =======
 // 概要タブのバナーからの復帰口。実績解除などのモーダルに上書きされても
 // state にイベントが残っている限りここから開き直せる
@@ -811,6 +826,7 @@ function selectCEOTrait(trait: string) {
 // ======= 社長モード =======
 ;(window as any).openDocument = openDocument
 ;(window as any).verdictDocument = verdictDocument
+;(window as any).openScenarioResult = openScenarioResult
 ;(window as any).openWeeklyEvent = openWeeklyEvent
 ;(window as any).resolveWeeklyEventAction = resolveWeeklyEventAction
 ;(window as any).respondToVisitor = respondToVisitor

@@ -32,9 +32,11 @@ import * as FinanceManager from './FinanceManager'
 import { updateMonthlyStress } from './HRManager'
 import { processMonthlyRetention } from './RetentionManager'
 import { generateWeeklyEvent, expireWeeklyEvent } from './WeeklyEventManager'
+import { checkScenarioOutcome, buildDebrief } from './ScenarioManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { renderWeeklyEvent } from '../ui/weeklyEvent'
+import { renderScenarioResult } from '../ui/scenarioResult'
 import { applyTabVisibilityForMode } from '../ui/renderers'
 import { escapeHtml } from '../ui/escape'
 
@@ -338,6 +340,38 @@ export function syncEmployeeAnimations(): void {
 // メインターン進行（オーケストレーション）
 // ============================================
 
+// ============================================
+// Wave 3-D: シナリオの決着表示
+// ============================================
+
+/**
+ * シナリオが決着していれば結果画面 (クリア/ゲームオーバー + 事後講評) を出す。
+ * 決着していない、またはサンドボックスなら false を返し、呼び出し側の既定処理に委ねる。
+ */
+function showScenarioOutcomeIfSettled(delayMs = 500): boolean {
+    const game = getGame()
+    const outcome = checkScenarioOutcome(game)
+    if (!outcome) return false
+
+    game.scenarioResult = outcome
+    if (outcome === 'gameover') {
+        game.isGameOver = true
+        game.gameOverReason = game.gameOverReason || '資金がショートしました'
+    }
+
+    const debrief = buildDebrief(game, outcome)
+    if (!debrief) return false
+
+    setTimeout(() => {
+        ;(window as any).showModal?.(
+            outcome === 'clear' ? '🎉 シナリオクリア' : '📉 シナリオ終了',
+            renderScenarioResult(debrief),
+            true
+        )
+    }, delayMs)
+    return true
+}
+
 export function nextTurn(): void {
     const game = getGame()
 
@@ -499,7 +533,10 @@ export function nextTurn(): void {
             ;(window as any).updateDisplay?.()
             ;(window as any).renderActivePanel?.()
             ;(window as any).updateRanking?.()
-            ;(window as any).showModal?.('💔 ゲームオーバー', '資金不足で倒産しました...<br>再スタートしてください。', true)
+            // Wave 3-D: シナリオ中なら結果画面 + 事後講評に差し替える
+            if (!showScenarioOutcomeIfSettled()) {
+                ;(window as any).showModal?.('💔 ゲームオーバー', '資金不足で倒産しました...<br>再スタートしてください。', true)
+            }
             return
         }
 
@@ -603,6 +640,14 @@ export function nextTurn(): void {
         setTimeout(() => (window as any).showTheoryUnlocked?.(theory), 900 + i * 1500)
     })
 
+    // Wave 3-D: シナリオの決着表示。
+    // 実績解除モーダル (i*1000ms) の後に出す — 決着画面はその回のプレイで最も重要な画面で、
+    // 後から開くモーダルに上書きされてはいけない。
+    // タイミングだけに頼らず、game.scenarioResult が残る限り概要タブから開き直せる
+    const scenarioSettled = showScenarioOutcomeIfSettled(
+        newAchievements.length > 0 ? newAchievements.length * 1000 + 600 : 500
+    )
+
     // フェーズ2: チュートリアル進行
     ;(window as any).advanceTutorialByAction?.('end_turn')
 
@@ -610,7 +655,7 @@ export function nextTurn(): void {
     // 先週提示したまま未対応のものは失効させてから今週の1件を抽選する
     // (放置＝意思決定の放棄。決裁カードなら提出者のモチベーションが下がる)
     const expired = expireWeeklyEvent()
-    const weeklyEvent = generateWeeklyEvent()
+    const weeklyEvent = scenarioSettled ? null : generateWeeklyEvent()
     if (weeklyEvent) {
         setTimeout(() => {
             ;(window as any).showModal?.(
