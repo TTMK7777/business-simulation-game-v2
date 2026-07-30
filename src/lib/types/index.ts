@@ -101,6 +101,11 @@ export interface Product {
     quality: number
     sales: number
     assignedEmployees?: (number | Employee)[]
+    /**
+     * Phase 3: この製品が戦っている市場セグメント（config/marketSegments.ts）。
+     * 旧セーブの製品は未設定で、既定セグメントとして扱われる。
+     */
+    segmentId?: string
 }
 
 // ============================================
@@ -109,7 +114,7 @@ export interface Product {
 
 /** 売上乗算チェーンの1要素が生んだ寄与額（円）。合計は概算で今月売上に近似する */
 export interface RevenueDriverContribution {
-    key: 'base' | 'charisma' | 'skillBonus' | 'marketShare' | 'brandPower' | 'workforce' | 'difficulty'
+    key: 'base' | 'charisma' | 'skillBonus' | 'marketShare' | 'brandPower' | 'workforce' | 'segment' | 'difficulty'
     label: string
     amount: number
 }
@@ -213,6 +218,12 @@ export interface GameState {
     scenarioStartMonth: number
     /** 決着（クリア/ゲームオーバー）。決着済みなら再判定しない */
     scenarioResult: ScenarioResult | null
+    // ======= Phase 3: 市場セグメント =======
+    /**
+     * セグメント別の自社シェア（%）。marketShare はこの加重平均として毎月導出される。
+     * 旧セーブは未定義で、ロード時に全セグメント0で初期化される。
+     */
+    segmentShares: Record<string, number>
 }
 
 export type ScenarioResult = 'clear' | 'gameover'

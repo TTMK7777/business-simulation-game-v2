@@ -3757,3 +3757,72 @@
     font-weight: bold;
     color: #4caf50;
 }
+
+/* ============================================
+   Phase 3: 参入市場（セグメント）選択
+   ============================================ */
+
+.segment-selection-lead {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+}
+
+.segment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.segment-option {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    background: var(--color-surface);
+    border: 1px solid rgba(var(--color-brand-rgb), 0.3);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.segment-option:hover {
+    border-color: var(--color-brand);
+}
+
+.segment-option:active {
+    transform: scale(0.98);
+}
+
+.segment-option-head {
+    font-size: 14px;
+    color: var(--color-text-primary);
+}
+
+.segment-option-owned {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--color-brand);
+    background: rgba(var(--color-brand-rgb), 0.14);
+    border-radius: 9px;
+}
+
+.segment-option-desc {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+}
+
+/* 判断材料の数字は目立たせる（選択肢に数字を明示する設計制約） */
+.segment-option-stats {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-brand);
+}

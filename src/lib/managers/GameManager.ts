@@ -33,6 +33,7 @@ import { updateMonthlyStress } from './HRManager'
 import { processMonthlyRetention } from './RetentionManager'
 import { generateWeeklyEvent, expireWeeklyEvent } from './WeeklyEventManager'
 import { checkScenarioOutcome, buildDebrief } from './ScenarioManager'
+import { growSegmentShares } from './SegmentManager'
 import { renderQuarterlyReview, renderPolicySelection } from '../ui/ceoStatus'
 import { renderVisitorDialog } from '../ui/visitorDialog'
 import { renderWeeklyEvent } from '../ui/weeklyEvent'
@@ -515,11 +516,14 @@ export function nextTurn(): void {
             syncEmployeeAnimations()
         }
 
-        // 製品駆動のシェア成長: 製品1本につき月+0.2% (上限60)。
+        // 製品駆動のシェア成長 (Phase 3: セグメント経由)。
         // 従来はマーケ (上限15) 以外にシェア加算源がなく、オフィスLv5 (22%) や
-        // 上位実績 (30/50%) が構造的に到達不能だった
+        // 上位実績 (30/50%) が構造的に到達不能だった。
+        // Phase 3 からは製品が属するセグメントのシェアを伸ばし、その全体換算分を
+        // marketShare に加算する = 高成長セグメントを選ぶほど速く伸びる
         if (game.products.length > 0) {
-            game.marketShare = Math.min(60, game.marketShare + game.products.length * 0.2)
+            const overallGain = growSegmentShares(game)
+            game.marketShare = Math.min(60, game.marketShare + overallGain)
         }
 
         // I-5: インライン月次計算を FinanceManager.calculateMonthlyRevenue() に統一

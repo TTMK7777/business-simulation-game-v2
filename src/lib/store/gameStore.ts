@@ -7,6 +7,8 @@ import { DEFAULT_COMPETITORS } from '../gameConfig'
 import { PERSONALITIES, HIDDEN_TRAITS, generateTemperament } from '../config/personalities'
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { TutorialV2Schema } from '../storage'
+// Phase 3: セグメントシェアの初期化 (config 駆動の純粋ヘルパー。manager → store の逆依存は無い)
+import { ensureSegmentShares } from '../managers/SegmentManager'
 
 // ============================================
 // デフォルトゲーム状態
@@ -70,7 +72,9 @@ const defaultGameState: GameState = {
     scenarioId: null as string | null,
     scenarioStartYear: 2025,
     scenarioStartMonth: 1,
-    scenarioResult: null as import('../types').ScenarioResult | null
+    scenarioResult: null as import('../types').ScenarioResult | null,
+    // Phase 3: セグメント別の自社シェア（%）
+    segmentShares: {} as Record<string, number>
 }
 
 // ============================================
@@ -277,6 +281,9 @@ export function normalizeGameState(): void {
     if (typeof game.scenarioStartYear !== 'number') game.scenarioStartYear = game.year || 2025
     if (typeof game.scenarioStartMonth !== 'number') game.scenarioStartMonth = game.month || 1
     if (game.scenarioResult !== 'clear' && game.scenarioResult !== 'gameover') game.scenarioResult = null
+    // Phase 3: 旧セーブはセグメント情報を持たない。全セグメント0で初期化し、
+    // 製品の segmentId 未設定はそのまま（SegmentManager が既定セグメントとして扱う）
+    ensureSegmentShares(game)
 }
 
 export function resetGameState(): void {

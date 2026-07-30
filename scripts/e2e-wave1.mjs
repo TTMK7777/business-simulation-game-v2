@@ -466,6 +466,80 @@ await evaljs(`(() => {
 })()`)
 await sleep(300)
 
+// --- 7.7 Phase 3 Wave 1: 市場セグメント ---
+// 製品開発でセグメントを選ばせ、選んだ市場のシェアだけが伸びること + 売上ドライバーに出ること
+await evaljs(`(() => {
+  const g = window.game
+  g.money = 30000000
+  g.products = []
+  g.segmentShares = { enterprise: 0, smb: 0, consumer: 0, ai: 0 }
+  g.currentWeeklyEvent = null
+  g.documentQueue = []
+  g.scenarioId = null
+  g.scenarioResult = null
+  g.isBankrupt = false
+  g.isGameOver = false
+  // 開発には2名必要
+  while (g.employees.length < 2) {
+    const c = JSON.parse(JSON.stringify(g.employees[0]))
+    c.id = 8000 + g.employees.length
+    c.name = 'E2E 開発' + g.employees.length
+    g.employees.push(c)
+  }
+  window.developProduct()
+  return true
+})()`)
+await sleep(600)
+const segSelect = await evaljs(`(() => {
+  const opts = [...document.querySelectorAll('.segment-option')]
+  return {
+    count: opts.length,
+    // 設計制約: 各選択肢に判断材料の数字が出ていること
+    allHaveStats: opts.length > 0 && opts.every(o =>
+      (o.querySelector('.segment-option-stats')?.textContent || '').includes('成長率')),
+    visible: opts.length > 0 && opts[0].getBoundingClientRect().height > 0 && !!opts[0].offsetParent
+  }
+})()`)
+record('phase3-segment-selection-shown',
+  segSelect.count === 4 && segSelect.allHaveStats && segSelect.visible,
+  JSON.stringify(segSelect))
+await shot('14-segment-selection')
+
+// AI セグメントを選んで開発 → その製品に segmentId が付く
+await evaljs(`(() => {
+  const btn = [...document.querySelectorAll('.segment-option')].find(o => (o.textContent||'').includes('AI'))
+  if (btn) btn.click()
+  return true
+})()`)
+await sleep(700)
+const devInfo = await evaljs(`(() => {
+  const g = window.game
+  return { products: g.products.length, segmentId: g.products[0]?.segmentId }
+})()`)
+record('phase3-product-has-segment',
+  devInfo.products === 1 && devInfo.segmentId === 'ai',
+  JSON.stringify(devInfo))
+
+// 決算まで進める → 選んだセグメントのシェアだけ伸び、ドライバーに segment が出る
+await evaljs(`(() => { window.closeModal?.(); window.game.week = 4; return true })()`)
+await evaljs(`document.querySelector('#turnFab').click()`)
+await sleep(1500)
+await evaljs(`(() => { window.closeModal?.(); return true })()`)
+const segGrowth = await evaljs(`(() => {
+  const g = window.game
+  const snap = (g.financeHistory || []).slice(-1)[0] || {}
+  const keys = (snap.revenueDrivers?.contributions || []).map(c => c.key)
+  return {
+    ai: g.segmentShares.ai,
+    smb: g.segmentShares.smb,
+    enterprise: g.segmentShares.enterprise,
+    hasSegmentDriver: keys.includes('segment')
+  }
+})()`)
+record('phase3-segment-share-grows',
+  segGrowth.ai > 0 && segGrowth.smb === 0 && segGrowth.enterprise === 0 && segGrowth.hasSegmentDriver,
+  JSON.stringify(segGrowth))
+
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {
   const clickToggle = `(() => {

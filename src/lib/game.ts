@@ -106,6 +106,8 @@ import { renderDocumentStack, renderStatusTab, renderEmployeesForDesk } from './
 import { renderDocumentDetail, renderVerdictResult } from './ui/documentDetail'
 import { renderWeeklyEvent, renderWeeklyEventResult } from './ui/weeklyEvent'
 import { renderScenarioResult } from './ui/scenarioResult'
+import { renderSegmentSelection } from './ui/segmentSelection'
+import { getSegment } from './config/marketSegments'
 import * as ScenarioManagerBridge from './managers/ScenarioManager'
 import * as WeeklyEventManager from './managers/WeeklyEventManager'
 import { renderVisitorResult } from './ui/visitorDialog'
@@ -435,10 +437,17 @@ function generateProductName(): string {
     return `製品${game.products.length + 1}`
 }
 
-function developProduct() {
+function developProduct(segmentId?: string) {
     if (!requireCompanyActive()) return
     if (game.employees.length < 2) {
         showModal('開発失敗', '最低2名の従業員が必要です')
+        return
+    }
+
+    // Phase 3: どの市場で戦うかを先に選ばせる (製品ごとに PPM の縦軸が決まる)。
+    // 引数指定があればそれを使う (選択モーダルからの再入 / 自動テスト用)
+    if (!segmentId) {
+        showModal('🎯 参入する市場を選ぶ', renderSegmentSelection(game), true)
         return
     }
 
@@ -502,13 +511,18 @@ function developProduct() {
         id: Date.now(),
         name: generateProductName(),
         quality: quality,
-        sales: 0
+        sales: 0,
+        segmentId
     }
     game.products.push(product)
     updateDisplay()
     renderActivePanel()
 
+    const segment = getSegment(segmentId)
     let message = `${product.name}を開発しました！<br>品質: ${quality}%`
+    if (segment) {
+        message += `<br>参入市場: ${escapeHtml(segment.emoji)} ${escapeHtml(segment.name)}`
+    }
     if (bonusMessages.length > 0) {
         message += '<br><br><strong>ボーナス効果:</strong><br>' + bonusMessages.join('<br>')
     }

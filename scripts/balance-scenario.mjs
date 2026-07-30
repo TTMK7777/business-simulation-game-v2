@@ -92,6 +92,20 @@ async function playOnce() {
   await sleep(400)
   await waitFor('scenario started', `window.game.scenarioId === 'startup_year_one'`)
 
+  // 参入市場の選び方をページ側に用意する (成長率が最も高いセグメント)
+  await evaljs(`(() => {
+    window.__pickBestSegment = () => {
+      const g = window.game
+      const ids = Object.keys(g.segmentShares || {})
+      if (ids.length === 0) return 'smb'
+      // 成長率は UI に出ている値と同じものを使いたいが、ページからは直接呼べないため
+      // セグメント定義の序列 (ai > consumer > smb > enterprise) を初期成長率の代理にする
+      const order = ['ai', 'consumer', 'smb', 'enterprise']
+      return order.find(id => ids.includes(id)) || ids[0]
+    }
+    return true
+  })()`)
+
   for (let turn = 0; turn < MAX_TURNS; turn++) {
     const settled = await evaljs(`window.game.scenarioResult`)
     if (settled) break
@@ -104,9 +118,11 @@ async function playOnce() {
         const c = window.generateCandidate()
         if (c && g.money >= c.salary * 3) window.hireEmployee(c)
       }
-      // 2) 資金に余裕があれば製品を作る (売上源)
+      // 2) 資金に余裕があれば製品を作る (売上源)。
+      //    Phase 3: 参入市場は「今いちばん成長率が高いところ」を選ぶ素朴な方針
       if (g.employees.length >= 2 && g.products.length < 3 && g.money >= 3500000) {
-        window.developProduct()
+        const best = window.__pickBestSegment ? window.__pickBestSegment() : 'smb'
+        window.developProduct(best)
       }
       window.closeModal?.()
       return true
