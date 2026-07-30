@@ -15,6 +15,8 @@ import { calculateTeamCompatibility } from '../managers/HRManager'
 import { getMonthlyFixedCost } from '../managers/FinanceManager'
 import { escapeHtml as escapeHtmlForUi } from './escape'
 import { getScenario } from '../config/scenarios'
+import { buildPpmView } from '../managers/PpmManager'
+import { renderPpmMatrix } from './ppmMatrix'
 import { getSurvivedMonths } from '../managers/ScenarioManager'
 import {
     ACHIEVEMENTS,
@@ -809,6 +811,9 @@ export function renderMarket(): void {
                 ${game.competitorAttacks.map((attack: string) => litHtml`<div style="margin-bottom: 4px;">• ${attack}</div>`)}
             </div>
         ` : nothing}
+
+        <!-- Phase 3 Wave 2: PPM マトリクス (実データ) -->
+        ${unsafeHTML(renderPpmMatrix(buildPpmView(game)))}
     `
     litRender(template, info)
 }

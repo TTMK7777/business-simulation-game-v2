@@ -540,6 +540,67 @@ record('phase3-segment-share-grows',
   segGrowth.ai > 0 && segGrowth.smb === 0 && segGrowth.enterprise === 0 && segGrowth.hasSegmentDriver,
   JSON.stringify(segGrowth))
 
+// --- 7.8 Phase 3 Wave 2: PPM マトリクスが実データで描画される ---
+// AI (高成長) で高シェア = 花形、成熟後は金のなる木へ移ることを実ブラウザで確認
+await evaljs(`(() => {
+  const g = window.game
+  g.segmentShares = { enterprise: 0, smb: 0, consumer: 0.1, ai: 20 }
+  g.products = [
+    { id: 501, name: 'PPM花形', quality: 60, sales: 0, segmentId: 'ai' },
+    { id: 502, name: 'PPM問題児', quality: 40, sales: 0, segmentId: 'consumer' }
+  ]
+  g.scenarioStartYear = 2025
+  g.scenarioStartMonth = 1
+  g.year = 2025
+  g.month = 1
+  window.showPanel(document.querySelector('button[data-panel="market"]'), 'market')
+  return true
+})()`)
+await sleep(700)
+const ppmInfo = await evaljs(`(() => {
+  const section = document.querySelector('.ppm-section')
+  const cells = [...document.querySelectorAll('.ppm-cell')]
+  const star = document.querySelector('.ppm-cell-star')
+  const qm = document.querySelector('.ppm-cell-question_mark')
+  return {
+    rendered: !!section,
+    visible: !!section && section.getBoundingClientRect().height > 0 && !!section.offsetParent,
+    cellCount: cells.length,
+    starItems: star ? star.querySelectorAll('.ppm-item').length : -1,
+    questionItems: qm ? qm.querySelectorAll('.ppm-item').length : -1,
+    starText: star ? (star.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 60) : '',
+    // 実データ: 製品ごとに成長率と相対シェアの数字が出ていること
+    itemsHaveStats: [...document.querySelectorAll('.ppm-item-stats')].every(e =>
+      (e.textContent || '').includes('相対シェア'))
+  }
+})()`)
+record('phase3-ppm-matrix-rendered',
+  ppmInfo.rendered && ppmInfo.visible && ppmInfo.cellCount === 4 &&
+  ppmInfo.starItems === 1 && ppmInfo.questionItems === 1 && ppmInfo.itemsHaveStats,
+  JSON.stringify(ppmInfo))
+await shot('15-ppm-matrix')
+
+// 市場が成熟すると花形 → 金のなる木へ移る（時間で象限が動く）
+await evaljs(`(() => {
+  const g = window.game
+  g.year = 2027
+  g.month = 7
+  window.showPanel(document.querySelector('button[data-panel="market"]'), 'market')
+  return true
+})()`)
+await sleep(600)
+const ppmMatured = await evaljs(`(() => {
+  const cow = document.querySelector('.ppm-cell-cash_cow')
+  const star = document.querySelector('.ppm-cell-star')
+  return {
+    cowItems: cow ? cow.querySelectorAll('.ppm-item').length : -1,
+    starItems: star ? star.querySelectorAll('.ppm-item').length : -1
+  }
+})()`)
+record('phase3-ppm-quadrant-shifts-over-time',
+  ppmMatured.cowItems === 1 && ppmMatured.starItems === 0,
+  JSON.stringify(ppmMatured))
+
 // --- 7.5 ダークモード検証 (tokens-theme マージ後に有効。トグル未実装なら SKIP 扱い) ---
 if (process.env.E2E_DARK === '1') {
   const clickToggle = `(() => {

@@ -3826,3 +3826,134 @@
     font-weight: 600;
     color: var(--color-brand);
 }
+
+/* ============================================
+   Phase 3 Wave 2: PPM (BCGマトリクス)
+   ============================================ */
+
+.ppm-section {
+    margin-top: 24px;
+}
+
+.ppm-title {
+    margin: 0 0 6px;
+    font-size: 14px;
+    color: var(--color-brand);
+}
+
+.ppm-lead {
+    font-size: 11px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+}
+
+.ppm-empty {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+    padding: 12px;
+    background: var(--color-surface-alt);
+    border-radius: 10px;
+}
+
+.ppm-matrix {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    grid-template-rows: 1fr 18px;
+    gap: 4px;
+}
+
+/* 軸ラベル: 縦は左、横は下。
+   writing-mode は上下の並び順が直感と逆に読めたため使わず、
+   1文字ずつ改行した通常の縦並びにする（上＝高成長を明示） */
+.ppm-axis-y {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9px;
+    line-height: 1.15;
+    text-align: center;
+    color: var(--color-text-secondary);
+}
+
+.ppm-axis-x {
+    grid-column: 2;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--color-text-secondary);
+}
+
+.ppm-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.ppm-cell {
+    min-height: 92px;
+    padding: 8px 9px;
+    background: var(--color-surface-alt);
+    border: 1px solid transparent;
+    border-radius: 10px;
+}
+
+/* 製品が入っている象限だけ色を立てる（今どこにいるかを一目で） */
+.ppm-cell.is-occupied {
+    background: rgba(var(--color-brand-rgb), 0.10);
+    border-color: rgba(var(--color-brand-rgb), 0.4);
+}
+
+.ppm-cell-head {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--color-text-primary);
+}
+
+.ppm-cell-count {
+    margin-left: auto;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--color-brand);
+    background: rgba(var(--color-brand-rgb), 0.16);
+    border-radius: 8px;
+}
+
+.ppm-cell-advice {
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.5;
+    color: var(--color-text-secondary);
+}
+
+.ppm-cell-items {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ppm-item {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 6px;
+    background: var(--color-surface);
+    border-radius: 7px;
+}
+
+.ppm-item-name {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.ppm-item-stats {
+    font-size: 9px;
+    color: var(--color-brand);
+    font-weight: 600;
+}
