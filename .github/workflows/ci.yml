@@ -1,0 +1,52 @@
+# CI — 依存更新とコード変更の検証ゲート
+#
+# 経緯: 本リポは dependabot-automerge.yml で非メジャー更新を自動マージしているが、
+# required status checks が未設定＝「何も検証せずに main へマージ」されていた。
+# codeql.yml はセキュリティスキャンであってビルド/テストの門番ではない。
+# 同種の穴があった jan-anime-map では依存の版ずれでテストが長期間 fail していたのに
+# 誰も気づかなかった。このワークフローの job を required status check に登録することで
+# automerge が検証を通過した PR にのみ適用されるようにする。
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          # engines / .nvmrc 未設定。vite 8 と vitest 4 の要求 (^20.19 || >=22.12) を満たす 22 を採用
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        # CLAUDE.md の規約に合わせて tsc を直接叩く
+        run: node ./node_modules/typescript/bin/tsc --noEmit
+
+      - name: Test
+        run: npm test -- --run
+
+      - name: Build
+        run: npm run build
