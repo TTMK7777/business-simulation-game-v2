@@ -157,6 +157,8 @@ export function buildRetentionAdvisorMessage(atRisk: AtRiskEmployeeLike[]): Advi
 // ============================================
 export interface MonthlySettlement {
     revenue: number
+    /** Wave 2: 変動費（旧呼び出し互換のため任意） */
+    variableCost?: number
     salaryTotal: number
     interest: number
     /** Wave 1-E: オフィス維持費（旧呼び出し互換のため任意） */
@@ -171,7 +173,7 @@ export interface MonthlySettlement {
 export function buildFinanceSummaryData(input: MonthlySettlement): FinanceData {
     return {
         revenue: input.revenue,
-        expenses: input.salaryTotal + input.interest + (input.fixedCost ?? 0) + (input.attritionCost ?? 0),
+        expenses: (input.variableCost ?? 0) + input.salaryTotal + input.interest + (input.fixedCost ?? 0) + (input.attritionCost ?? 0),
         profit: input.profit,
         cash: input.cash,
         debt: input.debt,

@@ -12,7 +12,7 @@ import { PERSONALITIES, SUB_TRAITS, HIDDEN_TRAITS } from '../config/personalitie
 import { DEPARTMENTS, POSITIONS } from '../config/departments'
 import { OFFICE_LEVELS } from '../config/offices'
 import { calculateTeamCompatibility } from '../managers/HRManager'
-import { getMonthlyFixedCost } from '../managers/FinanceManager'
+import { getMonthlyFixedCost, estimateVariableCost, getContributionMarginRatio, getBreakEvenRevenue } from '../managers/FinanceManager'
 import { escapeHtml as escapeHtmlForUi } from './escape'
 import { getScenario } from '../config/scenarios'
 import { buildPpmView } from '../managers/PpmManager'
@@ -531,10 +531,12 @@ export function updateDisplay(): void {
     const revenueEl = document.getElementById('revenue')
     if (revenueEl) revenueEl.textContent = `${Math.floor(game.monthlyRevenue / 10000)}万`
 
-    // 概要タブ: 今月の収支見込み (前月売上実績 − 人件費 − 利息見込 − オフィス維持費。財務タブの純利益と同じ表示式)
+    // 概要タブ: 今月の収支見込み (前月売上実績 − 変動費見込 − 人件費 − 利息見込 − オフィス維持費。
+    // 財務タブの純利益と同じ表示式)
     const forecastEl = document.getElementById('profitForecast') as HTMLElement | null
     if (forecastEl) {
-        const forecast = game.monthlyRevenue - salaryTotalForWarn - interestForWarn - fixedCostForWarn
+        const variableCostForecast = estimateVariableCost(game, game.monthlyRevenue)
+        const forecast = game.monthlyRevenue - variableCostForecast - salaryTotalForWarn - interestForWarn - fixedCostForWarn
         forecastEl.textContent = `${forecast >= 0 ? '+' : ''}${Math.floor(forecast / 10000)}万円`
         forecastEl.style.color = forecast >= 0 ? 'var(--color-success-text)' : 'var(--color-danger-text)'
         forecastEl.style.fontWeight = '700'
@@ -835,12 +837,27 @@ export function renderFinance(): void {
     const interestPreview = game.debt > 0 ? Math.floor(game.debt * LOAN_INTEREST_RATE) : 0
     // Wave 1-E: オフィス維持費も月次の固定費として純利益から差し引く
     const fixedCostPreview = getMonthlyFixedCost(game.officeLevel)
-    const netProfitPreview = game.monthlyRevenue - salaryTotal - interestPreview - fixedCostPreview
+    // Wave 2: 売上 → 変動費 → 限界利益 → 固定費群 → 純利益 の順に並べる。
+    // 損益分岐点は「固定費 ÷ 限界利益率」。固定費合計そのものではない
+    const variableCostPreview = estimateVariableCost(game, game.monthlyRevenue)
+    const contributionMargin = game.monthlyRevenue - variableCostPreview
+    const marginRatio = getContributionMarginRatio(game.monthlyRevenue, variableCostPreview)
+    const fixedCostTotal = salaryTotal + interestPreview + fixedCostPreview
+    const breakEven = getBreakEvenRevenue(fixedCostTotal, marginRatio)
+    const netProfitPreview = contributionMargin - fixedCostTotal
     const template = litHtml`
         <div class="info-box">
             <div>
                 <span>📊 売上高</span>
                 <strong>${Math.floor(game.monthlyRevenue / 10000)}万円</strong>
+            </div>
+            <div>
+                <span>☁️ 変動費</span>
+                <strong>${Math.floor(variableCostPreview / 10000)}万円</strong>
+            </div>
+            <div>
+                <span>📐 限界利益</span>
+                <strong>${Math.floor(contributionMargin / 10000)}万円（${(marginRatio * 100).toFixed(1)}%）</strong>
             </div>
             <div>
                 <span>👥 人件費</span>
@@ -849,6 +866,10 @@ export function renderFinance(): void {
             <div>
                 <span>🏢 オフィス維持費</span>
                 <strong>${Math.floor(fixedCostPreview / 10000)}万円</strong>
+            </div>
+            <div>
+                <span>⚖️ 損益分岐点売上高</span>
+                <strong>${Number.isFinite(breakEven) ? `${Math.floor(breakEven / 10000)}万円` : '—'}</strong>
             </div>
             <div style="border-top: 2px solid #667eea; padding-top: 8px; margin-top: 8px;">
                 <span>💰 純利益</span>

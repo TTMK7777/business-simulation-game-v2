@@ -7,7 +7,7 @@ import { SKILL_EFFECTS, SKILL_SPECIAL_LOOKUP } from '../config/skills'
 import { OFFICE_LEVELS } from '../config/offices'
 import { calculateWorkforceMultiplier } from './RetentionManager'
 import { getSegmentSalesMultiplier } from './SegmentManager'
-import type { FinanceSnapshot, RevenueDriverBreakdown } from '../types'
+import type { FinanceSnapshot, GameState, RevenueDriverBreakdown } from '../types'
 
 /** financeHistory の最大保持件数（5年分の月次決算） */
 const FINANCE_HISTORY_LIMIT = 60
@@ -34,6 +34,8 @@ export interface RepayResult {
 
 export interface MonthlyRevenueResult {
     revenue: number
+    /** Wave 2: 変動費（売上連動費用）。売上 − 変動費 ＝ 限界利益 */
+    variableCost: number
     salaryTotal: number
     interest: number
     /** Wave 1-E: オフィス維持費（officeLevel 連動の月次固定費） */
@@ -112,6 +114,71 @@ export function getMonthlyFixedCost(officeLevel: number): number {
 }
 
 // ============================================
+// Wave 2: 変動費（売上連動費用）
+// ============================================
+
+/**
+ * 製品1つあたりの変動費率を返す。
+ *
+ * 品質が高いほど率が上がる。物語上は高機能ほどクラウド費・サポート工数が嵩むということで、
+ * ゲーム上は「売上は伸びるが1円あたりの儲けは薄くなる」というトレードオフになる。
+ * 品質を上げる判断が一方向の正解でなくなり、製品構成そのものが意思決定になる。
+ *
+ * 純粋関数にして製品へは保存しない。セーブに率が焼き付くと、
+ * バランス調整のたびに旧セーブだけ古い率で動き続けることになるため。
+ */
+export function getVariableCostRate(quality: number): number {
+    const { variableCostRateBase, variableCostRateQualitySlope, variableCostRateMax } = BALANCE_CONFIG.economy
+    const q = Math.max(0, quality)
+    const rate = variableCostRateBase + variableCostRateQualitySlope * (q / 100)
+    return Math.min(variableCostRateMax, rate)
+}
+
+/**
+ * 限界利益率を返す（0〜1）。売上ゼロの月は 0 を返す。
+ *
+ * 損益分岐点売上高は「固定費 ÷ 限界利益率」で求まる。この率が 1 だった頃は
+ * 分岐点が固定費合計そのものに退化していた。
+ */
+export function getContributionMarginRatio(revenue: number, variableCost: number): number {
+    if (revenue <= 0) return 0
+    return (revenue - variableCost) / revenue
+}
+
+/**
+ * 損益分岐点売上高。固定費を限界利益率で割る。
+ *
+ * @param fixedCostTotal 売上に連動しない費用の合計（人件費＋利息＋オフィス維持費＋再採用コスト）
+ */
+export function getBreakEvenRevenue(fixedCostTotal: number, contributionMarginRatio: number): number {
+    // 限界利益率が 0 以下なら、売上をいくら積んでも固定費を回収できない
+    if (contributionMarginRatio <= 0) return Infinity
+    return fixedCostTotal / contributionMarginRatio
+}
+
+/**
+ * 決算前に「この売上ならいくら変動費がかかるか」を見積もる（表示用）。
+ *
+ * 直近決算の実績率を優先する。実績は製品ごとの売れ方で加重された率になっており、
+ * 品質の単純平均より実態に近いため。決算がまだ無い初月だけ品質平均で代用する。
+ */
+export function estimateVariableCost(game: GameState, revenue: number): number {
+    if (revenue <= 0) return 0
+
+    const history = game.financeHistory
+    if (history && history.length > 0) {
+        const last = history[history.length - 1]
+        if (last.revenue > 0) {
+            return Math.floor(revenue * (last.variableCost / last.revenue))
+        }
+    }
+
+    if (game.products.length === 0) return 0
+    const avgQuality = game.products.reduce((sum, p) => sum + p.quality, 0) / game.products.length
+    return Math.floor(revenue * getVariableCostRate(avgQuality))
+}
+
+// ============================================
 // 月次収益計算
 // ============================================
 /**
@@ -121,6 +188,7 @@ export function getMonthlyFixedCost(officeLevel: number): number {
 export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult {
     const game = getGame()
     let revenue = 0
+    let variableCost = 0
     const difficultyMultiplier = BALANCE_CONFIG.difficultyMultipliers[(game.difficulty || 'normal') as keyof typeof BALANCE_CONFIG.difficultyMultipliers]
     const productRevenues: { name: string; revenue: number }[] = []
 
@@ -184,6 +252,10 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
         product.sales += productRevenue
         revenue += productRevenue
 
+        // Wave 2: 変動費は製品ごとに率が違う（品質連動）ため、製品単位で積む。
+        // 全社の限界利益率は「どの製品がどれだけ売れたか」で決まる加重平均になる。
+        variableCost += Math.floor(productRevenue * getVariableCostRate(product.quality))
+
         productRevenues.push({ name: product.name, revenue: productRevenue })
 
         // ドライバー分解: 乗算チェーンと同じ順序で段階的に積算する
@@ -227,7 +299,8 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
     const fixedCost = getMonthlyFixedCost(game.officeLevel)
     game.monthlyRevenue = revenue
     game.revenueHistory.push(revenue)
-    const profit = revenue - salaryTotal - interest - fixedCost - attritionCost
+    // Wave 2: 変動費を最初に引く。ここまでが限界利益で、そこから固定費群を回収する
+    const profit = revenue - variableCost - salaryTotal - interest - fixedCost - attritionCost
     game.money += profit
 
     const isBankrupt = game.money < 0
@@ -252,6 +325,7 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
         year: game.year,
         month: game.month,
         revenue,
+        variableCost,
         salaryTotal,
         interest,
         fixedCost,
@@ -271,6 +345,7 @@ export function calculateMonthlyRevenue(attritionCost = 0): MonthlyRevenueResult
 
     return {
         revenue,
+        variableCost,
         salaryTotal,
         interest,
         fixedCost,

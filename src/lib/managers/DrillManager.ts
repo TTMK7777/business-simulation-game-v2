@@ -4,7 +4,7 @@
 //   罠（誤答の選択肢）を人が書くのではなく、**エンジンの中間計算値から導出する**。
 //
 // FinanceManager の profit は
-//   revenue - salaryTotal - interest - fixedCost - attritionCost
+//   revenue - variableCost - salaryTotal - interest - fixedCost - attritionCost
 // という減算チェーンで求まる。この途中で止めた値こそが、実際に人が落とす場所であり、
 // それはコードから機械的に取り出せる。人力で罠を列挙する必要がないため、
 // 問題数はプレイした月数だけ増える。
@@ -21,7 +21,7 @@ export const DRILL_TOLERANCE_RATIO = 0.002
 const DRILL_TOLERANCE_MIN = 0.5
 
 /** 生成できる問題の種類 */
-export type DrillKind = 'profit' | 'equityRatio' | 'breakeven'
+export type DrillKind = 'profit' | 'equityRatio' | 'breakeven' | 'contributionMargin'
 
 export interface DrillTrap {
     /** 途中で止まったときに出てくる値 */
@@ -120,9 +120,12 @@ function buildDrawerChoices(correct: DrawerKey, seed: number): DrawerKey[] {
  * 罠は FinanceManager の減算チェーンをそのまま途中で止めた値。
  */
 function generateProfitProblem(s: FinanceSnapshot): DrillProblem {
-    const afterSalary = s.revenue - s.salaryTotal
+    const contributionMargin = s.revenue - s.variableCost
+    const afterSalary = contributionMargin - s.salaryTotal
     const afterInterest = afterSalary - s.interest
     const afterFixed = afterInterest - s.fixedCost
+    // 変動費だけを引き忘れると、固定費を全部引いてもここで止まる（利益より変動費のぶん大きい）
+    const forgotVariable = s.profit + s.variableCost
 
     return {
         id: `t${s.turn}-profit`,
@@ -132,8 +135,9 @@ function generateProfitProblem(s: FinanceSnapshot): DrillProblem {
         title: '当月利益',
         stem:
             `あなたの会社の${s.year}年${s.month}月の月次実績です。` +
-            `売上 ${yen(s.revenue)}、人件費 ${yen(s.salaryTotal)}、支払利息 ${yen(s.interest)}、` +
-            `オフィス維持費 ${yen(s.fixedCost)}、退職に伴う再採用コスト ${yen(s.attritionCost)}。` +
+            `売上 ${yen(s.revenue)}、変動費 ${yen(s.variableCost)}、人件費 ${yen(s.salaryTotal)}、` +
+            `支払利息 ${yen(s.interest)}、オフィス維持費 ${yen(s.fixedCost)}、` +
+            `退職に伴う再採用コスト ${yen(s.attritionCost)}。` +
             `この月の利益はいくらですか。`,
         answer: s.profit,
         unit: '円',
@@ -144,8 +148,18 @@ function generateProfitProblem(s: FinanceSnapshot): DrillProblem {
                 hint: 'まだ1つも費用を引いていません。手元に残る金額を聞かれています。',
             },
             {
+                value: contributionMargin,
+                label: '限界利益（売上 − 変動費）',
+                hint: '変動費までは引けています。ここから固定費（人件費・利息・オフィス維持費・再採用コスト）を回収して、残った分が利益です。',
+            },
+            {
+                value: forgotVariable,
+                label: '変動費だけを引き忘れた値',
+                hint: '売上に連動する費用が抜けています。売れれば売れるほど増える費用は、固定費と別枠で先に引いてください。',
+            },
+            {
                 value: afterSalary,
-                label: '売上から人件費だけを引いた値',
+                label: '限界利益から人件費だけを引いた値',
                 hint: '人件費で止まっています。残りの3つ（利息・オフィス維持費・再採用コスト）を引いて完走してください。',
             },
             {
@@ -160,9 +174,61 @@ function generateProfitProblem(s: FinanceSnapshot): DrillProblem {
             },
         ], s.profit),
         solution:
-            `${yen(s.revenue)} − ${yen(s.salaryTotal)} − ${yen(s.interest)} − ${yen(s.fixedCost)} − ` +
-            `${yen(s.attritionCost)} ＝ ${yen(s.profit)}。` +
-            `費用は4種類あります。式を全部書いてから数字を入れると、引き忘れが起きません。`,
+            `${yen(s.revenue)} − ${yen(s.variableCost)} − ${yen(s.salaryTotal)} − ${yen(s.interest)} − ` +
+            `${yen(s.fixedCost)} − ${yen(s.attritionCost)} ＝ ${yen(s.profit)}。` +
+            `費用は5種類あり、うち変動費だけが売上に連動します。` +
+            `売上 − 変動費 ＝ 限界利益 ${yen(contributionMargin)} を先に出してから固定費を引くと、順序が崩れません。`,
+        source: { turn: s.turn, year: s.year, month: s.month },
+    }
+}
+
+/**
+ * 限界利益率。
+ * 罠は「分母・分子に何を置くか」と「固定費まで混ぜてしまう」取り違え。
+ */
+function generateContributionMarginProblem(s: FinanceSnapshot): DrillProblem {
+    const contributionMargin = s.revenue - s.variableCost
+    const answer = s.revenue > 0 ? (contributionMargin / s.revenue) * 100 : 0
+    const variableCostRatio = s.revenue > 0 ? (s.variableCost / s.revenue) * 100 : 0
+    const fixedCostTotal = s.salaryTotal + s.interest + s.fixedCost + s.attritionCost
+    // 固定費まで変動費に混ぜて「全部の費用」で計算してしまう典型
+    const withFixedMixed = s.revenue > 0 ? ((s.revenue - s.variableCost - fixedCostTotal) / s.revenue) * 100 : 0
+
+    return {
+        id: `t${s.turn}-contribution-margin`,
+        kind: 'contributionMargin',
+        drawer: 'classification',
+        drawerChoices: buildDrawerChoices('classification', s.turn + 3),
+        title: '限界利益率',
+        stem:
+            `${s.year}年${s.month}月のあなたの会社は、売上 ${yen(s.revenue)} に対し、` +
+            `売上に連動する費用（変動費）が ${yen(s.variableCost)}、` +
+            `売上が増減しても変わらない費用（人件費・支払利息・オフィス維持費・再採用コスト）が` +
+            `合計 ${yen(fixedCostTotal)} でした。限界利益率は何%ですか。`,
+        answer,
+        unit: '%',
+        traps: usableTraps([
+            {
+                value: variableCostRatio,
+                label: '変動費率（変動費 ÷ 売上）',
+                hint: '裏返しの値です。100からこれを引くと限界利益率になります。',
+            },
+            {
+                value: withFixedMixed,
+                label: '固定費まで引いてしまった値（売上高利益率）',
+                hint: '固定費を混ぜています。限界利益は「売上に連動する費用だけ」を引いた段階の利益で、固定費はその後に回収するものです。',
+            },
+            {
+                value: contributionMargin,
+                label: '限界利益の金額そのもの',
+                hint: '金額ではなく率を聞かれています。売上で割って100を掛けてください。',
+            },
+        ], answer),
+        solution:
+            `限界利益 ＝ ${yen(s.revenue)} − ${yen(s.variableCost)} ＝ ${yen(contributionMargin)}。` +
+            `限界利益率 ＝ ${yen(contributionMargin)} ÷ ${yen(s.revenue)} × 100 ＝ ${answer.toFixed(1)}%。` +
+            `費用を見たらまず「売上が倍になったらこれも倍になるか」を自問してください。` +
+            `そこで固定費と変動費が分かれます。`,
         source: { turn: s.turn, year: s.year, month: s.month },
     }
 }
@@ -207,12 +273,19 @@ function generateEquityRatioProblem(s: FinanceSnapshot): DrillProblem {
 }
 
 /**
- * 損益分岐点売上高。
- * このゲームの費用は売上に連動しない（全額が固定的な性格）ため、損益分岐点＝総費用になる。
- * 罠は「引き忘れた費用」の組み合わせ。
+ * 損益分岐点売上高 ＝ 固定費 ÷ 限界利益率。
+ *
+ * 最大の罠は「固定費合計そのもの」。売上を1円増やしても、その全額が固定費の回収に
+ * 回るわけではない（変動費が付いてくる）ため、必要な売上は固定費より必ず大きくなる。
+ * 変動費が無かった頃はこの値が正解になってしまっていた。
  */
 function generateBreakevenProblem(s: FinanceSnapshot): DrillProblem {
-    const answer = s.salaryTotal + s.interest + s.fixedCost + s.attritionCost
+    const fixedCostTotal = s.salaryTotal + s.interest + s.fixedCost + s.attritionCost
+    const contributionMargin = s.revenue - s.variableCost
+    const marginRatio = s.revenue > 0 ? contributionMargin / s.revenue : 0
+    // 限界利益率が0以下だと分岐点が存在しない。その月は固定費合計を答えにしても
+    // 「回収できない」という事実を教えられないため、率が正のときだけ本来の式を使う
+    const answer = marginRatio > 0 ? fixedCostTotal / marginRatio : fixedCostTotal
     const gap = s.revenue - answer
 
     return {
@@ -222,22 +295,28 @@ function generateBreakevenProblem(s: FinanceSnapshot): DrillProblem {
         drawerChoices: buildDrawerChoices('formula', s.turn + 2),
         title: '損益分岐点売上高',
         stem:
-            `${s.year}年${s.month}月のあなたの会社の費用は、人件費 ${yen(s.salaryTotal)}、` +
-            `支払利息 ${yen(s.interest)}、オフィス維持費 ${yen(s.fixedCost)}、` +
-            `再採用コスト ${yen(s.attritionCost)} でした。これらが変わらないとして、` +
-            `赤字にならないために最低限必要な月間売上はいくらですか。`,
+            `${s.year}年${s.month}月のあなたの会社は、売上 ${yen(s.revenue)} に対して` +
+            `変動費が ${yen(s.variableCost)} かかりました。` +
+            `固定費は人件費 ${yen(s.salaryTotal)}、支払利息 ${yen(s.interest)}、` +
+            `オフィス維持費 ${yen(s.fixedCost)}、再採用コスト ${yen(s.attritionCost)} です。` +
+            `変動費率と固定費が変わらないとして、赤字にならないために最低限必要な月間売上はいくらですか。`,
         answer,
         unit: '円',
         traps: usableTraps([
             {
-                value: s.salaryTotal,
-                label: '人件費だけ',
-                hint: '人件費だけでは足りません。売上がゼロでも出ていく金を全部数えてください。',
+                value: fixedCostTotal,
+                label: '固定費の合計',
+                hint: '売上を1円増やしても、その1円がまるごと固定費の回収に回るわけではありません。変動費が付いてくるぶん、必要な売上は固定費より大きくなります。固定費を限界利益率で割ってください。',
             },
             {
-                value: s.salaryTotal + s.fixedCost,
-                label: '人件費 ＋ オフィス維持費',
-                hint: '借入があれば利息も毎月出ていきます。退職者が出た月は再採用コストも乗ります。',
+                value: fixedCostTotal + s.variableCost,
+                label: '固定費 ＋ 今月の変動費',
+                hint: '今月の変動費をそのまま足しています。変動費は売上が変われば変わるので、金額ではなく「率」で扱ってください。',
+            },
+            {
+                value: s.salaryTotal,
+                label: '人件費だけ',
+                hint: '人件費だけでは足りません。売上がゼロでも出ていく金を全部数えてから、限界利益率で割ります。',
             },
             {
                 value: s.revenue,
@@ -246,10 +325,14 @@ function generateBreakevenProblem(s: FinanceSnapshot): DrillProblem {
             },
         ], answer),
         solution:
-            `${yen(s.salaryTotal)} ＋ ${yen(s.interest)} ＋ ${yen(s.fixedCost)} ＋ ${yen(s.attritionCost)} ` +
-            `＝ ${yen(answer)}。実際の売上は ${yen(s.revenue)} だったので、` +
+            `固定費 ＝ ${yen(s.salaryTotal)} ＋ ${yen(s.interest)} ＋ ${yen(s.fixedCost)} ＋ ` +
+            `${yen(s.attritionCost)} ＝ ${yen(fixedCostTotal)}。` +
+            `限界利益率 ＝ (${yen(s.revenue)} − ${yen(s.variableCost)}) ÷ ${yen(s.revenue)} ＝ ` +
+            `${(marginRatio * 100).toFixed(1)}%。` +
+            `損益分岐点売上高 ＝ ${yen(fixedCostTotal)} ÷ ${(marginRatio * 100).toFixed(1)}% ＝ ${yen(answer)}。` +
+            `実際の売上は ${yen(s.revenue)} だったので、` +
             (gap >= 0 ? `${yen(gap)} の余裕がありました。` : `${yen(-gap)} 足りていませんでした。`) +
-            `この線を毎月頭に置いておくと、採用や増床の判断が変わります。`,
+            `固定費をそのまま答えにすると必ず過小評価になります。`,
         source: { turn: s.turn, year: s.year, month: s.month },
     }
 }
@@ -263,6 +346,7 @@ export function generateProblemsFromSnapshot(snapshot: FinanceSnapshot): DrillPr
     return [
         generateProfitProblem(snapshot),
         generateEquityRatioProblem(snapshot),
+        generateContributionMarginProblem(snapshot),
         generateBreakevenProblem(snapshot),
     ]
 }

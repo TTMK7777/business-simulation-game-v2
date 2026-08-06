@@ -70,7 +70,9 @@ export function startScenario(scenarioId: string): ScenarioDef | null {
 
 function buildComment(state: GameState, result: ScenarioResult, survivedMonths: number): string {
     if (result === 'gameover') {
-        return `${survivedMonths}ヶ月目に資金が尽きました。売上が固定費（人件費＋オフィス維持費）を上回る前に現金が持たなかったのが直接の敗因です。製品を早く出すか、規模を抑えて損益分岐点を下げるかの二択でした。`
+        // Wave 2: 固定費を回収するのは売上ではなく限界利益（売上 − 変動費）。
+        // 敗因の言語化を実際の計算と揃える
+        return `${survivedMonths}ヶ月目に資金が尽きました。限界利益（売上から変動費を引いた残り）が固定費（人件費＋オフィス維持費）を上回る前に現金が持たなかったのが直接の敗因です。製品を早く出すか、規模を抑えて損益分岐点を下げるかの二択でした。`
     }
 
     const hasProfit = state.monthlyRevenue > 0
