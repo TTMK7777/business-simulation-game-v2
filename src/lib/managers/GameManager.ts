@@ -529,7 +529,7 @@ export function nextTurn(): void {
         // （旧コードは FinanceManager 側と同一ロジックを二重実装しており、片方の修正が
         //   他方に反映されないリスクがあった）
         const monthly = FinanceManager.calculateMonthlyRevenue(retention.attritionCost)
-        const { revenue, salaryTotal, interest, fixedCost, attritionCost, profit, isBankrupt } = monthly
+        const { revenue, variableCost, salaryTotal, interest, fixedCost, attritionCost, profit, isBankrupt } = monthly
 
         if (isBankrupt) {
             // game.isBankrupt は calculateMonthlyRevenue 内で設定済み
@@ -543,8 +543,14 @@ export function nextTurn(): void {
             return
         }
 
+        // Wave 2: 売上 → 変動費 → 限界利益 → 固定費群 の順で並べる。
+        // 「売上のうち固定費の回収に使える金がいくらか」が読み取れる形にする（＝限界利益）
+        const contributionMargin = revenue - variableCost
+        const marginRatio = revenue > 0 ? (contributionMargin / revenue) * 100 : 0
         const summaryLines = [
             `📊 売上: ${Math.floor(revenue / 10000)}万円`,
+            `☁️ 変動費: ${Math.floor(variableCost / 10000)}万円`,
+            `📐 限界利益: ${Math.floor(contributionMargin / 10000)}万円（限界利益率 ${marginRatio.toFixed(1)}%）`,
             `👥 人件費: ${Math.floor(salaryTotal / 10000)}万円`,
             // Wave 1-E: オフィス維持費は売上ゼロでも出ていく固定費なので常に表示する
             `🏢 オフィス維持費: ${Math.floor(fixedCost / 10000)}万円`
@@ -571,7 +577,7 @@ export function nextTurn(): void {
 
         // a2ui: 月次決算 → 財務ダッシュボードカード更新
         getA2UIManager().showFinanceSummary(
-            buildFinanceSummaryData({ revenue, salaryTotal, interest, fixedCost, attritionCost, profit, cash: game.money, debt: game.debt })
+            buildFinanceSummaryData({ revenue, variableCost, salaryTotal, interest, fixedCost, attritionCost, profit, cash: game.money, debt: game.debt })
         )
 
         // Wave 1-B: 退職の発生を数字とセットで通知する (人員減 + 再採用コスト)
@@ -597,6 +603,8 @@ export function nextTurn(): void {
         }
 
         // a2ui: 資金危険水域への新規突入時のみアドバイザーカード (継続中は再発火しない)
+        // Wave 2: 変動費は含めない。売上ゼロでも出ていく金＝固定費だけで危険水域を測る
+        // （変動費は売上と同時に発生するため、資金が尽きるまでの月数の分母にはならない）
         const monthlyCost = salaryTotal + interest + fixedCost
         const isDanger = isFinanceDanger(game.money, monthlyCost)
         if (shouldFireDangerAdvisor(_wasFinanceDanger, isDanger)) {

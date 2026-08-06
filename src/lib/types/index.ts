@@ -132,6 +132,11 @@ export interface FinanceSnapshot {
     month: number
     // P/L
     revenue: number
+    /**
+     * Phase 9 Wave 2: 変動費（売上に連動する費用）。
+     * 売上 − 変動費 ＝ 限界利益。旧セーブは normalizeGameState() が 0 で埋める。
+     */
+    variableCost: number
     salaryTotal: number
     interest: number
     /** Wave 1-E: オフィス維持費（officeLevel 連動の月次固定費） */

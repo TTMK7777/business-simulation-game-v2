@@ -62,8 +62,8 @@ export const DRAWERS: Record<DrawerKey, DrawerDef> = {
     },
     classification: {
         key: 'classification',
-        name: '貸借属性の識別',
-        trigger: '勘定科目が出たとき。名前の印象ではなく貸借の位置と機能で判定する'
+        name: '費用・勘定の属性識別',
+        trigger: '費用や勘定科目が出たとき。名前の印象ではなく「売上に連動するか」「貸借のどちら側か」で判定する'
     }
 }
 

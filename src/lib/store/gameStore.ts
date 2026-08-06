@@ -230,11 +230,13 @@ export function normalizeGameState(): void {
             emp.performanceMultiplier = 1
         }
     })
-    // Wave 1-B/E: 旧セーブの財務スナップショットには固定費・退職コストが無い。
-    // グラフ側で undefined 演算にならないよう 0 で埋める（正規化責務は store 層に一元化）
+    // Wave 1-B/E, Wave 2: 旧セーブの財務スナップショットには固定費・退職コスト・変動費が無い。
+    // グラフ側で undefined 演算にならないよう 0 で埋める（正規化責務は store 層に一元化）。
+    // 変動費 0 ＝ その月の限界利益率 100%。導入前の決算をそのまま表現しており、事実として正しい。
     game.financeHistory.forEach((snapshot: any) => {
         if (typeof snapshot.fixedCost !== 'number') snapshot.fixedCost = 0
         if (typeof snapshot.attritionCost !== 'number') snapshot.attritionCost = 0
+        if (typeof snapshot.variableCost !== 'number') snapshot.variableCost = 0
     })
     game.products.forEach((product: any) => {
         product.sales = Number(product.sales) || 0

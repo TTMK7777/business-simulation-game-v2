@@ -307,16 +307,49 @@ export const legacyNewsTemplates = [
 ];
 
 // ============================================
+// 変動費（Phase 9 Wave 2）
+// ============================================
+// 売上に連動して発生する費用。物語上はクラウド利用料・サポート費・決済手数料にあたる。
+// 導入前のこのゲームは費用が全額固定で、限界利益率が常に 100% だった。
+// その状態では CVP・差額原価・営業レバレッジが構造的に表現できない。
+
+/** 変動費率の基礎。売上に必ず比例してかかる分 */
+const VARIABLE_COST_RATE_BASE = 0.30
+/** 品質100あたりの変動費率の上乗せ。高品質ほどインフラとサポートが重くなる */
+const VARIABLE_COST_RATE_QUALITY_SLOPE = 0.15
+/** 品質の基準値。この品質の製品で変動費導入の前後の利益水準が揃う */
+const PRODUCT_QUALITY_BASE = 30
+/** 基準品質での変動費率（= 0.345） */
+const STANDARD_VARIABLE_COST_RATE =
+    VARIABLE_COST_RATE_BASE + VARIABLE_COST_RATE_QUALITY_SLOPE * (PRODUCT_QUALITY_BASE / 100)
+/**
+ * 変動費導入で目減りする利益を売上側で戻す補正倍率（= 約1.527）。
+ *
+ * これを掛けないと基準品質の製品で利益が約35%消え、既存プレイヤーの体感が一段難化する。
+ * 構造（変動費の有無）だけを入れ替え、難易度は据え置く意図。
+ */
+const REVENUE_SCALE_FOR_VARIABLE_COST = 1 / (1 - STANDARD_VARIABLE_COST_RATE)
+
+/** 変動費導入前の売上係数。補正の起点として残す（直接は使わない） */
+const LEGACY_PRODUCT_REVENUE_BASE = 50000
+const LEGACY_PRODUCT_REVENUE_MULTIPLIER = 10000
+
+// ============================================
 // ゲームバランス調整パラメータ（Phase 2）
 // ============================================
 export const BALANCE_CONFIG = {
     // === 経済バランス ===
     economy: {
-        // 製品売上計算
-        productRevenueMultiplier: 10000,      // 品質1あたりの売上（デフォルト: 10000）
-        productRevenueBase: 50000,            // 製品の最低売上保証
+        // 製品売上計算（変動費導入に伴い REVENUE_SCALE_FOR_VARIABLE_COST で補正済み）
+        productRevenueMultiplier: Math.round(LEGACY_PRODUCT_REVENUE_MULTIPLIER * REVENUE_SCALE_FOR_VARIABLE_COST),  // 品質1あたりの売上
+        productRevenueBase: Math.round(LEGACY_PRODUCT_REVENUE_BASE * REVENUE_SCALE_FOR_VARIABLE_COST),              // 製品の最低売上保証
         marketShareRevenueBonus: 0.02,        // 市場シェア1%あたりの売上ボーナス率
         brandPowerRevenueBonus: 0.05,         // ブランド力1あたりの売上ボーナス率
+
+        // 変動費（売上連動費用）
+        variableCostRateBase: VARIABLE_COST_RATE_BASE,                    // 基礎変動費率
+        variableCostRateQualitySlope: VARIABLE_COST_RATE_QUALITY_SLOPE,   // 品質100あたりの上乗せ
+        variableCostRateMax: 0.9,             // 変動費率の上限（限界利益が消えるのを防ぐ）
 
         // 給与関連
         baseSalary: 300000,                   // 基本給（新人）
@@ -330,7 +363,7 @@ export const BALANCE_CONFIG = {
 
         // 製品開発
         productDevelopmentCost: 2000000,      // 製品開発コスト
-        productQualityBase: 30,               // 品質の基準値
+        productQualityBase: PRODUCT_QUALITY_BASE,  // 品質の基準値
         productQualityVariance: 20,           // 品質のばらつき
     },
 

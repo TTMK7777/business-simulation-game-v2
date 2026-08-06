@@ -27,16 +27,19 @@ beforeEach(() => {
 /** 決定的なテスト用スナップショット（数字はすべて手計算できる値にしてある） */
 function makeSnapshot(overrides: Partial<FinanceSnapshot> = {}): FinanceSnapshot {
     const revenue = 5_000_000
+    // 限界利益率がちょうど 60% になる値。損益分岐点が固定費合計と明確に食い違う
+    const variableCost = 2_000_000
     const salaryTotal = 2_000_000
     const interest = 100_000
     const fixedCost = 800_000
     const attritionCost = 300_000
-    const profit = revenue - salaryTotal - interest - fixedCost - attritionCost // 1,800,000
+    const profit = revenue - variableCost - salaryTotal - interest - fixedCost - attritionCost // -200,000
     return {
         turn: 12,
         year: 2025,
         month: 12,
         revenue,
+        variableCost,
         salaryTotal,
         interest,
         fixedCost,
@@ -105,14 +108,19 @@ describe('罠の数値がエンジンの中間計算値と一致する', () => {
         expect(problem.answer).toBe(snap.profit)
 
         const trapValues = problem.traps.map(t => t.value)
-        // FinanceManager の profit = revenue - salaryTotal - interest - fixedCost - attritionCost
+        // FinanceManager の profit =
+        //   revenue - variableCost - salaryTotal - interest - fixedCost - attritionCost
         // その減算チェーンを途中で止めた値が、そのまま罠になっていること
+        const contributionMargin = snap.revenue - snap.variableCost
         expect(trapValues).toContain(snap.revenue)
-        expect(trapValues).toContain(snap.revenue - snap.salaryTotal)
-        expect(trapValues).toContain(snap.revenue - snap.salaryTotal - snap.interest)
+        expect(trapValues).toContain(contributionMargin)
+        expect(trapValues).toContain(contributionMargin - snap.salaryTotal)
+        expect(trapValues).toContain(contributionMargin - snap.salaryTotal - snap.interest)
         expect(trapValues).toContain(
-            snap.revenue - snap.salaryTotal - snap.interest - snap.fixedCost
+            contributionMargin - snap.salaryTotal - snap.interest - snap.fixedCost
         )
+        // 変動費だけを引き忘れた値（固定費は全部引けているのに利益が変動費のぶん過大になる）
+        expect(trapValues).toContain(snap.profit + snap.variableCost)
     })
 
     it('罠は正解と重複しない（完走した値を罠と判定しない）', () => {
@@ -133,9 +141,12 @@ describe('罠の数値がエンジンの中間計算値と一致する', () => {
             makeSnapshot(),
             // 自己資本比率と他人資本比率がほぼ50%で衝突するケース
             makeSnapshot({ cash: 10_004_628, debt: 5_000_000, netWorth: 5_004_628 }),
-            // 損益分岐点と実売上が僅差で衝突するケース
+            // 損益分岐点と実売上が僅差で衝突するケース。
+            // variableCost=0 は変動費導入前の旧セーブ相当（限界利益率100%）でもあり、
+            // このとき損益分岐点は固定費合計に一致する
             makeSnapshot({
                 revenue: 2_844_628,
+                variableCost: 0,
                 salaryTotal: 1_900_000,
                 interest: 100_000,
                 fixedCost: 600_000,
@@ -187,17 +198,36 @@ describe('罠の数値がエンジンの中間計算値と一致する', () => {
         )
     })
 
-    it('損益分岐点の罠は「引き忘れた費用」の組み合わせになっている', () => {
+    it('損益分岐点は「固定費 ÷ 限界利益率」で、固定費合計そのものは罠になっている', () => {
         const snap = makeSnapshot()
         const problem = generateProblemsFromSnapshot(snap).find(p => p.kind === 'breakeven')!
 
-        // このゲームの費用は全額固定費なので、損益分岐点売上高＝総費用
-        expect(problem.answer).toBe(
-            snap.salaryTotal + snap.interest + snap.fixedCost + snap.attritionCost
-        )
+        const fixedCostTotal = snap.salaryTotal + snap.interest + snap.fixedCost + snap.attritionCost
+        const marginRatio = (snap.revenue - snap.variableCost) / snap.revenue
+
+        expect(problem.answer).toBeCloseTo(fixedCostTotal / marginRatio, 6)
+        // 変動費が無かった頃はこれが正解だった。今は最も落ちやすい罠
+        expect(problem.answer).toBeGreaterThan(fixedCostTotal)
+
         const trapValues = problem.traps.map(t => t.value)
+        expect(trapValues).toContain(fixedCostTotal)
         expect(trapValues).toContain(snap.salaryTotal)
-        expect(trapValues).toContain(snap.salaryTotal + snap.fixedCost)
+    })
+
+    it('限界利益率の罠は「変動費率」と「固定費まで引いた値」になっている', () => {
+        const snap = makeSnapshot()
+        const problem = generateProblemsFromSnapshot(snap).find(p => p.kind === 'contributionMargin')!
+
+        expect(problem.answer).toBeCloseTo(((snap.revenue - snap.variableCost) / snap.revenue) * 100, 6)
+
+        const trapValues = problem.traps.map(t => t.value)
+        // 変動費率（＝100 − 限界利益率）
+        expect(trapValues).toContainEqual(expect.closeTo((snap.variableCost / snap.revenue) * 100, 6))
+        // 固定費まで引いてしまった値（売上高利益率）
+        const fixedCostTotal = snap.salaryTotal + snap.interest + snap.fixedCost + snap.attritionCost
+        expect(trapValues).toContainEqual(
+            expect.closeTo(((snap.revenue - snap.variableCost - fixedCostTotal) / snap.revenue) * 100, 6)
+        )
     })
 })
 
@@ -259,7 +289,8 @@ describe('judgeAnswer', () => {
     it('中間値を入れると罠として検出され、どこで止まったかが返る', () => {
         const snap = makeSnapshot()
         const problem = generateProblemsFromSnapshot(snap).find(p => p.kind === 'profit')!
-        const stoppedEarly = snap.revenue - snap.salaryTotal // 人件費だけ引いて止まった
+        // 変動費と人件費まで引いて止まった
+        const stoppedEarly = snap.revenue - snap.variableCost - snap.salaryTotal
 
         const r = judgeAnswer(problem, stoppedEarly)
 

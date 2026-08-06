@@ -14,7 +14,14 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { calculateMonthlyRevenue, getLoan, repayLoan } from '../lib/managers/FinanceManager'
+import {
+  calculateMonthlyRevenue,
+  getLoan,
+  repayLoan,
+  getVariableCostRate,
+  getContributionMarginRatio,
+  getBreakEvenRevenue,
+} from '../lib/managers/FinanceManager'
 import { getGame, overwriteGameState, cloneDefaults, resetGameState, normalizeGameState } from '../lib/store/gameStore'
 import { BALANCE_CONFIG } from '../lib/gameConfig'
 import { OFFICE_LEVELS } from '../lib/config/offices'
@@ -70,8 +77,11 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
   }
 }
 
-// 品質50の単一製品の乗算前基礎売上（productRevenueBase=50000 + quality*productRevenueMultiplier=500000）
-const BASE_REVENUE = 550_000
+// 品質50の単一製品の乗算前基礎売上。
+// Wave 2 の変動費導入で売上係数を補正したため、数値を直書きせず設定から導出する
+// （直書きするとバランス調整のたびにテストが本質と無関係に落ちる）
+const BASE_REVENUE =
+  BALANCE_CONFIG.economy.productRevenueBase + 50 * BALANCE_CONFIG.economy.productRevenueMultiplier
 
 describe('calculateMonthlyRevenue: 月次決算スナップショット記録', () => {
   it('決算後に financeHistory へ1件記録される（P/L・簡易B/S・CFを含む）', () => {
@@ -215,10 +225,10 @@ describe('売上ドライバー分解 (revenueDrivers)', () => {
     const result = calculateMonthlyRevenue()
     const byKey = Object.fromEntries(result.revenueDrivers.contributions.map(c => [c.key, c.amount]))
 
-    // 550000 * 1.15 - 550000 = 82500
-    expect(byKey.charisma).toBe(82_500)
-    expect(result.revenue).toBe(632_500)
-    expect(result.revenueDrivers.total).toBe(632_500)
+    // カリスマ1名は +15%
+    expect(byKey.charisma).toBe(Math.round(BASE_REVENUE * 0.15))
+    expect(result.revenue).toBe(Math.floor(BASE_REVENUE * 1.15))
+    expect(result.revenueDrivers.total).toBe(Math.round(BASE_REVENUE * 1.15))
   })
 
   it('Tier3スキル revenue_bonus 保有者1名は+5%分の寄与額を生む', () => {
@@ -234,9 +244,9 @@ describe('売上ドライバー分解 (revenueDrivers)', () => {
     const result = calculateMonthlyRevenue()
     const byKey = Object.fromEntries(result.revenueDrivers.contributions.map(c => [c.key, c.amount]))
 
-    // 550000 * 1.05 - 550000 = 27500
-    expect(byKey.skillBonus).toBe(27_500)
-    expect(result.revenue).toBe(577_500)
+    // revenue_bonus 保有者1名は +5%
+    expect(byKey.skillBonus).toBe(Math.round(BASE_REVENUE * 0.05))
+    expect(result.revenue).toBe(Math.floor(BASE_REVENUE * 1.05))
   })
 
   it('市場シェア・ブランド力の寄与額が正しく按分される', () => {
@@ -244,20 +254,20 @@ describe('売上ドライバー分解 (revenueDrivers)', () => {
       ...cloneDefaults(),
       products: [makeProduct({ quality: 50 })],
       employees: [],
-      marketShare: 10, // 550000 * (1+10*0.02=1.2) - 550000 = 110000
-      brandPower: 4,   // 660000 * (1+4*0.05=1.2) - 660000 = 132000
+      marketShare: 10, // 売上 × (1 + 10*0.02) = ×1.2
+      brandPower: 4,   // さらに × (1 + 4*0.05) = ×1.2
       difficulty: 'normal',
     })
 
     const result = calculateMonthlyRevenue()
     const byKey = Object.fromEntries(result.revenueDrivers.contributions.map(c => [c.key, c.amount]))
 
-    expect(byKey.marketShare).toBe(110_000)
-    expect(byKey.brandPower).toBe(132_000)
-    expect(result.revenue).toBe(792_000)
+    expect(byKey.marketShare).toBe(Math.round(BASE_REVENUE * 0.2))
+    expect(byKey.brandPower).toBe(Math.round(BASE_REVENUE * 1.2 * 0.2))
+    expect(result.revenue).toBe(Math.floor(BASE_REVENUE * 1.44))
   })
 
-  it('寄与額の合計は実売上に近似する（floor丸め誤差1円以内）', () => {
+  it('寄与額の合計は実売上に近似する（丸め誤差は製品数の範囲に収まる）', () => {
     overwriteGameState({
       ...cloneDefaults(),
       products: [
@@ -276,7 +286,9 @@ describe('売上ドライバー分解 (revenueDrivers)', () => {
 
     const result = calculateMonthlyRevenue()
     const diff = Math.abs(result.revenueDrivers.total - result.revenue)
-    expect(diff).toBeLessThanOrEqual(1)
+    // 実売上は製品ごとに Math.floor、ドライバー分解は合計後に Math.round。
+    // ずれは製品1つあたり最大1円なので、製品数が許容の上限になる
+    expect(diff).toBeLessThanOrEqual(getGame().products.length)
   })
 })
 
@@ -300,7 +312,9 @@ describe('calculateMonthlyRevenue: オフィス維持費（Wave 1-E）', () => {
     const result = calculateMonthlyRevenue()
 
     expect(result.fixedCost).toBe(OFFICE_LEVELS[1].monthlyMaintenance)
-    expect(result.profit).toBe(result.revenue - result.salaryTotal - result.interest - result.fixedCost)
+    expect(result.profit).toBe(
+      result.revenue - result.variableCost - result.salaryTotal - result.interest - result.fixedCost
+    )
   })
 
   it('オフィスの規模が上がるほど固定費が増える（損益分岐点が上がる）', () => {
@@ -336,7 +350,8 @@ describe('calculateMonthlyRevenue: オフィス維持費（Wave 1-E）', () => {
 
     expect(snapshot.fixedCost).toBe(OFFICE_LEVELS[2].monthlyMaintenance)
     expect(snapshot.profit).toBe(
-      snapshot.revenue - snapshot.salaryTotal - snapshot.interest - snapshot.fixedCost - snapshot.attritionCost
+      snapshot.revenue - snapshot.variableCost - snapshot.salaryTotal - snapshot.interest -
+      snapshot.fixedCost - snapshot.attritionCost
     )
   })
 
@@ -374,7 +389,7 @@ describe('calculateMonthlyRevenue: 退職コストと労働力ドライバー（
 
     expect(result.attritionCost).toBe(600_000)
     expect(result.profit).toBe(
-      result.revenue - result.salaryTotal - result.interest - result.fixedCost - 600_000
+      result.revenue - result.variableCost - result.salaryTotal - result.interest - result.fixedCost - 600_000
     )
     expect(getGame().financeHistory[0].attritionCost).toBe(600_000)
   })
@@ -445,5 +460,132 @@ describe('calculateMonthlyRevenue: 退職コストと労働力ドライバー（
 
     expect(workforce.amount).toBeGreaterThan(0)
     expect(result.revenue).toBeGreaterThan(BASE_REVENUE)
+  })
+})
+
+// ============================================================
+// Wave 2: 変動費（売上連動費用）
+//
+// 変動費が無かった頃、このゲームは限界利益率が常に 100% で、
+// 損益分岐点が固定費合計に退化していた。以下はその欠陥が戻っていないことの確認。
+// ============================================================
+describe('変動費（Wave 2）', () => {
+  function singleProductState(quality: number) {
+    overwriteGameState({
+      ...cloneDefaults(),
+      products: [makeProduct({ quality })],
+      employees: [],
+      marketShare: 0,
+      brandPower: 0,
+      difficulty: 'normal',
+      debt: 0,
+      money: 50_000_000,
+      officeLevel: 1,
+    })
+  }
+
+  it('売上に連動する費用が計上され、限界利益率が 100% でなくなる', () => {
+    singleProductState(50)
+
+    const result = calculateMonthlyRevenue()
+
+    expect(result.variableCost).toBeGreaterThan(0)
+    const marginRatio = getContributionMarginRatio(result.revenue, result.variableCost)
+    expect(marginRatio).toBeLessThan(1)
+    expect(marginRatio).toBeGreaterThan(0)
+  })
+
+  it('変動費は純利益から差し引かれる（引き忘れていない）', () => {
+    singleProductState(50)
+
+    const result = calculateMonthlyRevenue()
+
+    expect(result.profit).toBe(
+      result.revenue - result.variableCost - result.salaryTotal - result.interest -
+      result.fixedCost - result.attritionCost
+    )
+  })
+
+  it('品質が高い製品ほど変動費率が上がる（売上は伸びるが儲けは薄くなる）', () => {
+    expect(getVariableCostRate(80)).toBeGreaterThan(getVariableCostRate(20))
+
+    singleProductState(20)
+    const low = calculateMonthlyRevenue()
+    singleProductState(80)
+    const high = calculateMonthlyRevenue()
+
+    // 高品質のほうが売上は大きい
+    expect(high.revenue).toBeGreaterThan(low.revenue)
+    // しかし限界利益率は低い＝1円の売上が固定費回収に回る割合は落ちる
+    expect(getContributionMarginRatio(high.revenue, high.variableCost))
+      .toBeLessThan(getContributionMarginRatio(low.revenue, low.variableCost))
+  })
+
+  it('変動費率には上限があり、限界利益がマイナスにならない', () => {
+    // 品質が上限を振り切っても率は variableCostRateMax で頭打ちになる
+    expect(getVariableCostRate(100_000)).toBe(BALANCE_CONFIG.economy.variableCostRateMax)
+    expect(getVariableCostRate(100_000)).toBeLessThan(1)
+  })
+
+  it('変動費はスナップショットに記録される', () => {
+    singleProductState(50)
+
+    const result = calculateMonthlyRevenue()
+    const snapshot = getGame().financeHistory[0]
+
+    expect(snapshot.variableCost).toBe(result.variableCost)
+  })
+
+  it('旧セーブ（variableCost 未定義）は normalizeGameState() が 0 へ正規化する', () => {
+    // 変動費導入前に保存された決算には variableCost が無い
+    const legacySnapshot: any = {
+      turn: 1, year: 2025, month: 1, revenue: 1_000_000, salaryTotal: 300_000, interest: 0,
+      profit: 700_000, cash: 5_000_000, debt: 0, netWorth: 5_000_000,
+      operatingCF: 700_000, financingCF: 0, revenueDrivers: { contributions: [], total: 1_000_000 },
+    }
+    overwriteGameState({ ...cloneDefaults(), financeHistory: [legacySnapshot] } as any)
+
+    // ロード経路 (GameManager.loadGame) は overwriteGameState → normalizeGameState を必ず通る
+    normalizeGameState()
+
+    expect(getGame().financeHistory[0].variableCost).toBe(0)
+  })
+
+  it('損益分岐点売上高は固定費合計より必ず大きい（固定費そのものではない）', () => {
+    singleProductState(50)
+    const result = calculateMonthlyRevenue()
+
+    const fixedCostTotal = result.salaryTotal + result.interest + result.fixedCost + result.attritionCost
+    const marginRatio = getContributionMarginRatio(result.revenue, result.variableCost)
+    const breakEven = getBreakEvenRevenue(fixedCostTotal, marginRatio)
+
+    expect(breakEven).toBeGreaterThan(fixedCostTotal)
+    expect(breakEven).toBeCloseTo(fixedCostTotal / marginRatio, 6)
+  })
+
+  it('限界利益率が 0 以下なら損益分岐点は存在しない（無限大を返す）', () => {
+    expect(getBreakEvenRevenue(1_000_000, 0)).toBe(Infinity)
+    expect(getBreakEvenRevenue(1_000_000, -0.1)).toBe(Infinity)
+  })
+
+  it('売上ゼロの月は限界利益率を 0 として扱う（0除算を作らない）', () => {
+    expect(getContributionMarginRatio(0, 0)).toBe(0)
+  })
+
+  it('変動費の導入で基準品質の利益水準は概ね維持されている（売上係数の補正が効いている）', () => {
+    // 基準品質(productQualityBase)の製品を、変動費が無かった頃の売上係数で計算した場合の利益と比較する。
+    // 補正が外れると、この差が数十%単位で開く。
+    const quality = BALANCE_CONFIG.economy.productQualityBase
+    singleProductState(quality)
+    const result = calculateMonthlyRevenue()
+
+    const legacyRevenue = 50_000 + quality * 10_000  // 変動費導入前の売上係数
+    const legacyProfit = legacyRevenue - result.salaryTotal - result.interest - result.fixedCost
+
+    const contributionMargin = result.revenue - result.variableCost
+    expect(contributionMargin).toBeCloseTo(legacyRevenue, -2)  // 100円単位で一致
+
+    const drift = Math.abs(result.profit - legacyProfit)
+    expect(drift).toBeLessThan(Math.abs(legacyProfit) * 0.01)
   })
 })
